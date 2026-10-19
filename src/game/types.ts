@@ -14,5 +14,7 @@ export type Contract = {
   quote: string
   /** Líneas de código que hay que escribir para completarlo */
   code: number
+  /** Segundos de plazo desde que se acepta */
+  time: number
   reward: Reward
 }

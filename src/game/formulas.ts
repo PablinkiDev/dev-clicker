@@ -28,3 +28,16 @@ export function fastTypingCost(currentLevel: number): number {
 export function addCode(current: number, amount: number, target: number): number {
   return Math.min(target, current + amount)
 }
+
+/** Dinero que se pierde al vencer un contrato: 5 % de lo que tenés (GDD §4) */
+export function failureMoneyLoss(money: number): number {
+  return Math.floor(money * 0.05)
+}
+
+/** Reputación que se pierde al vencer un contrato */
+export const FAILURE_REP_LOSS: number = 1
+
+/** XP que se gana igual al fallar: 20 % de la recompensa ("por la experiencia") */
+export function failureXp(rewardXp: number): number {
+  return Math.ceil(rewardXp * 0.2)
+}
