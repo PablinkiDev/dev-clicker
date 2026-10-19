@@ -14,7 +14,8 @@ type SaveFile = {
 }
 
 export function saveGame(state: GameState): void {
-  const file: SaveFile = { version: SAVE_VERSION, savedAt: Date.now(), state: { ...state, notice: null } }
+  // La terminal y los avisos son pasajeros: no se guardan
+  const file: SaveFile = { version: SAVE_VERSION, savedAt: Date.now(), state: { ...state, notice: null, log: [] } }
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(file))
   } catch {
@@ -29,7 +30,11 @@ export function loadGame(): GameState | null {
     if (!raw) return null
     const file = migrate(JSON.parse(raw))
     if (!isSaveFile(file) || file.version !== SAVE_VERSION) return null
-    return file.state
+    return {
+      ...file.state,
+      notice: null,
+      log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }],
+    }
   } catch {
     return null
   }

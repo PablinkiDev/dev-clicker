@@ -48,6 +48,7 @@ export const CONTRACT_TEMPLATES: ContractTemplate[] = [
   {
     id: 'boton-mas-grande',
     difficulty: 'mid',
+    lang: 'css',
     client: 'Blockchain para Perros S.A.',
     title: 'Botón “Comprar” más grande',
     quote: 'Más grande. No, más. Ahora que titile. Los inversores llegan en 5 minutos.',

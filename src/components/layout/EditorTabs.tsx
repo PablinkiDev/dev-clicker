@@ -1,0 +1,48 @@
+import { fileName } from '../../game/format'
+import type { Contract } from '../../game/types'
+import type { View } from '../../ui'
+
+type EditorTabsProps = {
+  view: View
+  contract: Contract | null
+  onChange: (view: View) => void
+}
+
+type Tab = { view: View; icon: string; iconClass: string; name: string; modified?: boolean }
+
+/** Pestañas del editor: el contrato en curso es un archivo abierto, el resto son "carpetas" */
+function EditorTabs({ view, contract, onChange }: EditorTabsProps) {
+  const tabs: Tab[] = [
+    ...(contract
+      ? [{ view: 'work' as const, icon: '<>', iconClass: 'text-orange', name: fileName(contract.id, contract.lang), modified: true }]
+      : []),
+    { view: 'board', icon: '▤', iconClass: 'text-muted', name: 'ofertas/' },
+    { view: 'team', icon: '●', iconClass: 'text-cyan', name: 'equipo/' },
+    { view: 'skills', icon: '⑂', iconClass: 'text-green', name: 'mejoras.tree' },
+  ]
+
+  return (
+    <div className="hidden h-9 shrink-0 overflow-x-auto border-b border-line bg-panel [scrollbar-width:none] md:flex">
+      {tabs.map((tab) => {
+        const isActive = tab.view === view
+        return (
+          <button
+            key={tab.view}
+            type="button"
+            onClick={() => onChange(tab.view)}
+            className={`relative flex cursor-pointer items-center gap-2 border-r border-line px-4 font-mono text-xs whitespace-nowrap ${
+              isActive ? 'bg-bg text-text' : 'text-muted hover:text-text'
+            }`}
+          >
+            {isActive && <span className="absolute inset-x-0 top-0 h-0.5 bg-green" />}
+            <span className={tab.iconClass}>{tab.icon}</span>
+            {tab.name}
+            {tab.modified && <span className="size-2 rounded-full bg-text/80" />}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export default EditorTabs

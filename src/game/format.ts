@@ -1,0 +1,17 @@
+// Formatos de texto que se usan en varias partes de la interfaz
+
+/** 75 → "1:15" */
+export function formatTime(seconds: number): string {
+  const s = Math.max(0, Math.ceil(seconds))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+/** 2600 → "$2.600" */
+export function formatMoney(amount: number): string {
+  return `$${Math.round(amount).toLocaleString('es-AR')}`
+}
+
+/** "boton-mas-grande" + css → "boton-mas-grande.css" */
+export function fileName(id: string, lang: 'html' | 'css' = 'html'): string {
+  return `${id}.${lang}`
+}

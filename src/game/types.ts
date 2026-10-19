@@ -21,6 +21,8 @@ export type ContractTemplate = {
   /** Segundos de plazo desde que se acepta */
   time: number
   reward: Reward
+  /** Lenguaje del archivo que se escribe; si falta, es HTML */
+  lang?: 'html' | 'css'
   /** Contrato que aparece una sola vez (el guiado) */
   once?: boolean
 }

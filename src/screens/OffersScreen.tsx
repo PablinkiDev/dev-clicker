@@ -1,11 +1,15 @@
+import ScreenHeader from '../components/ScreenHeader'
 import { estimateSeconds } from '../game/formulas'
+import { fileName } from '../game/format'
 import type { Contract, Difficulty } from '../game/types'
 
-type OfferBoardProps = {
+type OffersScreenProps = {
   offers: Contract[]
   perClick: number
   /** Líneas por segundo del equipo */
   autoRate: number
+  /** Contrato en curso: si hay uno, no se puede aceptar otro */
+  activeFile: string | null
   onAccept: (offer: Contract) => void
 }
 
@@ -17,20 +21,30 @@ const DIFFICULTY_LABEL: Record<Difficulty, { text: string; className: string }> 
 
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'mid', 'hard']
 
-function OfferBoard({ offers, perClick, autoRate, onAccept }: OfferBoardProps) {
+function OffersScreen({ offers, perClick, autoRate, activeFile, onAccept }: OffersScreenProps) {
   // Ordenamos una copia: nunca hay que modificar (mutar) las props ni el estado
   const sorted = [...offers].sort(
     (a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
   )
 
   return (
-    <section className="w-full max-w-md">
-      <p className="mb-2 flex justify-between font-mono text-xs text-muted">
+    <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
+      {activeFile ? (
+        <ScreenHeader icon="</>" title="Tablón de ofertas">
+          Estás trabajando en <b className="font-mono text-text">{activeFile}</b>. Terminalo antes de aceptar otra.
+        </ScreenHeader>
+      ) : (
+        <ScreenHeader icon="</>" title="Ningún contrato abierto">
+          Elegí una oferta para empezar. <b className="font-mono text-text">El reloj no corre</b> hasta que la aceptes.
+        </ScreenHeader>
+      )}
+
+      <p className="mb-2.5 flex justify-between font-mono text-xs text-muted">
         <span>ofertas/</span>
-        <span className="text-faint">el reloj arranca al aceptar</span>
+        <span className="text-faint">siempre hay una fácil, una media y una difícil</span>
       </p>
 
-      <ul className="flex flex-col gap-3">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
         {sorted.map((offer) => {
           const label = DIFFICULTY_LABEL[offer.difficulty]
           const estimate = estimateSeconds(offer.code, perClick, autoRate)
@@ -47,8 +61,12 @@ function OfferBoard({ offers, perClick, autoRate, onAccept }: OfferBoardProps) {
               <button
                 type="button"
                 onClick={() => onAccept(offer)}
-                className="w-full cursor-pointer rounded-xl border border-line bg-panel-2 p-4 text-left transition hover:-translate-y-0.5 hover:border-cyan/50"
+                disabled={activeFile !== null}
+                className="h-full w-full cursor-pointer rounded-xl border border-line bg-panel-2 p-3.5 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-cyan/50 disabled:cursor-default disabled:opacity-60"
               >
+                <p className="mb-1 truncate font-mono text-[11px] text-muted">
+                  <span className="text-orange">&lt;&gt;</span> {fileName(offer.id, offer.lang)}
+                </p>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-muted">{offer.client}</p>
                   <span className={`rounded px-2 py-0.5 text-[10px] font-extrabold uppercase ${label.className}`}>
@@ -74,4 +92,4 @@ function OfferBoard({ offers, perClick, autoRate, onAccept }: OfferBoardProps) {
   )
 }
 
-export default OfferBoard
+export default OffersScreen

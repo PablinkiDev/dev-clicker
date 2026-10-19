@@ -19,6 +19,10 @@
   --color-purple: #c792ea;
   --color-cyan: #89ddff;
   --color-red: #ff6e7f;
+  --color-orange: #f78c6c;
+  --color-blue: #82aaff;
+  --color-panel-3: #1b2135;
+  --color-line-2: #2e3753;
 
   --font-ui: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
