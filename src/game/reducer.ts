@@ -31,6 +31,9 @@ export type LogEntry = {
   text: string
 }
 
+/** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
+export const DARK_MODE_PRICE = 60
+
 /** Cuántas líneas guarda la terminal */
 const LOG_LIMIT = 50
 
@@ -44,6 +47,10 @@ export type GameState = {
   editor: EditorId
   /** El editor que se ve (solo estético; cualquiera ya comprado) */
   look: EditorId
+  /** Modo oscuro para Bloc de notas y Notepad: se compra una vez y después se prende o apaga */
+  darkMode: { owned: boolean; on: boolean }
+  /** Accesibilidad: fuerza colores oscuros en los editores claros. Siempre gratis */
+  dim: boolean
   developers: number
   offers: Contract[]
   cooldowns: Cooldowns
@@ -71,6 +78,8 @@ export type GameAction =
   | { type: 'hireDeveloper' }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
+  | { type: 'toggleDarkMode' }
+  | { type: 'setDim'; dim: boolean }
   // El tablón nuevo se arma afuera (usa azar y la hora) y llega ya calculado
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
   // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
@@ -86,6 +95,8 @@ export function createInitialState(): GameState {
     skills: INITIAL_SKILLS,
     editor: 'nano',
     look: 'nano',
+    darkMode: { owned: false, on: false },
+    dim: false,
     developers: 0,
     offers: createInitialOffers(),
     cooldowns: {},
@@ -201,6 +212,29 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'dismissNotice':
       return { ...state, notice: null }
+
+    case 'toggleDarkMode': {
+      // Primera vez: se compra. Después: interruptor
+      if (state.darkMode.owned) return { ...state, darkMode: { owned: true, on: !state.darkMode.on } }
+      if (state.money < DARK_MODE_PRICE) {
+        return {
+          ...state,
+          notice: {
+            kind: 'error',
+            text: `Te faltan $${DARK_MODE_PRICE - state.money} para el modo oscuro. Mientras tanto, entrecerrá los ojos.`,
+          },
+        }
+      }
+      return {
+        ...state,
+        money: state.money - DARK_MODE_PRICE,
+        darkMode: { owned: true, on: true },
+        log: addLog(state.log, 'success', 'npm install modo-oscuro · tus retinas te lo agradecen'),
+      }
+    }
+
+    case 'setDim':
+      return { ...state, dim: action.dim }
 
     case 'setLook': {
       const owned = EDITORS.findIndex((e) => e.id === state.editor)

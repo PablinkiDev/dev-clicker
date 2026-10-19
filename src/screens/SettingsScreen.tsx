@@ -8,10 +8,12 @@ type SettingsScreenProps = {
   /** Editor que se ve */
   look: EditorId
   onLookChange: (look: EditorId) => void
+  dim: boolean
+  onDimChange: (dim: boolean) => void
   onReset: () => void
 }
 
-function SettingsScreen({ editor, look, onLookChange, onReset }: SettingsScreenProps) {
+function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, onReset }: SettingsScreenProps) {
   const ownedIndex = EDITORS.findIndex((e) => e.id === editor)
 
   return (
@@ -44,6 +46,23 @@ function SettingsScreen({ editor, look, onLookChange, onReset }: SettingsScreenP
           )
         })}
       </ul>
+
+      <p className="mb-2.5 font-mono text-xs text-muted">accesibilidad/</p>
+      <label className="mb-6 flex max-w-xl cursor-pointer items-center justify-between gap-4 rounded-xl border border-line bg-panel-2 px-4 py-3">
+        <span>
+          <b className="block">Reducir brillo</b>
+          <span className="text-xs text-muted">
+            Usa colores oscuros en Bloc de notas y Notepad. Siempre gratis: el modo oscuro de $60 es un chiste del juego,
+            la accesibilidad no se cobra.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={dim}
+          onChange={(event) => onDimChange(event.target.checked)}
+          className="size-5 shrink-0 cursor-pointer accent-green"
+        />
+      </label>
 
       <p className="mb-2.5 font-mono text-xs text-muted">partida/</p>
       <button

@@ -170,12 +170,48 @@
   color: var(--color-green);
 }
 
+/* Modo oscuro (comprado o por accesibilidad) para los editores claros */
+[data-editor='bloc'][data-dark],
+[data-editor='notepad'][data-dark] {
+  --color-bg: #2d2d30;
+  --color-panel: #2d2d30;
+  --color-panel-2: #353538;
+  --color-panel-3: #3f3f42;
+  --color-line: #48484c;
+  --color-line-2: #5c5c60;
+  --color-text: #e2e2e2;
+  --color-muted: #b4b4b4;
+  --color-faint: #85858a;
+  --color-green: #6ccf7f;
+  --color-yellow: #e3b341;
+  --color-purple: #c49bf2;
+  --color-cyan: #6cc4e8;
+  --color-red: #f2777a;
+  --color-orange: #f0a35e;
+  --color-blue: #7aa2f7;
+}
+
+[data-editor='notepad'][data-dark] {
+  --syn-comment: #6a9955;
+  --syn-tag: #569cd6;
+  --syn-string: #ce9178;
+  --syn-attr: #9cdcfe;
+  --syn-number: #b5cea8;
+  --syn-keyword: #c586c0;
+}
+
 [data-editor='bloc'] .code-view,
 [data-editor='notepad'] .code-view {
   margin: 0 12px 10px;
   background: #fbfaf3;
   border: 2px solid;
   border-color: #8a867e #ffffff #ffffff #8a867e;
+}
+
+[data-editor='bloc'][data-dark] .code-view,
+[data-editor='notepad'][data-dark] .code-view {
+  background: #1c1c1c;
+  border-color: #141416 #4e4e52 #4e4e52 #141416;
 }
 
 /* Es un juego: evitamos que los clics rápidos seleccionen texto */

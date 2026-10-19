@@ -18,7 +18,7 @@ import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
 import { autoRate, critChance, linesPerClick, skillCost } from './game/formulas'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
-import { createInitialState, gameReducer } from './game/reducer'
+import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
@@ -149,7 +149,10 @@ function App() {
 
   return (
     // data-editor activa la paleta del editor definida en index.css
-    <div data-editor={look.id} className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text">
+    <div
+      data-editor={look.id}
+      data-dark={(state.darkMode.owned && state.darkMode.on) || state.dim ? '' : undefined}
+      className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text">
       <TitleBar editor={look.id} title={titles[currentView]} modified={contract !== null && code > 0} />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -166,7 +169,16 @@ function App() {
         )}
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {look.features.nav === 'menu' && <MenuBar editor={look.id} view={currentView} onChange={setView} />}
+          {look.features.nav === 'menu' && (
+            <MenuBar
+              editor={look.id}
+              view={currentView}
+              onChange={setView}
+              darkMode={state.darkMode}
+              darkModePrice={DARK_MODE_PRICE}
+              onDarkMode={() => dispatch({ type: 'toggleDarkMode' })}
+            />
+          )}
           <EconomyHud
             money={money}
             xp={xp}
@@ -218,6 +230,8 @@ function App() {
               editor={editor.id}
               look={look.id}
               onLookChange={(id) => dispatch({ type: 'setLook', look: id })}
+              dim={state.dim}
+              onDimChange={(dim) => dispatch({ type: 'setDim', dim })}
               onReset={resetGame}
             />
           )}

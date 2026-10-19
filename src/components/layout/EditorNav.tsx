@@ -32,7 +32,16 @@ const DECOR_MENUS: Partial<Record<EditorId, string[]>> = {
   notepad: ['Archivo', 'Editar', 'Buscar', 'Vista', 'Codificación', 'Lenguaje', 'Configuración', 'Macro', 'Ejecutar', 'Plugins', 'Ventana', '?'],
 }
 
-export function MenuBar({ editor, view, onChange }: EditorNavProps) {
+type MenuBarProps = EditorNavProps & {
+  darkMode: { owned: boolean; on: boolean }
+  darkModePrice: number
+  onDarkMode: () => void
+}
+
+export function MenuBar({ editor, view, onChange, darkMode, darkModePrice, onDarkMode }: MenuBarProps) {
+  let darkLabel = `🌙 Modo oscuro · $${darkModePrice}`
+  if (darkMode.owned) darkLabel = darkMode.on ? '☀ Modo claro' : '🌙 Modo oscuro'
+
   return (
     <nav className="flex shrink-0 items-center gap-px overflow-x-auto border-b border-line bg-panel px-1.5 py-0.5 text-[13px] [scrollbar-width:none]">
       {VIEWS.map((v) => (
@@ -53,6 +62,13 @@ export function MenuBar({ editor, view, onChange }: EditorNavProps) {
           {item}
         </span>
       ))}
+      <button
+        type="button"
+        onClick={onDarkMode}
+        className="ml-auto cursor-pointer px-2.5 py-1 font-bold whitespace-nowrap hover:bg-blue hover:text-white"
+      >
+        {darkLabel}
+      </button>
     </nav>
   )
 }

@@ -6,7 +6,7 @@ import type { GameState } from './reducer'
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 4
+export const SAVE_VERSION: number = 5
 
 type SaveFile = {
   version: number
@@ -76,6 +76,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 4 }
   }
 
+  // v4 → v5: modo oscuro y reducir brillo
+  if (file.version === 4) {
+    state = { ...state, darkMode: { owned: false, on: false }, dim: false }
+    file = { ...file, version: 5 }
+  }
+
   return { ...file, state }
 }
 
@@ -112,6 +118,8 @@ function isSaveFile(value: unknown): value is SaveFile {
     Object.keys(INITIAL_SKILLS).every((key) => isNumber(skills[key])) &&
     EDITORS.some((e) => e.id === s.editor) &&
     EDITORS.some((e) => e.id === s.look) &&
+    isObject(s.darkMode) &&
+    typeof s.dim === 'boolean' &&
     Array.isArray(s.offers) &&
     s.offers.every(isContract) &&
     isObject(s.cooldowns) &&
