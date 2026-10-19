@@ -14,7 +14,7 @@ import {
   xpMultiplier,
 } from './formulas'
 import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
-import { getEditor, nextEditor, type EditorId } from '../data/editors'
+import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { createInitialOffers, type Cooldowns } from './offers'
 import type { Contract } from './types'
 
@@ -40,7 +40,10 @@ export type GameState = {
   xp: number
   rep: number
   skills: SkillLevels
+  /** El mejor editor comprado: define los bonus */
   editor: EditorId
+  /** El editor que se ve (solo estético; cualquiera ya comprado) */
+  look: EditorId
   developers: number
   offers: Contract[]
   cooldowns: Cooldowns
@@ -67,6 +70,7 @@ export type GameAction =
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'hireDeveloper' }
   | { type: 'buyEditor' }
+  | { type: 'setLook'; look: EditorId }
   // El tablón nuevo se arma afuera (usa azar y la hora) y llega ya calculado
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
   // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
@@ -81,6 +85,7 @@ export function createInitialState(): GameState {
     rep: 0,
     skills: INITIAL_SKILLS,
     editor: 'nano',
+    look: 'nano',
     developers: 0,
     offers: createInitialOffers(),
     cooldowns: {},
@@ -197,6 +202,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'dismissNotice':
       return { ...state, notice: null }
 
+    case 'setLook': {
+      const owned = EDITORS.findIndex((e) => e.id === state.editor)
+      const wanted = EDITORS.findIndex((e) => e.id === action.look)
+      if (wanted < 0 || wanted > owned) return state
+      return { ...state, look: action.look }
+    }
+
     case 'buyEditor': {
       const next = nextEditor(state.editor)
       if (!next || state.money < next.price) return state
@@ -204,6 +216,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         money: state.money - next.price,
         editor: next.id,
+        look: next.id, // al comprar uno nuevo, se usa directamente
         log: addLog(state.log, 'success', `Instalado ${next.name} · ${next.bonusText}`),
       }
     }

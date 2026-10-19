@@ -1,5 +1,5 @@
 import type { EditorId } from '../../data/editors'
-import { VIEW_LABEL, type View } from '../../ui'
+import { VIEWS, VIEW_LABEL, type View } from '../../ui'
 
 type EditorNavProps = {
   editor: EditorId
@@ -7,8 +7,7 @@ type EditorNavProps = {
   onChange: (view: View) => void
 }
 
-const VIEWS: View[] = ['work', 'board', 'team', 'skills']
-const NANO_KEYS: Record<View, string> = { work: '^E', board: '^T', team: '^P', skills: '^W' }
+const NANO_KEYS: Record<View, string> = { work: '^E', board: '^T', team: '^P', skills: '^W', settings: '^G' }
 
 /** Barra de atajos de Nano: va abajo de todo, como en la terminal */
 export function NanoBar({ view, onChange }: Omit<EditorNavProps, 'editor'>) {

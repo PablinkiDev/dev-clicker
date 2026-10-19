@@ -6,7 +6,7 @@ import type { GameState } from './reducer'
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 3
+export const SAVE_VERSION: number = 4
 
 type SaveFile = {
   version: number
@@ -70,6 +70,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 3 }
   }
 
+  // v3 → v4: se puede elegir el aspecto; arranca igual al editor comprado
+  if (file.version === 3) {
+    state = { ...state, look: state.editor }
+    file = { ...file, version: 4 }
+  }
+
   return { ...file, state }
 }
 
@@ -105,6 +111,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     isObject(skills) &&
     Object.keys(INITIAL_SKILLS).every((key) => isNumber(skills[key])) &&
     EDITORS.some((e) => e.id === s.editor) &&
+    EDITORS.some((e) => e.id === s.look) &&
     Array.isArray(s.offers) &&
     s.offers.every(isContract) &&
     isObject(s.cooldowns) &&

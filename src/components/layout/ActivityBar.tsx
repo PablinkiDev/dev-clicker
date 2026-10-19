@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { VIEW_LABEL, type View } from '../../ui'
+import { VIEWS, VIEW_LABEL, type View } from '../../ui'
 
 type ActivityBarProps = {
   view: View
@@ -35,9 +35,13 @@ const ICONS: Record<View, ReactNode> = {
       <path d="M6 8.5v7M8.3 7.2l7.4 3.8M8.3 16.8l7.4-3.8" />
     </>
   ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+    </>
+  ),
 }
-
-const VIEWS: View[] = ['work', 'board', 'team', 'skills']
 
 /** Barra de actividad: a la izquierda en escritorio, abajo en el celular */
 function ActivityBar({ view, onChange, offersCount, skillsAvailable }: ActivityBarProps) {

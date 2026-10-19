@@ -23,6 +23,7 @@ import { clearSave, loadGame, saveGame } from './game/save'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
+import SettingsScreen from './screens/SettingsScreen'
 import TeamScreen from './screens/TeamScreen'
 import type { View } from './ui'
 
@@ -33,7 +34,7 @@ function App() {
   // Todo el estado de la partida vive en un solo objeto; las reglas están en game/reducer.ts.
   // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva.
   const [state, dispatch] = useReducer(gameReducer, undefined, () => loadGame() ?? createInitialState())
-  const { code, money, xp, rep, skills, editor: editorId, developers, offers, cooldowns, contract, timeLeft, notice, log } = state
+  const { code, money, xp, rep, skills, editor: editorId, look: lookId, developers, offers, cooldowns, contract, timeLeft, notice, log } = state
 
   // Estado de la interfaz (no es parte de la partida)
   const [view, setView] = useState<View>(() => (state.contract ? 'work' : 'board'))
@@ -41,8 +42,10 @@ function App() {
   const [critPop, setCritPop] = useState<{ id: number; lines: number } | null>(null)
 
   // Valores derivados
+  // editor: el mejor comprado (bonus) · look: el que se ve (aspecto y navegación)
   const editor = getEditor(editorId)
-  const { ideChrome } = editor.features
+  const look = getEditor(lookId)
+  const { ideChrome } = look.features
   const perClick = linesPerClick(skills.fastTyping, editor.clickBonus)
   const auto = autoRate(developers, editor.autoBonus)
   const isComplete = contract !== null && code >= contract.code
@@ -141,12 +144,13 @@ function App() {
     board: 'ofertas/',
     team: 'equipo/',
     skills: 'mejoras.tree',
+    settings: 'settings.json',
   }
 
   return (
     // data-editor activa la paleta del editor definida en index.css
-    <div data-editor={editor.id} className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text">
-      <TitleBar editor={editor.id} title={titles[currentView]} modified={contract !== null && code > 0} />
+    <div data-editor={look.id} className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text">
+      <TitleBar editor={look.id} title={titles[currentView]} modified={contract !== null && code > 0} />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {ideChrome && (
@@ -162,7 +166,7 @@ function App() {
         )}
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {editor.features.nav === 'menu' && <MenuBar editor={editor.id} view={currentView} onChange={setView} />}
+          {look.features.nav === 'menu' && <MenuBar editor={look.id} view={currentView} onChange={setView} />}
           <EconomyHud
             money={money}
             xp={xp}
@@ -185,8 +189,8 @@ function App() {
                 <CodeView
                   contract={contract}
                   code={code}
-                  syntax={editor.features.syntax}
-                  lineNumbers={editor.features.lineNumbers}
+                  syntax={look.features.syntax}
+                  lineNumbers={look.features.lineNumbers}
                 />
               </div>
               {ideChrome && <Minimap code={code} target={contract.code} />}
@@ -209,6 +213,14 @@ function App() {
               onHire={() => dispatch({ type: 'hireDeveloper' })}
             />
           )}
+          {currentView === 'settings' && (
+            <SettingsScreen
+              editor={editor.id}
+              look={look.id}
+              onLookChange={(id) => dispatch({ type: 'setLook', look: id })}
+              onReset={resetGame}
+            />
+          )}
           {currentView === 'skills' && (
             <SkillsScreen
               skills={skills}
@@ -228,16 +240,9 @@ function App() {
             critPop={critPop}
           />
           {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
-          {editor.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}
-          <button
-            type="button"
-            onClick={resetGame}
-            className="hidden shrink-0 cursor-pointer bg-panel pb-1.5 font-mono text-[10px] text-faint hover:text-red md:block"
-          >
-            rm -rf partida/ · empezar de cero
-          </button>
-          {editor.features.nav === 'nano' && <NanoBar view={currentView} onChange={setView} />}
-          {editor.features.nav === 'agent' && (
+          {look.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}
+          {look.features.nav === 'nano' && <NanoBar view={currentView} onChange={setView} />}
+          {look.features.nav === 'agent' && (
             <AgentBar
               view={currentView}
               onChange={setView}
