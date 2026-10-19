@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import ContractCard from './components/ContractCard'
 import OfferBoard from './components/OfferBoard'
 import {
+  DEVELOPER_PRICE,
   FAILURE_REP_LOSS,
   FAST_TYPING_MAX_LEVEL,
   addCode,
+  autoRate,
   failureMoneyLoss,
   failureXp,
   fastTypingCost,
@@ -29,6 +31,7 @@ function App() {
   const [xp, setXp] = useState(0)
   const [rep, setRep] = useState(0)
   const [fastTypingLevel, setFastTypingLevel] = useState(0)
+  const [developers, setDevelopers] = useState(0)
   const [offers, setOffers] = useState<Contract[]>(createInitialOffers)
   const [cooldowns, setCooldowns] = useState<Cooldowns>({})
   const [contract, setContract] = useState<Contract | null>(null)
@@ -41,6 +44,8 @@ function App() {
 
   // Valores derivados: se calculan a partir del estado en cada render
   const perClick = linesPerClick(fastTypingLevel)
+  const auto = autoRate(developers)
+  const canHireDeveloper = money >= DEVELOPER_PRICE
   const isActive = contract !== null
   const isComplete = contract !== null && code >= contract.code
   const isRunning = isActive && !isComplete && isVisible
@@ -69,6 +74,11 @@ function App() {
       const elapsed = (now - last) / 1000
       last = now
 
+      // El equipo escribe código solo mientras haya un contrato activo (GDD §5)
+      if (auto > 0) {
+        setCode((prev) => addCode(prev, auto * elapsed, contract.code))
+      }
+
       timeLeftRef.current = Math.max(0, timeLeftRef.current - elapsed)
       setTimeLeft(timeLeftRef.current)
 
@@ -89,7 +99,7 @@ function App() {
 
     // Limpieza: se ejecuta cuando isRunning cambia (pausa, entrega, fallo) o al desmontar
     return () => clearInterval(id)
-  }, [isRunning, contract])
+  }, [isRunning, contract, auto])
 
   function acceptContract(offer: Contract) {
     if (contract) return
@@ -123,6 +133,12 @@ function App() {
       kind: 'success',
       text: `${contract.client} pagó: +$${reward.money} · +${reward.xp} XP · +${reward.rep} ★`,
     })
+  }
+
+  function hireDeveloper() {
+    if (!canHireDeveloper) return
+    setMoney((prev) => prev - DEVELOPER_PRICE)
+    setDevelopers((prev) => prev + 1)
   }
 
   function buyUpgrade() {
@@ -199,7 +215,7 @@ function App() {
           </div>
         </>
       ) : (
-        <OfferBoard offers={offers} perClick={perClick} onAccept={acceptContract} />
+        <OfferBoard offers={offers} perClick={perClick} autoRate={auto} onAccept={acceptContract} />
       )}
 
       <section className="w-full max-w-md rounded-xl border border-line bg-panel-2 p-4">
@@ -220,6 +236,28 @@ function App() {
           className="mt-3 w-full cursor-pointer rounded-lg border border-purple/50 bg-purple/15 py-2 font-mono text-sm font-bold text-purple transition-colors hover:bg-purple/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
         >
           {isMaxLevel ? '✓ Nivel máximo' : `Mejorar · ${upgradeCost} XP`}
+        </button>
+      </section>
+
+      <section className="w-full max-w-md rounded-xl border border-line bg-panel-2 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-bold">🧑‍💻 Desarrollador ★</p>
+            <p className="text-xs text-muted">Escribe +2 líneas/seg mientras haya un contrato activo</p>
+          </div>
+          <span className="text-right font-mono text-sm text-muted">
+            {developers} en el equipo
+            <span className="block text-green">+{auto} l/s</span>
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={hireDeveloper}
+          disabled={!canHireDeveloper}
+          className="mt-3 w-full cursor-pointer rounded-lg border border-yellow/50 bg-yellow/15 py-2 font-mono text-sm font-bold text-yellow transition-colors hover:bg-yellow/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
+        >
+          Contratar · ${DEVELOPER_PRICE.toLocaleString('es-AR')}
         </button>
       </section>
     </main>

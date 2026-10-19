@@ -45,7 +45,18 @@ export function failureXp(rewardXp: number): number {
 /** Clics por segundo que suponemos para estimar si un contrato llega a tiempo */
 export const ASSUMED_CLICKS_PER_SECOND: number = 5
 
-/** Segundos estimados para completar un contrato con la producción actual */
-export function estimateSeconds(code: number, perClick: number): number {
-  return code / (ASSUMED_CLICKS_PER_SECOND * perClick)
+/** Segundos estimados para completar un contrato: clics supuestos + producción automática */
+export function estimateSeconds(code: number, perClick: number, auto: number): number {
+  return code / (ASSUMED_CLICKS_PER_SECOND * perClick + auto)
+}
+
+/** Precio de un Desarrollador ★ (GDD §5, experimental) */
+export const DEVELOPER_PRICE: number = 2600
+
+/** Líneas por segundo que escribe cada Desarrollador ★ (GDD §5, experimental) */
+export const DEVELOPER_RATE: number = 2
+
+/** Producción automática total del equipo, en líneas por segundo */
+export function autoRate(developers: number): number {
+  return developers * DEVELOPER_RATE
 }

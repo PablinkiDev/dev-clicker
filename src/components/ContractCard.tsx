@@ -59,7 +59,7 @@ function ContractCard({ contract, code, timeLeft, isActive }: ContractCardProps)
         <p className="mt-4 flex justify-between font-mono text-sm">
           <span className="text-muted">{isComplete ? '✓ Build OK' : 'Progreso'}</span>
           <span className={isComplete ? 'text-green' : ''}>
-            {code} / {contract.code} líneas
+            {Math.floor(code)} / {contract.code} líneas
           </span>
         </p>
       </div>

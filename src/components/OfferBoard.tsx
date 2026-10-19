@@ -4,6 +4,8 @@ import type { Contract, Difficulty } from '../game/types'
 type OfferBoardProps = {
   offers: Contract[]
   perClick: number
+  /** Líneas por segundo del equipo */
+  autoRate: number
   onAccept: (offer: Contract) => void
 }
 
@@ -15,7 +17,7 @@ const DIFFICULTY_LABEL: Record<Difficulty, { text: string; className: string }> 
 
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'mid', 'hard']
 
-function OfferBoard({ offers, perClick, onAccept }: OfferBoardProps) {
+function OfferBoard({ offers, perClick, autoRate, onAccept }: OfferBoardProps) {
   // Ordenamos una copia: nunca hay que modificar (mutar) las props ni el estado
   const sorted = [...offers].sort(
     (a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
@@ -31,7 +33,7 @@ function OfferBoard({ offers, perClick, onAccept }: OfferBoardProps) {
       <ul className="flex flex-col gap-3">
         {sorted.map((offer) => {
           const label = DIFFICULTY_LABEL[offer.difficulty]
-          const estimate = estimateSeconds(offer.code, perClick)
+          const estimate = estimateSeconds(offer.code, perClick, autoRate)
           const ratio = estimate / offer.time
           const verdict =
             ratio < 0.7
