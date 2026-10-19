@@ -1,8 +1,10 @@
-import type { Contract } from '../game/types'
+import type { ContractTemplate } from '../game/types'
 
-// Contrato guiado del GDD (§4): 25 líneas en 30 s, $100, +10 XP y +2 de reputación
-export const FIRST_CONTRACT: Contract = {
+/** Contrato guiado del GDD (§4): 25 líneas en 30 s, $100, +10 XP y +2 de reputación */
+export const GUIDED_CONTRACT: ContractTemplate = {
   id: 'mi-sobrino',
+  difficulty: 'easy',
+  once: true,
   client: 'Tía Norma',
   title: 'Mi sobrino sabe HTML',
   quote: 'Mi sobrino dijo que era fácil, pero se fue a jugar a la Play. ¿Me lo terminás?',
@@ -10,3 +12,87 @@ export const FIRST_CONTRACT: Contract = {
   time: 30,
   reward: { money: 100, xp: 10, rep: 2 },
 }
+
+/** Contratos repetibles: el generador de ofertas elige entre estos */
+export const CONTRACT_TEMPLATES: ContractTemplate[] = [
+  {
+    id: 'landing-verduleria',
+    difficulty: 'easy',
+    client: 'Verdulería El Tomate Feliz',
+    title: 'Landing de la verdulería',
+    quote: 'Que se vea moderno. Y que la palta se mueva cuando pasás el mouse.',
+    code: 40,
+    time: 40,
+    reward: { money: 180, xp: 20, rep: 3 },
+  },
+  {
+    id: 'menu-don-muzza',
+    difficulty: 'easy',
+    client: 'Pizzería Don Muzza',
+    title: 'Menú online sin PDF',
+    quote: 'Basta de mandar la foto del menú borrosa. Quiero algo que se lea en el celu.',
+    code: 35,
+    time: 40,
+    reward: { money: 150, xp: 16, rep: 2 },
+  },
+  {
+    id: 'horarios-gym',
+    difficulty: 'easy',
+    client: 'Gimnasio Músculo Feliz',
+    title: 'Horarios del gimnasio',
+    quote: 'Que se vean los horarios. Y una foto mía haciendo press de banca, obvio.',
+    code: 30,
+    time: 35,
+    reward: { money: 130, xp: 14, rep: 2 },
+  },
+  {
+    id: 'boton-mas-grande',
+    difficulty: 'mid',
+    client: 'Blockchain para Perros S.A.',
+    title: 'Botón “Comprar” más grande',
+    quote: 'Más grande. No, más. Ahora que titile. Los inversores llegan en 5 minutos.',
+    code: 45,
+    time: 28,
+    reward: { money: 240, xp: 24, rep: 3 },
+  },
+  {
+    id: 'portfolio-primo',
+    difficulty: 'mid',
+    client: 'Tu primo el “influencer”',
+    title: 'Portfolio con mucha onda',
+    quote: 'Algo minimalista pero que llame la atención. Y que tenga mi cara en todos lados.',
+    code: 60,
+    time: 45,
+    reward: { money: 280, xp: 30, rep: 3 },
+  },
+  {
+    id: 'perez-y-perez',
+    difficulty: 'mid',
+    client: 'Estudio Pérez & Pérez',
+    title: 'Una web seria. Muy seria.',
+    quote: 'Nada de colores. Bueno, azul. Azul serio. ¿Existe el azul serio?',
+    code: 55,
+    time: 40,
+    reward: { money: 260, xp: 28, rep: 3 },
+  },
+  {
+    id: 'tipo-amazon',
+    difficulty: 'hard',
+    client: 'Emprendedor Visionario',
+    title: 'Una web tipo Amazon, simple',
+    quote: 'Nada complicado: tipo Amazon, pero más lindo. Presupuesto ajustado, visión infinita.',
+    code: 110,
+    time: 55,
+    reward: { money: 520, xp: 55, rep: 6 },
+  },
+  {
+    id: 'pitch-landing',
+    difficulty: 'hard',
+    client: 'Startup (todavía sin nombre)',
+    title: 'Landing para levantar inversión',
+    quote: 'Mañana es el pitch. La web tiene que decir “disruptivo” al menos cuatro veces.',
+    code: 100,
+    time: 50,
+    reward: { money: 480, xp: 50, rep: 5 },
+  },
+]

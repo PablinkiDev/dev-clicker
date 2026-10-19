@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import ContractCard from './components/ContractCard'
-import { FIRST_CONTRACT } from './data/contracts'
+import OfferBoard from './components/OfferBoard'
 import {
   FAILURE_REP_LOSS,
   FAST_TYPING_MAX_LEVEL,
@@ -10,6 +10,8 @@ import {
   fastTypingCost,
   linesPerClick,
 } from './game/formulas'
+import { CLIENT_COOLDOWN_MS, createInitialOffers, refillOffers, type Cooldowns } from './game/offers'
+import type { Contract } from './game/types'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
 type Notice = {
@@ -27,20 +29,20 @@ function App() {
   const [xp, setXp] = useState(0)
   const [rep, setRep] = useState(0)
   const [fastTypingLevel, setFastTypingLevel] = useState(0)
-  const [isActive, setIsActive] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(FIRST_CONTRACT.time)
+  const [offers, setOffers] = useState<Contract[]>(createInitialOffers)
+  const [cooldowns, setCooldowns] = useState<Cooldowns>({})
+  const [contract, setContract] = useState<Contract | null>(null)
+  const [timeLeft, setTimeLeft] = useState(0)
   const [isVisible, setIsVisible] = useState(() => document.visibilityState === 'visible')
   const [notice, setNotice] = useState<Notice | null>(null)
 
   // Ref: el tiempo "real" que usa el reloj. Cambiarlo NO provoca un render.
-  const timeLeftRef = useRef(FIRST_CONTRACT.time)
-
-  // Por ahora hay un único contrato que se repite; en el commit de ofertas pasará a ser estado
-  const contract = FIRST_CONTRACT
+  const timeLeftRef = useRef(0)
 
   // Valores derivados: se calculan a partir del estado en cada render
   const perClick = linesPerClick(fastTypingLevel)
-  const isComplete = code >= contract.code
+  const isActive = contract !== null
+  const isComplete = contract !== null && code >= contract.code
   const isRunning = isActive && !isComplete && isVisible
   const upgradeCost = fastTypingCost(fastTypingLevel)
   const isMaxLevel = fastTypingLevel >= FAST_TYPING_MAX_LEVEL
@@ -58,7 +60,7 @@ function App() {
 
   // Efecto 2: el reloj del contrato. Solo existe mientras isRunning sea true.
   useEffect(() => {
-    if (!isRunning) return
+    if (!isRunning || !contract) return
 
     let last = performance.now()
     const id = setInterval(() => {
@@ -77,7 +79,7 @@ function App() {
         setRep((prev) => Math.max(0, prev - FAILURE_REP_LOSS))
         setXp((prev) => prev + lostXp)
         setCode(0)
-        setIsActive(false)
+        setContract(null)
         setNotice({
           kind: 'error',
           text: `Se venció el plazo: ${contract.client} contrató a un primo. −5 % de dinero · −${FAILURE_REP_LOSS} ★ · +${lostXp} XP por la experiencia`,
@@ -89,27 +91,34 @@ function App() {
     return () => clearInterval(id)
   }, [isRunning, contract])
 
-  function acceptContract() {
-    timeLeftRef.current = contract.time
-    setTimeLeft(contract.time)
+  function acceptContract(offer: Contract) {
+    if (contract) return
+    // El cliente aceptado entra en cooldown y su lugar en el tablón se completa al instante
+    const nextCooldowns = { ...cooldowns, [offer.id]: Date.now() + CLIENT_COOLDOWN_MS }
+    const remaining = offers.filter((o) => o.uid !== offer.uid)
+    setCooldowns(nextCooldowns)
+    setOffers(refillOffers(remaining, nextCooldowns, offer.id, Date.now()))
+
+    timeLeftRef.current = offer.time
+    setTimeLeft(offer.time)
     setCode(0)
-    setIsActive(true)
+    setContract(offer)
     setNotice(null)
   }
 
   function program() {
-    if (!isActive || isComplete) return
+    if (!contract || isComplete) return
     setCode((prev) => addCode(prev, perClick, contract.code))
   }
 
   function deliver() {
-    if (!isComplete) return
+    if (!contract || !isComplete) return
     const { reward } = contract
     setMoney((prev) => prev + reward.money)
     setXp((prev) => prev + reward.xp)
     setRep((prev) => prev + reward.rep)
     setCode(0) // el código no se acumula entre contratos (GDD §3)
-    setIsActive(false)
+    setContract(null)
     setNotice({
       kind: 'success',
       text: `${contract.client} pagó: +$${reward.money} · +${reward.xp} XP · +${reward.rep} ★`,
@@ -162,43 +171,35 @@ function App() {
         <p className="font-mono text-sm text-muted">⏸ Pestaña oculta: el tiempo está en pausa</p>
       )}
 
-      <ContractCard contract={contract} code={code} timeLeft={timeLeft} isActive={isActive} />
+      {contract ? (
+        <>
+          <ContractCard contract={contract} code={code} timeLeft={timeLeft} isActive />
+          <div className="grid w-full max-w-md grid-cols-[1fr_auto] gap-3">
+            <button
+              type="button"
+              onClick={program}
+              disabled={isComplete}
+              className="h-20 cursor-pointer rounded-2xl bg-linear-to-b from-[#6dffa0] to-[#2fd36b] text-2xl font-extrabold text-[#062312] shadow-[0_5px_0_#17803f] transition-[transform,box-shadow] duration-75 active:translate-y-1 active:shadow-[0_1px_0_#17803f] disabled:cursor-default disabled:from-panel-2 disabled:to-panel-2 disabled:text-faint disabled:shadow-[0_5px_0_#0c0f19] disabled:active:translate-y-0"
+            >
+              Programar
+              <span className="block font-mono text-xs font-semibold opacity-70">
+                {isComplete ? 'objetivo alcanzado' : `+${perClick} ${perClick === 1 ? 'línea' : 'líneas'}`}
+              </span>
+            </button>
 
-      {isActive ? (
-        <div className="grid w-full max-w-md grid-cols-[1fr_auto] gap-3">
-          <button
-            type="button"
-            onClick={program}
-            disabled={isComplete}
-            className="h-20 cursor-pointer rounded-2xl bg-linear-to-b from-[#6dffa0] to-[#2fd36b] text-2xl font-extrabold text-[#062312] shadow-[0_5px_0_#17803f] transition-[transform,box-shadow] duration-75 active:translate-y-1 active:shadow-[0_1px_0_#17803f] disabled:cursor-default disabled:from-panel-2 disabled:to-panel-2 disabled:text-faint disabled:shadow-[0_5px_0_#0c0f19] disabled:active:translate-y-0"
-          >
-            Programar
-            <span className="block font-mono text-xs font-semibold opacity-70">
-              {isComplete ? 'objetivo alcanzado' : `+${perClick} ${perClick === 1 ? 'línea' : 'líneas'}`}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={deliver}
-            disabled={!isComplete}
-            className="h-20 cursor-pointer rounded-2xl bg-linear-to-b from-[#ffd98a] to-[#ffb938] px-5 font-mono font-bold text-[#2b1a00] shadow-[0_5px_0_#a8700f] transition-[transform,box-shadow] duration-75 active:translate-y-1 active:shadow-[0_1px_0_#a8700f] disabled:cursor-default disabled:from-panel-2 disabled:to-panel-2 disabled:text-faint disabled:shadow-none disabled:active:translate-y-0"
-          >
-            git push
-            <span className="block font-ui text-xs font-semibold opacity-80">Entregar</span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={deliver}
+              disabled={!isComplete}
+              className="h-20 cursor-pointer rounded-2xl bg-linear-to-b from-[#ffd98a] to-[#ffb938] px-5 font-mono font-bold text-[#2b1a00] shadow-[0_5px_0_#a8700f] transition-[transform,box-shadow] duration-75 active:translate-y-1 active:shadow-[0_1px_0_#a8700f] disabled:cursor-default disabled:from-panel-2 disabled:to-panel-2 disabled:text-faint disabled:shadow-none disabled:active:translate-y-0"
+            >
+              git push
+              <span className="block font-ui text-xs font-semibold opacity-80">Entregar</span>
+            </button>
+          </div>
+        </>
       ) : (
-        <button
-          type="button"
-          onClick={acceptContract}
-          className="h-20 w-full max-w-md cursor-pointer rounded-2xl border border-cyan/50 bg-cyan/10 text-xl font-extrabold text-cyan transition-colors hover:bg-cyan/20"
-        >
-          Aceptar contrato
-          <span className="block font-mono text-xs font-semibold opacity-70">
-            git checkout -b {contract.id} · el reloj arranca al aceptar
-          </span>
-        </button>
+        <OfferBoard offers={offers} perClick={perClick} onAccept={acceptContract} />
       )}
 
       <section className="w-full max-w-md rounded-xl border border-line bg-panel-2 p-4">

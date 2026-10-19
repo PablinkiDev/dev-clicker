@@ -41,3 +41,11 @@ export const FAILURE_REP_LOSS: number = 1
 export function failureXp(rewardXp: number): number {
   return Math.ceil(rewardXp * 0.2)
 }
+
+/** Clics por segundo que suponemos para estimar si un contrato llega a tiempo */
+export const ASSUMED_CLICKS_PER_SECOND: number = 5
+
+/** Segundos estimados para completar un contrato con la producción actual */
+export function estimateSeconds(code: number, perClick: number): number {
+  return code / (ASSUMED_CLICKS_PER_SECOND * perClick)
+}

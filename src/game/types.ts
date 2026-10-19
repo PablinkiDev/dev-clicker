@@ -6,8 +6,12 @@ export type Reward = {
   rep: number
 }
 
-export type Contract = {
+export type Difficulty = 'easy' | 'mid' | 'hard'
+
+/** Plantilla de un contrato: a partir de ella se generan las ofertas */
+export type ContractTemplate = {
   id: string
+  difficulty: Difficulty
   client: string
   title: string
   /** Lo que dice el cliente al hacer el pedido */
@@ -17,4 +21,11 @@ export type Contract = {
   /** Segundos de plazo desde que se acepta */
   time: number
   reward: Reward
+  /** Contrato que aparece una sola vez (el guiado) */
+  once?: boolean
+}
+
+/** Una oferta concreta del tablón: una plantilla con valores propios y un id único */
+export type Contract = ContractTemplate & {
+  uid: string
 }
