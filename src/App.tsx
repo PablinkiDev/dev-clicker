@@ -5,6 +5,7 @@ import {
   DEVELOPER_PRICE,
   FAILURE_REP_LOSS,
   FAST_TYPING_MAX_LEVEL,
+  ROOM_CAPACITY,
   addCode,
   autoRate,
   failureMoneyLoss,
@@ -45,7 +46,8 @@ function App() {
   // Valores derivados: se calculan a partir del estado en cada render
   const perClick = linesPerClick(fastTypingLevel)
   const auto = autoRate(developers)
-  const canHireDeveloper = money >= DEVELOPER_PRICE
+  const isTeamFull = developers >= ROOM_CAPACITY
+  const canHireDeveloper = !isTeamFull && money >= DEVELOPER_PRICE
   const isActive = contract !== null
   const isComplete = contract !== null && code >= contract.code
   const isRunning = isActive && !isComplete && isVisible
@@ -243,6 +245,9 @@ function App() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="font-bold">🧑‍💻 Desarrollador ★</p>
+            <p className="font-mono text-xs text-muted">
+              🏠 Habitación · {1 + developers}/{1 + ROOM_CAPACITY} puestos
+            </p>
             <p className="text-xs text-muted">Escribe +2 líneas/seg mientras haya un contrato activo</p>
           </div>
           <span className="text-right font-mono text-sm text-muted">
@@ -257,7 +262,7 @@ function App() {
           disabled={!canHireDeveloper}
           className="mt-3 w-full cursor-pointer rounded-lg border border-yellow/50 bg-yellow/15 py-2 font-mono text-sm font-bold text-yellow transition-colors hover:bg-yellow/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
         >
-          Contratar · ${DEVELOPER_PRICE.toLocaleString('es-AR')}
+          {isTeamFull ? '🪑 Habitación llena' : `Contratar · $${DEVELOPER_PRICE.toLocaleString('es-AR')}`}
         </button>
       </section>
     </main>

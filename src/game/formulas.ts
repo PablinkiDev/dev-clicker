@@ -60,3 +60,6 @@ export const DEVELOPER_RATE: number = 2
 export function autoRate(developers: number): number {
   return developers * DEVELOPER_RATE
 }
+
+/** Puestos para empleados en la habitación inicial: vos + 2 (GDD §6) */
+export const ROOM_CAPACITY: number = 2
