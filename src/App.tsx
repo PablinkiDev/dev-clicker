@@ -11,6 +11,9 @@ import StatusBar from './components/layout/StatusBar'
 import Terminal from './components/layout/Terminal'
 import TitleBar from './components/layout/TitleBar'
 import Toast from './components/layout/Toast'
+import EditorShop from './components/EditorShop'
+import { MenuBar, NanoBar } from './components/layout/EditorNav'
+import { getEditor } from './data/editors'
 import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
 import { CRIT_MULTIPLIER, autoRate, critChance, linesPerClick, skillCost } from './game/formulas'
@@ -30,7 +33,7 @@ function App() {
   // Todo el estado de la partida vive en un solo objeto; las reglas están en game/reducer.ts.
   // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva.
   const [state, dispatch] = useReducer(gameReducer, undefined, () => loadGame() ?? createInitialState())
-  const { code, money, xp, rep, skills, developers, offers, cooldowns, contract, timeLeft, notice, log } = state
+  const { code, money, xp, rep, skills, editor: editorId, developers, offers, cooldowns, contract, timeLeft, notice, log } = state
 
   // Estado de la interfaz (no es parte de la partida)
   const [view, setView] = useState<View>(() => (state.contract ? 'work' : 'board'))
@@ -38,7 +41,9 @@ function App() {
   const [critPop, setCritPop] = useState<{ id: number; lines: number } | null>(null)
 
   // Valores derivados
-  const perClick = linesPerClick(skills.fastTyping)
+  const editor = getEditor(editorId)
+  const { ideChrome } = editor.features
+  const perClick = linesPerClick(skills.fastTyping, editor.clickBonus)
   const auto = autoRate(developers)
   const isComplete = contract !== null && code >= contract.code
   const isRunning = contract !== null && !isComplete && isVisible
@@ -139,19 +144,25 @@ function App() {
   }
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
-      <TitleBar title={titles[currentView]} />
+    // data-editor activa la paleta del editor definida en index.css
+    <div data-editor={editor.id} className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text">
+      <TitleBar editor={editor.id} title={titles[currentView]} modified={contract !== null && code > 0} />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <ActivityBar
-          view={currentView}
-          onChange={setView}
-          offersCount={offers.length}
-          skillsAvailable={skillsAvailable}
-        />
-        <Sidebar contract={contract} offers={offers} developers={developers} money={money} onNavigate={setView} />
+        {ideChrome && (
+          <>
+            <ActivityBar
+              view={currentView}
+              onChange={setView}
+              offersCount={offers.length}
+              skillsAvailable={skillsAvailable}
+            />
+            <Sidebar contract={contract} offers={offers} developers={developers} money={money} onNavigate={setView} />
+          </>
+        )}
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {editor.id === 'bloc' && <MenuBar view={currentView} onChange={setView} />}
           <EconomyHud
             money={money}
             xp={xp}
@@ -160,18 +171,25 @@ function App() {
             auto={auto}
             critPercent={Math.round(critChance(skills.criticalCode) * 100)}
           />
-          <EditorTabs view={currentView} contract={contract} onChange={setView} />
+          {ideChrome && <EditorTabs view={currentView} contract={contract} onChange={setView} />}
 
           {currentView === 'work' && contract && (
             <div className="flex min-h-0 flex-1">
               <div className="flex min-w-0 flex-1 flex-col">
-                <p className="hidden shrink-0 gap-1.5 px-4.5 pt-1.5 font-mono text-[11px] text-faint md:flex">
-                  dev-clicker › en-curso › <b className="font-medium text-muted">{activeFile}</b>
-                </p>
+                {ideChrome && (
+                  <p className="hidden shrink-0 gap-1.5 px-4.5 pt-1.5 font-mono text-[11px] text-faint md:flex">
+                    dev-clicker › en-curso › <b className="font-medium text-muted">{activeFile}</b>
+                  </p>
+                )}
                 <ContractCard contract={contract} code={code} timeLeft={timeLeft} />
-                <CodeView contract={contract} code={code} />
+                <CodeView
+                  contract={contract}
+                  code={code}
+                  syntax={editor.features.syntax}
+                  lineNumbers={editor.features.lineNumbers}
+                />
               </div>
-              <Minimap code={code} target={contract.code} />
+              {ideChrome && <Minimap code={code} target={contract.code} />}
             </div>
           )}
           {currentView === 'board' && (
@@ -192,7 +210,12 @@ function App() {
             />
           )}
           {currentView === 'skills' && (
-            <SkillsScreen skills={skills} xp={xp} onBuy={(skill) => dispatch({ type: 'buySkill', skill })} />
+            <SkillsScreen
+              skills={skills}
+              xp={xp}
+              onBuy={(skill) => dispatch({ type: 'buySkill', skill })}
+              tools={<EditorShop editor={editor.id} money={money} onBuy={() => dispatch({ type: 'buyEditor' })} />}
+            />
           )}
 
           <ActionDock
@@ -212,15 +235,18 @@ function App() {
           >
             rm -rf partida/ · empezar de cero
           </button>
+          {editor.id === 'nano' && <NanoBar view={currentView} onChange={setView} />}
         </main>
       </div>
 
-      <StatusBar
-        line={Math.floor(code) + 1}
-        timeLeft={contract ? timeLeft : null}
-        isUrgent={isUrgent}
-        isPaused={contract !== null && !isVisible}
-      />
+      {ideChrome && (
+        <StatusBar
+          line={Math.floor(code) + 1}
+          timeLeft={contract ? timeLeft : null}
+          isUrgent={isUrgent}
+          isPaused={contract !== null && !isVisible}
+        />
+      )}
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
     </div>

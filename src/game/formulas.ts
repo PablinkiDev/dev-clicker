@@ -1,9 +1,9 @@
 // Fórmulas del juego como funciones puras: reciben datos y devuelven un resultado,
 // sin tocar React ni el estado. Así se pueden probar y reutilizar en cualquier lado.
 
-/** Líneas que suma cada clic según el nivel de "Escritura veloz": 1 + nivel */
-export function linesPerClick(fastTypingLevel: number): number {
-  return 1 + fastTypingLevel
+/** Líneas que suma cada clic: 1 + nivel de "Escritura veloz" + bonus del editor */
+export function linesPerClick(fastTypingLevel: number, editorBonus: number): number {
+  return 1 + fastTypingLevel + editorBonus
 }
 
 /**

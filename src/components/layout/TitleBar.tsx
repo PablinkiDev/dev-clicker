@@ -1,9 +1,45 @@
+import type { EditorId } from '../../data/editors'
+
 type TitleBarProps = {
+  editor: EditorId
   title: string
+  /** Hay un contrato con código sin entregar */
+  modified: boolean
 }
 
-/** Barra de título de la "ventana" del IDE (solo escritorio) */
-function TitleBar({ title }: TitleBarProps) {
+/** Barra de título de la "ventana" (solo escritorio). Cada editor tiene la suya */
+function TitleBar({ editor, title, modified }: TitleBarProps) {
+  if (editor === 'nano') {
+    return (
+      <header className="hidden h-6.5 shrink-0 items-center justify-between bg-text px-3 font-mono text-xs text-bg md:flex">
+        <span>nano 7.2</span>
+        <span>{title}</span>
+        <span>{modified ? 'Modificado' : ''}</span>
+      </header>
+    )
+  }
+
+  if (editor === 'bloc') {
+    return (
+      <header className="hidden h-8 shrink-0 items-center gap-2 bg-linear-to-r from-[#0a246a] via-[#3a6ea5] to-[#a6caf0] px-2.5 text-xs font-bold text-white md:flex">
+        <span>📝</span>
+        <span className="flex-1">
+          {modified ? '*' : ''}
+          {title} - Bloc de notas
+        </span>
+        {['—', '▢', '✕'].map((symbol) => (
+          <span
+            key={symbol}
+            className="grid h-4 w-4.5 place-items-center border border-t-white border-r-[#404040] border-b-[#404040] border-l-white bg-[#d4d0c8] text-[10px] text-black"
+          >
+            {symbol}
+          </span>
+        ))}
+      </header>
+    )
+  }
+
+  // IDE completo (VS Code en adelante)
   return (
     <header className="hidden h-9 shrink-0 items-center gap-3.5 border-b border-line bg-panel px-3.5 text-xs text-muted md:flex">
       <div className="flex gap-1.75">

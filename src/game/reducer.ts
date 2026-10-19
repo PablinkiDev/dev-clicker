@@ -15,6 +15,7 @@ import {
   xpMultiplier,
 } from './formulas'
 import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
+import { getEditor, nextEditor, type EditorId } from '../data/editors'
 import { createInitialOffers, type Cooldowns } from './offers'
 import type { Contract } from './types'
 
@@ -40,6 +41,7 @@ export type GameState = {
   xp: number
   rep: number
   skills: SkillLevels
+  editor: EditorId
   developers: number
   offers: Contract[]
   cooldowns: Cooldowns
@@ -65,6 +67,7 @@ export type GameAction =
   | { type: 'tick'; elapsed: number }
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'hireDeveloper' }
+  | { type: 'buyEditor' }
   // El tablón nuevo se arma afuera (usa azar y la hora) y llega ya calculado
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
   // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
@@ -78,6 +81,7 @@ export function createInitialState(): GameState {
     xp: 0,
     rep: 0,
     skills: INITIAL_SKILLS,
+    editor: 'nano',
     developers: 0,
     offers: createInitialOffers(),
     cooldowns: {},
@@ -107,7 +111,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'program': {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
-      const lines = linesPerClick(state.skills.fastTyping) * (action.crit ? CRIT_MULTIPLIER : 1)
+      const lines = linesPerClick(state.skills.fastTyping, getEditor(state.editor).clickBonus) * (action.crit ? CRIT_MULTIPLIER : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (action.crit) log = addLog(log, 'crit', `⚡ Crítico: +${lines} líneas sin un solo typo. Sospechoso.`)
@@ -192,6 +196,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'dismissNotice':
       return { ...state, notice: null }
+
+    case 'buyEditor': {
+      const next = nextEditor(state.editor)
+      if (!next || state.money < next.price) return state
+      return {
+        ...state,
+        money: state.money - next.price,
+        editor: next.id,
+        log: addLog(state.log, 'success', `Instalado ${next.name} · ${next.bonusText}`),
+      }
+    }
 
     case 'hireDeveloper': {
       if (state.developers >= ROOM_CAPACITY || state.money < DEVELOPER_PRICE) return state

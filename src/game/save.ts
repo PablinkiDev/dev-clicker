@@ -1,11 +1,12 @@
 // Guardado de la partida en localStorage, con versión y validación (GDD §14).
+import { EDITORS } from '../data/editors'
 import { INITIAL_SKILLS } from '../data/skills'
 import type { GameState } from './reducer'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 2
+export const SAVE_VERSION: number = 3
 
 type SaveFile = {
   version: number
@@ -51,20 +52,25 @@ export function clearSave(): void {
 // --- Migraciones -------------------------------------------------------------
 // Cada vez que cambia la forma del estado, un guardado viejo se actualiza paso a paso.
 
-function migrate(file: unknown): unknown {
-  if (!isObject(file) || !isObject(file.state)) return file
+function migrate(raw: unknown): unknown {
+  if (!isObject(raw) || !isObject(raw.state)) return raw
+  let file: Record<string, unknown> = raw
+  let state: Record<string, unknown> = raw.state
 
   // v1 → v2: el nivel de "Escritura veloz" pasó a vivir dentro de skills
   if (file.version === 1) {
-    const { fastTypingLevel, ...rest } = file.state
-    file = {
-      ...file,
-      version: 2,
-      state: { ...rest, skills: { ...INITIAL_SKILLS, fastTyping: isNumber(fastTypingLevel) ? fastTypingLevel : 0 } },
-    }
+    const { fastTypingLevel, ...rest } = state
+    state = { ...rest, skills: { ...INITIAL_SKILLS, fastTyping: isNumber(fastTypingLevel) ? fastTypingLevel : 0 } }
+    file = { ...file, version: 2 }
   }
 
-  return file
+  // v2 → v3: aparecen los editores; las partidas viejas arrancan en Nano
+  if (file.version === 2) {
+    state = { ...state, editor: 'nano' }
+    file = { ...file, version: 3 }
+  }
+
+  return { ...file, state }
 }
 
 // --- Validación -------------------------------------------------------------
@@ -98,6 +104,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     ['code', 'money', 'xp', 'rep', 'developers', 'timeLeft'].every((key) => isNumber(s[key])) &&
     isObject(skills) &&
     Object.keys(INITIAL_SKILLS).every((key) => isNumber(skills[key])) &&
+    EDITORS.some((e) => e.id === s.editor) &&
     Array.isArray(s.offers) &&
     s.offers.every(isContract) &&
     isObject(s.cooldowns) &&
