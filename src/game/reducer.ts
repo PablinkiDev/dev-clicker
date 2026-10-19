@@ -46,6 +46,8 @@ export type GameAction =
   | { type: 'hireDeveloper' }
   // El tablón nuevo se arma afuera (usa azar y la hora) y llega ya calculado
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
+  // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
+  | { type: 'reset'; state: GameState }
 
 export function createInitialState(): GameState {
   return {
@@ -141,6 +143,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.fastTypingLevel >= FAST_TYPING_MAX_LEVEL || state.xp < cost) return state
       return { ...state, xp: state.xp - cost, fastTypingLevel: state.fastTypingLevel + 1 }
     }
+
+    case 'reset':
+      return action.state
 
     case 'hireDeveloper': {
       if (state.developers >= ROOM_CAPACITY || state.money < DEVELOPER_PRICE) return state

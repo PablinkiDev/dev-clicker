@@ -11,6 +11,7 @@ import {
 } from './game/formulas'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
 import { createInitialState, gameReducer } from './game/reducer'
+import { clearSave, loadGame, saveGame } from './game/save'
 import type { Contract } from './game/types'
 
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
@@ -18,7 +19,8 @@ const TICK_MS = 100
 
 function App() {
   // Todo el estado del juego vive en un solo objeto; las reglas están en game/reducer.ts
-  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState)
+  // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva
+  const [state, dispatch] = useReducer(gameReducer, undefined, () => loadGame() ?? createInitialState())
   const { code, money, xp, rep, fastTypingLevel, developers, offers, cooldowns, contract, timeLeft, notice } =
     state
 
@@ -46,7 +48,12 @@ function App() {
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [])
 
-  // Efecto 2: el reloj. Solo avisa cuánto tiempo pasó; el reducer decide qué significa.
+  // Efecto 2: guardar la partida cada vez que cambia el estado
+  useEffect(() => {
+    saveGame(state)
+  }, [state])
+
+  // Efecto 3: el reloj. Solo avisa cuánto tiempo pasó; el reducer decide qué significa.
   useEffect(() => {
     if (!isRunning) return
 
@@ -72,6 +79,12 @@ function App() {
       offers: refillOffers(remaining, nextCooldowns, offer.id, now),
       cooldowns: nextCooldowns,
     })
+  }
+
+  function resetGame() {
+    if (!window.confirm('¿Borrar la partida y empezar de cero? No se puede deshacer.')) return
+    clearSave()
+    dispatch({ type: 'reset', state: createInitialState() })
   }
 
   const program = () => dispatch({ type: 'program' })
@@ -195,6 +208,14 @@ function App() {
           {isTeamFull ? '🪑 Habitación llena' : `Contratar · $${DEVELOPER_PRICE.toLocaleString('es-AR')}`}
         </button>
       </section>
+
+      <button
+        type="button"
+        onClick={resetGame}
+        className="cursor-pointer font-mono text-xs text-faint underline-offset-4 hover:text-red hover:underline"
+      >
+        rm -rf partida/ · empezar de cero
+      </button>
     </main>
   )
 }
