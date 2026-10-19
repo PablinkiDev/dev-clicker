@@ -31,12 +31,12 @@ function SettingsScreen({ editor, look, onLookChange, onReset }: SettingsScreenP
                 type="button"
                 onClick={() => onLookChange(e.id)}
                 disabled={!isOwned}
-                className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left disabled:cursor-default disabled:opacity-50 ${
+                className={`flex h-full w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left disabled:cursor-default disabled:opacity-50 ${
                   isSelected ? 'border-green bg-green/10' : 'border-line bg-panel-2 enabled:hover:border-line-2'
                 }`}
               >
                 <span className="font-bold">{e.name}</span>
-                <span className="font-mono text-xs text-muted">
+                <span className="shrink-0 font-mono text-xs text-muted">
                   {isSelected ? '✓ en uso' : isOwned ? 'usar' : `🔒 ${formatMoney(e.price)}`}
                 </span>
               </button>
