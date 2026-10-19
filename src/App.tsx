@@ -1,14 +1,9 @@
 import { useEffect, useReducer, useState } from 'react'
 import ContractCard from './components/ContractCard'
 import OfferBoard from './components/OfferBoard'
-import {
-  DEVELOPER_PRICE,
-  FAST_TYPING_MAX_LEVEL,
-  ROOM_CAPACITY,
-  autoRate,
-  fastTypingCost,
-  linesPerClick,
-} from './game/formulas'
+import SkillCard from './components/SkillCard'
+import { SKILLS } from './data/skills'
+import { CRIT_MULTIPLIER, DEVELOPER_PRICE, ROOM_CAPACITY, autoRate, critChance, linesPerClick } from './game/formulas'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
 import { createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
@@ -21,23 +16,22 @@ function App() {
   // Todo el estado del juego vive en un solo objeto; las reglas están en game/reducer.ts
   // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva
   const [state, dispatch] = useReducer(gameReducer, undefined, () => loadGame() ?? createInitialState())
-  const { code, money, xp, rep, fastTypingLevel, developers, offers, cooldowns, contract, timeLeft, notice } =
+  const { code, money, xp, rep, skills, developers, offers, cooldowns, contract, timeLeft, notice } =
     state
 
   // Estado de la interfaz (no es parte de la partida): si la pestaña está visible
   const [isVisible, setIsVisible] = useState(() => document.visibilityState === 'visible')
+  // Último crítico, para mostrar el "+N" flotante. El id cambia en cada crítico y reinicia la animación
+  const [critPop, setCritPop] = useState<{ id: number; lines: number } | null>(null)
 
   // Valores derivados: se calculan a partir del estado en cada render
-  const perClick = linesPerClick(fastTypingLevel)
+  const perClick = linesPerClick(skills.fastTyping)
   const auto = autoRate(developers)
   const isTeamFull = developers >= ROOM_CAPACITY
   const canHireDeveloper = !isTeamFull && money >= DEVELOPER_PRICE
   const isActive = contract !== null
   const isComplete = contract !== null && code >= contract.code
   const isRunning = isActive && !isComplete && isVisible
-  const upgradeCost = fastTypingCost(fastTypingLevel)
-  const isMaxLevel = fastTypingLevel >= FAST_TYPING_MAX_LEVEL
-  const canBuyUpgrade = !isMaxLevel && xp >= upgradeCost
 
   // Efecto 1: escuchar si la pestaña se oculta o vuelve a verse
   useEffect(() => {
@@ -87,10 +81,15 @@ function App() {
     dispatch({ type: 'reset', state: createInitialState() })
   }
 
-  const program = () => dispatch({ type: 'program' })
+  function program() {
+    // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
+    const crit = Math.random() < critChance(skills.criticalCode)
+    dispatch({ type: 'program', crit })
+    if (crit) setCritPop({ id: Date.now(), lines: perClick * CRIT_MULTIPLIER })
+  }
+
   const deliver = () => dispatch({ type: 'deliver' })
   const hireDeveloper = () => dispatch({ type: 'hireDeveloper' })
-  const buyUpgrade = () => dispatch({ type: 'buyFastTyping' })
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-4">
@@ -135,7 +134,7 @@ function App() {
       {contract ? (
         <>
           <ContractCard contract={contract} code={code} timeLeft={timeLeft} isActive />
-          <div className="grid w-full max-w-md grid-cols-[1fr_auto] gap-3">
+          <div className="relative grid w-full max-w-md grid-cols-[1fr_auto] gap-3">
             <button
               type="button"
               onClick={program}
@@ -147,6 +146,15 @@ function App() {
                 {isComplete ? 'objetivo alcanzado' : `+${perClick} ${perClick === 1 ? 'línea' : 'líneas'}`}
               </span>
             </button>
+
+            {critPop && (
+              <span
+                key={critPop.id}
+                className="pointer-events-none absolute -top-3 left-1/3 -translate-x-1/2 animate-float-up font-mono text-xl font-extrabold text-yellow"
+              >
+                ⚡ ¡Crítico! +{critPop.lines}
+              </span>
+            )}
 
             <button
               type="button"
@@ -163,25 +171,19 @@ function App() {
         <OfferBoard offers={offers} perClick={perClick} autoRate={auto} onAccept={acceptContract} />
       )}
 
-      <section className="w-full max-w-md rounded-xl border border-line bg-panel-2 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="font-bold">⌨ Escritura veloz</p>
-            <p className="text-xs text-muted">+1 línea por clic por nivel</p>
-          </div>
-          <span className="font-mono text-sm text-muted">
-            Nv. {fastTypingLevel}/{FAST_TYPING_MAX_LEVEL}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={buyUpgrade}
-          disabled={!canBuyUpgrade}
-          className="mt-3 w-full cursor-pointer rounded-lg border border-purple/50 bg-purple/15 py-2 font-mono text-sm font-bold text-purple transition-colors hover:bg-purple/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
-        >
-          {isMaxLevel ? '✓ Nivel máximo' : `Mejorar · ${upgradeCost} XP`}
-        </button>
+      <section className="w-full max-w-md">
+        <p className="mb-2 font-mono text-xs text-muted">mejoras/ · se pagan con XP</p>
+        <ul className="flex flex-col gap-3">
+          {SKILLS.map((skill) => (
+            <SkillCard
+              key={skill.id}
+              skill={skill}
+              level={skills[skill.id]}
+              xp={xp}
+              onBuy={() => dispatch({ type: 'buySkill', skill: skill.id })}
+            />
+          ))}
+        </ul>
       </section>
 
       <section className="w-full max-w-md rounded-xl border border-line bg-panel-2 p-4">

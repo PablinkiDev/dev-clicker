@@ -22,6 +22,15 @@
 
   --font-ui: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --animate-float-up: float-up 0.7s ease-out forwards;
+
+  @keyframes float-up {
+    to {
+      transform: translateY(-48px);
+      opacity: 0;
+    }
+  }
 }
 
 /* Es un juego: evitamos que los clics rápidos seleccionen texto */

@@ -4,15 +4,17 @@
 import {
   DEVELOPER_PRICE,
   FAILURE_REP_LOSS,
-  FAST_TYPING_MAX_LEVEL,
+  CRIT_MULTIPLIER,
   ROOM_CAPACITY,
   addCode,
   autoRate,
   failureMoneyLoss,
   failureXp,
-  fastTypingCost,
   linesPerClick,
+  skillCost,
+  xpMultiplier,
 } from './formulas'
+import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
 import { createInitialOffers, type Cooldowns } from './offers'
 import type { Contract } from './types'
 
@@ -27,7 +29,7 @@ export type GameState = {
   money: number
   xp: number
   rep: number
-  fastTypingLevel: number
+  skills: SkillLevels
   developers: number
   offers: Contract[]
   cooldowns: Cooldowns
@@ -39,10 +41,11 @@ export type GameState = {
 
 /** Todo lo que puede pasar en el juego. Cada acción describe QUÉ pasó, no cómo cambia el estado */
 export type GameAction =
-  | { type: 'program' }
+  // Si el clic fue crítico se decide afuera (es azar) con la probabilidad de critChance()
+  | { type: 'program'; crit: boolean }
   | { type: 'deliver' }
   | { type: 'tick'; elapsed: number }
-  | { type: 'buyFastTyping' }
+  | { type: 'buySkill'; skill: SkillId }
   | { type: 'hireDeveloper' }
   // El tablón nuevo se arma afuera (usa azar y la hora) y llega ya calculado
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
@@ -55,7 +58,7 @@ export function createInitialState(): GameState {
     money: 0,
     xp: 0,
     rep: 0,
-    fastTypingLevel: 0,
+    skills: INITIAL_SKILLS,
     developers: 0,
     offers: createInitialOffers(),
     cooldowns: {},
@@ -83,26 +86,25 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'program': {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
-      return {
-        ...state,
-        code: addCode(state.code, linesPerClick(state.fastTypingLevel), contract.code),
-      }
+      const lines = linesPerClick(state.skills.fastTyping) * (action.crit ? CRIT_MULTIPLIER : 1)
+      return { ...state, code: addCode(state.code, lines, contract.code) }
     }
 
     case 'deliver': {
       const { contract } = state
       if (!contract || state.code < contract.code) return state
       const { reward } = contract
+      const xp = Math.round(reward.xp * xpMultiplier(state.skills.logicalThinking))
       return {
         ...state,
         money: state.money + reward.money,
-        xp: state.xp + reward.xp,
+        xp: state.xp + xp,
         rep: state.rep + reward.rep,
         code: 0, // el código no se acumula entre contratos (GDD §3)
         contract: null,
         notice: {
           kind: 'success',
-          text: `${contract.client} pagó: +$${reward.money.toLocaleString('es-AR')} · +${reward.xp} XP · +${reward.rep} ★`,
+          text: `${contract.client} pagó: +$${reward.money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
         },
       }
     }
@@ -138,10 +140,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
     }
 
-    case 'buyFastTyping': {
-      const cost = fastTypingCost(state.fastTypingLevel)
-      if (state.fastTypingLevel >= FAST_TYPING_MAX_LEVEL || state.xp < cost) return state
-      return { ...state, xp: state.xp - cost, fastTypingLevel: state.fastTypingLevel + 1 }
+    case 'buySkill': {
+      const skill = SKILLS.find((s) => s.id === action.skill)
+      if (!skill) return state
+      const level = state.skills[skill.id]
+      const cost = skillCost(skill.baseCost, level)
+      if (level >= skill.maxLevel || state.xp < cost) return state
+      return {
+        ...state,
+        xp: state.xp - cost,
+        skills: { ...state.skills, [skill.id]: level + 1 },
+      }
     }
 
     case 'reset':
