@@ -164,7 +164,7 @@ function App() {
               offersCount={offers.length}
               skillsAvailable={skillsAvailable}
             />
-            <Sidebar contract={contract} offers={offers} developers={developers} money={money} onNavigate={setView} />
+            <Sidebar contract={contract} offers={offers} developers={developers} office={state.office} money={money} onNavigate={setView} />
           </>
         )}
 
@@ -221,9 +221,11 @@ function App() {
           {currentView === 'team' && (
             <TeamScreen
               developers={developers}
+              office={state.office}
               money={money}
               isWorking={isRunning}
               onHire={() => dispatch({ type: 'hireDeveloper' })}
+              onMove={() => dispatch({ type: 'moveOffice' })}
             />
           )}
           {currentView === 'settings' && (

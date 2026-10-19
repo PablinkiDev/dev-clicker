@@ -1,4 +1,5 @@
-import { DEVELOPER_PRICE, ROOM_CAPACITY } from '../../game/formulas'
+import { OFFICES } from '../../data/offices'
+import { DEVELOPER_PRICE } from '../../game/formulas'
 import { fileName, formatMoney } from '../../game/format'
 import type { Contract, Difficulty } from '../../game/types'
 import type { View } from '../../ui'
@@ -7,6 +8,7 @@ type SidebarProps = {
   contract: Contract | null
   offers: Contract[]
   developers: number
+  office: number
   money: number
   onNavigate: (view: View) => void
 }
@@ -29,7 +31,7 @@ function Folder({ children, extra }: { children: string; extra?: string }) {
 const FILE_ROW = 'flex h-6.5 w-full cursor-pointer items-center gap-1.5 rounded-md pr-2 pl-5.5 text-left text-[13px]'
 
 /** Explorador de archivos: el estado del juego visto como un proyecto */
-function Sidebar({ contract, offers, developers, money, onNavigate }: SidebarProps) {
+function Sidebar({ contract, offers, developers, office, money, onNavigate }: SidebarProps) {
   const goal = Math.min(100, (money / DEVELOPER_PRICE) * 100)
 
   return (
@@ -64,7 +66,7 @@ function Sidebar({ contract, offers, developers, money, onNavigate }: SidebarPro
           </button>
         ))}
 
-        <Folder extra={`${1 + developers}/${1 + ROOM_CAPACITY}`}>equipo</Folder>
+        <Folder extra={`${1 + developers}/${1 + OFFICES[office].capacity}`}>equipo</Folder>
         <button type="button" onClick={() => onNavigate('team')} className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}>
           <span className="w-4 text-center text-green">●</span>vos.exe
         </button>

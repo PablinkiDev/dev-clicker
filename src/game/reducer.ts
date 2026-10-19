@@ -4,7 +4,6 @@
 import {
   DEVELOPER_PRICE,
   FAILURE_REP_LOSS,
-  ROOM_CAPACITY,
   addCode,
   autoRate,
   failureMoneyLoss,
@@ -16,6 +15,7 @@ import {
 import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
 import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
+import { OFFICES } from '../data/offices'
 import { createInitialOffers, type Cooldowns } from './offers'
 import type { Contract } from './types'
 
@@ -55,6 +55,8 @@ export type GameState = {
   /** Accesibilidad: fuerza colores oscuros en los editores claros. Siempre gratis */
   dim: boolean
   developers: number
+  /** Índice de la oficina actual en OFFICES */
+  office: number
   offers: Contract[]
   cooldowns: Cooldowns
   /** Contrato en curso; null si no hay ninguno aceptado */
@@ -80,6 +82,7 @@ export type GameAction =
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
   | { type: 'hireDeveloper' }
+  | { type: 'moveOffice' }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
   | { type: 'toggleDarkMode' }
@@ -103,6 +106,7 @@ export function createInitialState(): GameState {
     darkMode: { owned: false, on: false },
     dim: false,
     developers: 0,
+    office: 0,
     offers: createInitialOffers(INITIAL_TECH),
     cooldowns: {},
     contract: null,
@@ -283,8 +287,19 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
     }
 
+    case 'moveOffice': {
+      const next = OFFICES[state.office + 1]
+      if (!next || state.money < next.price) return state
+      return {
+        ...state,
+        money: state.money - next.price,
+        office: state.office + 1,
+        log: addLog(state.log, 'success', `📦 Mudanza a ${next.name} · ahora entran ${next.capacity} empleados`),
+      }
+    }
+
     case 'hireDeveloper': {
-      if (state.developers >= ROOM_CAPACITY || state.money < DEVELOPER_PRICE) return state
+      if (state.developers >= OFFICES[state.office].capacity || state.money < DEVELOPER_PRICE) return state
       return {
         ...state,
         money: state.money - DEVELOPER_PRICE,
