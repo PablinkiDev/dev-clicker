@@ -2,10 +2,10 @@
 // sin tocar React ni el estado. Así se pueden probar y reutilizar en cualquier lado.
 
 /** Nivel máximo de "Escritura veloz" (GDD §8) */
-export const FAST_TYPING_MAX_LEVEL = 5
+export const FAST_TYPING_MAX_LEVEL: number = 5
 
-/** Costo base de "Escritura veloz" (GDD §8) */
-const FAST_TYPING_BASE_COST = 30
+/** Costo base de "Escritura veloz" en XP (GDD §8) */
+const FAST_TYPING_BASE_COST: number = 30
 
 /** Líneas que suma cada clic según el nivel de "Escritura veloz": 1 + nivel */
 export function linesPerClick(fastTypingLevel: number): number {
@@ -19,4 +19,12 @@ export function linesPerClick(fastTypingLevel: number): number {
  */
 export function fastTypingCost(currentLevel: number): number {
   return Math.ceil(FAST_TYPING_BASE_COST * Math.pow(1.5, currentLevel))
+}
+
+/**
+ * Suma código sin pasarse del objetivo del contrato (GDD §11):
+ * min(código objetivo, código actual + producción)
+ */
+export function addCode(current: number, amount: number, target: number): number {
+  return Math.min(target, current + amount)
 }
