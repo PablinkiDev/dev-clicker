@@ -1,7 +1,7 @@
 // Editores de código: se compran con dinero y cambian toda la interfaz.
-// Por ahora existen Nano y Bloc de notas; el resto se suma de a uno.
+// Se suman de a uno, en el orden en que se compran.
 
-export type EditorId = 'nano' | 'bloc'
+export type EditorId = 'nano' | 'bloc' | 'notepad'
 
 /** Qué partes del IDE tiene cada editor */
 export type EditorFeatures = {
@@ -11,6 +11,8 @@ export type EditorFeatures = {
   lineNumbers: boolean
   /** Explorador, pestañas, minimapa y barra de estado: el IDE "completo" */
   ideChrome: boolean
+  /** Cómo se navega: atajos de Nano, menú de ventana o barra de actividad del IDE */
+  nav: 'nano' | 'menu' | 'ide'
 }
 
 export type Editor = {
@@ -19,6 +21,8 @@ export type Editor = {
   price: number
   /** Líneas extra por clic que suma este editor */
   clickBonus: number
+  /** Probabilidad extra de crítico (0.05 = +5 %) */
+  critBonus: number
   bonusText: string
   features: EditorFeatures
 }
@@ -29,16 +33,27 @@ export const EDITORS: Editor[] = [
     name: 'Nano',
     price: 0,
     clickBonus: 0,
+    critBonus: 0,
     bonusText: 'Sin mouse, sin colores, sin miedo',
-    features: { syntax: false, lineNumbers: false, ideChrome: false },
+    features: { syntax: false, lineNumbers: false, ideChrome: false, nav: 'nano' },
   },
   {
     id: 'bloc',
     name: 'Bloc de notas',
     price: 250,
     clickBonus: 1,
+    critBonus: 0,
     bonusText: '+1 línea por clic: ¡ahora usás el mouse!',
-    features: { syntax: false, lineNumbers: false, ideChrome: false },
+    features: { syntax: false, lineNumbers: false, ideChrome: false, nav: 'menu' },
+  },
+  {
+    id: 'notepad',
+    name: 'Notepad',
+    price: 800,
+    clickBonus: 1,
+    critBonus: 0.05,
+    bonusText: 'Resaltado de sintaxis: +5 % de probabilidad de crítico',
+    features: { syntax: true, lineNumbers: true, ideChrome: false, nav: 'menu' },
   },
 ]
 

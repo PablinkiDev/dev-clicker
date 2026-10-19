@@ -54,8 +54,9 @@
   --font-ui: "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* Bloc de notas: Windows 98 suavizado. Gris cálido alrededor, papel solo donde se escribe */
-[data-editor='bloc'] {
+/* Bloc de notas (Windows 98) y Notepad (XP): gris cálido alrededor, papel solo donde se escribe */
+[data-editor='bloc'],
+[data-editor='notepad'] {
   --color-bg: #d4d0c8;
   --color-panel: #d4d0c8;
   --color-panel-2: #e4e1d8;
@@ -76,7 +77,18 @@
   --font-mono: Consolas, "Courier New", monospace;
 }
 
-[data-editor='bloc'] .code-view {
+/* Notepad: resaltado clásico sobre papel */
+[data-editor='notepad'] {
+  --syn-comment: #008000;
+  --syn-tag: #0000ff;
+  --syn-string: #8000ff;
+  --syn-attr: #c00000;
+  --syn-number: #ff8000;
+  --syn-keyword: #000080;
+}
+
+[data-editor='bloc'] .code-view,
+[data-editor='notepad'] .code-view {
   margin: 0 12px 10px;
   background: #fbfaf3;
   border: 2px solid;

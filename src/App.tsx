@@ -115,7 +115,7 @@ function App() {
 
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
-    const crit = Math.random() < critChance(skills.criticalCode)
+    const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
     dispatch({ type: 'program', crit })
     if (crit) setCritPop({ id: Date.now(), lines: perClick * CRIT_MULTIPLIER })
   }
@@ -162,14 +162,14 @@ function App() {
         )}
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {editor.id === 'bloc' && <MenuBar view={currentView} onChange={setView} />}
+          {editor.features.nav === 'menu' && <MenuBar editor={editor.id} view={currentView} onChange={setView} />}
           <EconomyHud
             money={money}
             xp={xp}
             rep={rep}
             perClick={perClick}
             auto={auto}
-            critPercent={Math.round(critChance(skills.criticalCode) * 100)}
+            critPercent={Math.round(critChance(skills.criticalCode, editor.critBonus) * 100)}
           />
           {ideChrome && <EditorTabs view={currentView} contract={contract} onChange={setView} />}
 
@@ -235,7 +235,7 @@ function App() {
           >
             rm -rf partida/ · empezar de cero
           </button>
-          {editor.id === 'nano' && <NanoBar view={currentView} onChange={setView} />}
+          {editor.features.nav === 'nano' && <NanoBar view={currentView} onChange={setView} />}
         </main>
       </div>
 

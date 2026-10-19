@@ -28,7 +28,12 @@ export function NanoBar({ view, onChange }: Omit<EditorNavProps, 'editor'>) {
  * Menú de Bloc de notas: las opciones que funcionan van en negrita y primero;
  * después vienen los menús de época, que son solo decorado.
  */
-export function MenuBar({ view, onChange }: Omit<EditorNavProps, 'editor'>) {
+const DECOR_MENUS: Partial<Record<EditorId, string[]>> = {
+  bloc: ['Archivo', 'Editar', 'Formato', 'Ver', 'Ayuda'],
+  notepad: ['Archivo', 'Editar', 'Buscar', 'Vista', 'Codificación', 'Lenguaje', 'Configuración', 'Macro', 'Ejecutar', 'Plugins', 'Ventana', '?'],
+}
+
+export function MenuBar({ editor, view, onChange }: EditorNavProps) {
   return (
     <nav className="flex shrink-0 items-center gap-px overflow-x-auto border-b border-line bg-panel px-1.5 py-0.5 text-[13px] [scrollbar-width:none]">
       {VIEWS.map((v) => (
@@ -36,7 +41,7 @@ export function MenuBar({ view, onChange }: Omit<EditorNavProps, 'editor'>) {
           key={v}
           type="button"
           onClick={() => onChange(v)}
-          className={`cursor-pointer px-2.5 py-1 font-bold whitespace-nowrap hover:bg-[#0a246a] hover:text-white ${
+          className={`cursor-pointer px-2.5 py-1 font-bold whitespace-nowrap hover:bg-blue hover:text-white ${
             v === view ? 'underline decoration-2 underline-offset-4' : ''
           }`}
         >
@@ -44,7 +49,7 @@ export function MenuBar({ view, onChange }: Omit<EditorNavProps, 'editor'>) {
         </button>
       ))}
       <i className="mx-1.5 my-1 w-px self-stretch bg-line-2" />
-      {['Archivo', 'Editar', 'Formato', 'Ver', 'Ayuda'].map((item) => (
+      {(DECOR_MENUS[editor] ?? []).map((item) => (
         <span key={item} className="px-2.5 py-1 whitespace-nowrap text-muted">
           {item}
         </span>

@@ -39,6 +39,27 @@ function TitleBar({ editor, title, modified }: TitleBarProps) {
     )
   }
 
+  if (editor === 'notepad') {
+    return (
+      <header className="hidden h-8 shrink-0 items-center gap-2 bg-linear-to-b from-[#3d8ff5] via-[#0a5fd8] to-[#0653c9] px-2.5 text-xs font-bold text-white md:flex">
+        <span>📒</span>
+        <span className="flex-1">
+          {modified ? '*' : ''}C:\\clientes\\{title} - Notepad
+        </span>
+        {['—', '▢', '✕'].map((symbol) => (
+          <span
+            key={symbol}
+            className={`grid h-4.5 w-5 place-items-center rounded-[3px] border border-white text-[10px] ${
+              symbol === '✕' ? 'bg-linear-to-b from-[#f08a6a] to-[#d2401c]' : 'bg-linear-to-b from-[#5aa0ff] to-[#1a62d8]'
+            }`}
+          >
+            {symbol}
+          </span>
+        ))}
+      </header>
+    )
+  }
+
   // IDE completo (VS Code en adelante)
   return (
     <header className="hidden h-9 shrink-0 items-center gap-3.5 border-b border-line bg-panel px-3.5 text-xs text-muted md:flex">

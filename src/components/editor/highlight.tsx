@@ -6,14 +6,15 @@ import type { ReactNode } from 'react'
 const TOKEN =
   /(<!--.*?-->|\/\*.*?\*\/)|(<\/?[\w!-]+|\/?>)|("[^"]*"|'[^']*')|([\w-]+)(?==)|([.#@][\w-]+)|(\b\d+(?:\.\d+)?(?:px|rem|s|%|deg)?\b)|(!important|\b(?:display|transform|animation|background|cursor|padding|font-size|z-index|opacity|gap|border-radius)\b)/g
 
+// Cada color usa una variable --syn-* (definida por el editor en index.css) y, si no existe, la paleta común
 const CLASSES = [
-  'text-faint italic', // comentario
-  'text-red', // etiqueta
-  'text-green', // texto entre comillas
-  'text-yellow', // atributo
-  'text-yellow', // selector
-  'text-orange', // número
-  'text-cyan', // palabra clave / propiedad
+  'text-(--syn-comment,var(--color-faint)) italic', // comentario
+  'text-(--syn-tag,var(--color-red))', // etiqueta
+  'text-(--syn-string,var(--color-green))', // texto entre comillas
+  'text-(--syn-attr,var(--color-yellow))', // atributo
+  'text-(--syn-attr,var(--color-yellow))', // selector
+  'text-(--syn-number,var(--color-orange))', // número
+  'text-(--syn-keyword,var(--color-cyan))', // palabra clave / propiedad
 ]
 
 export function highlight(line: string): ReactNode[] {
