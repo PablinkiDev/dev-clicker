@@ -1,34 +1,42 @@
-import type { Skill } from '../data/skills'
-import { skillCost } from '../game/formulas'
-
 type SkillCardProps = {
-  skill: Skill
+  icon: string
+  name: string
+  effect: string
   level: number
+  maxLevel: number
+  /** Costo en XP del siguiente nivel */
+  cost: number
   xp: number
+  /** Si falta un requisito, el texto que lo explica ("Requiere JavaScript Nv.3") */
+  locked?: string | null
   onBuy: () => void
 }
 
-function SkillCard({ skill, level, xp, onBuy }: SkillCardProps) {
-  const cost = skillCost(skill.baseCost, level)
-  const isMax = level >= skill.maxLevel
-  const canBuy = !isMax && xp >= cost
+/** Tarjeta de algo que se mejora con XP: habilidades y tecnologías */
+function SkillCard({ icon, name, effect, level, maxLevel, cost, xp, locked, onBuy }: SkillCardProps) {
+  const isMax = level >= maxLevel
+  const canBuy = !isMax && !locked && xp >= cost
+
+  let label = `${level === 0 ? 'Aprender' : 'Mejorar'} · ${cost} XP`
+  if (isMax) label = '✓ Nivel máximo'
+  else if (locked) label = `🔒 ${locked}`
 
   return (
-    <li className="flex flex-col rounded-xl border border-line bg-panel-2 p-4">
+    <li className={`flex flex-col rounded-xl border border-line bg-panel-2 p-4 ${locked ? 'opacity-60' : ''}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-bold">
-            {skill.icon} {skill.name}
+            {icon} {name}
           </p>
-          <p className="text-xs text-muted">{skill.effect}</p>
+          <p className="text-xs text-muted">{effect}</p>
         </div>
         <span className="shrink-0 font-mono text-sm text-muted">
-          Nv. {level}/{skill.maxLevel}
+          Nv. {level}/{maxLevel}
         </span>
       </div>
 
       <div className="mt-auto mb-3 flex gap-1 pt-2">
-        {Array.from({ length: skill.maxLevel }, (_, i) => (
+        {Array.from({ length: maxLevel }, (_, i) => (
           <span key={i} className={`h-1 flex-1 rounded-full ${i < level ? 'bg-green' : 'bg-panel'}`} />
         ))}
       </div>
@@ -39,7 +47,7 @@ function SkillCard({ skill, level, xp, onBuy }: SkillCardProps) {
         disabled={!canBuy}
         className="w-full cursor-pointer rounded-lg border border-purple/50 bg-purple/15 py-2 font-mono text-sm font-bold text-purple transition-colors hover:bg-purple/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
       >
-        {isMax ? '✓ Nivel máximo' : `${level === 0 ? 'Aprender' : 'Mejorar'} · ${cost} XP`}
+        {label}
       </button>
     </li>
   )

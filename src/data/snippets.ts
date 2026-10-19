@@ -1,3 +1,5 @@
+import type { Lang } from './techs'
+
 // Líneas de código que se van "escribiendo" en el editor. Son decorado: se repiten en loop.
 
 const TIA_NORMA = [
@@ -245,8 +247,36 @@ const GENERIC_CSS = [
   '/* qué podría salir mal */',
 ]
 
+const GENERIC_JS = [
+  '// hecho a las 3 AM, no juzgar',
+  'const carrito = []',
+  '',
+  'function agregar(producto) {',
+  '  carrito.push(producto)',
+  "  console.log('agregado', producto) // TODO: sacar antes de producción",
+  '}',
+  '',
+  'const total = carrito.reduce((a, p) => a + p.precio, 0)',
+  '',
+  "if (total == '0') { // == a propósito, confiá",
+  "  alert('Tu carrito está vacío :(')",
+  '}',
+  '',
+  "document.querySelector('#comprar').addEventListener('click', () => {",
+  '  try {',
+  '    pagar(total)',
+  '  } catch (e) {',
+  '    // ¯\\_(ツ)_/¯',
+  '  }',
+  '})',
+  '',
+  'let x = undefined + 1 // NaN, como mi sueldo',
+  'setTimeout(() => location.reload(), 0) // arregla todo',
+]
+
 /** Las líneas que corresponden a un contrato */
-export function snippetsFor(contractId: string, lang: 'html' | 'css' = 'html'): string[] {
+export function snippetsFor(contractId: string, lang: Lang = 'html'): string[] {
   if (contractId === 'mi-sobrino') return TIA_NORMA
+  if (lang === 'js') return GENERIC_JS
   return lang === 'css' ? GENERIC_CSS : GENERIC_HTML
 }

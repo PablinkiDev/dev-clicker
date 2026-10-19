@@ -15,6 +15,7 @@ import {
 } from './formulas'
 import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
 import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
+import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { createInitialOffers, type Cooldowns } from './offers'
 import type { Contract } from './types'
 
@@ -43,6 +44,8 @@ export type GameState = {
   xp: number
   rep: number
   skills: SkillLevels
+  /** Nivel de cada tecnología (0 = no aprendida) */
+  tech: TechLevels
   /** El mejor editor comprado: define los bonus */
   editor: EditorId
   /** El editor que se ve (solo estético; cualquiera ya comprado) */
@@ -75,6 +78,7 @@ export type GameAction =
   | { type: 'deliver' }
   | { type: 'tick'; elapsed: number }
   | { type: 'buySkill'; skill: SkillId }
+  | { type: 'learnTech'; tech: TechId }
   | { type: 'hireDeveloper' }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
@@ -93,12 +97,13 @@ export function createInitialState(): GameState {
     xp: 0,
     rep: 0,
     skills: INITIAL_SKILLS,
+    tech: INITIAL_TECH,
     editor: 'nano',
     look: 'nano',
     darkMode: { owned: false, on: false },
     dim: false,
     developers: 0,
-    offers: createInitialOffers(),
+    offers: createInitialOffers(INITIAL_TECH),
     cooldowns: {},
     contract: null,
     timeLeft: 0,
@@ -140,21 +145,24 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code < contract.code) return state
       const { reward } = contract
       const xp = Math.round(reward.xp * xpMultiplier(state.skills.logicalThinking))
+      // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
+      const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
+      const money = Math.round((reward.money * (1 + 0.1 * Math.max(0, techLevel - 1))) / 5) * 5
       return {
         ...state,
-        money: state.money + reward.money,
+        money: state.money + money,
         xp: state.xp + xp,
         rep: state.rep + reward.rep,
         code: 0, // el código no se acumula entre contratos (GDD §3)
         contract: null,
         notice: {
           kind: 'success',
-          text: `${contract.client} pagó: +$${reward.money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
+          text: `${contract.client} pagó: +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
         },
         log: addLog(
           state.log,
           'success',
-          `git push origin main → deploy exitoso 🚀 +$${reward.money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
+          `git push origin main → deploy exitoso 🚀 +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
         ),
       }
     }
@@ -190,6 +198,26 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           text: `Se venció el plazo: ${contract.client} contrató a un primo. −$${lostMoney.toLocaleString('es-AR')} · −${FAILURE_REP_LOSS} ★ · +${gainedXp} XP por la experiencia`,
         },
         log: addLog(state.log, 'error', `✗ DeadlineExceededException en ${contract.id} (${Math.floor(code)}/${contract.code})`),
+      }
+    }
+
+    case 'learnTech': {
+      const tech = TECHS.find((t) => t.id === action.tech)
+      if (!tech) return state
+      const level = state.tech[tech.id]
+      const cost = skillCost(tech.baseCost, level)
+      if (level >= tech.maxLevel || state.xp < cost || missingRequirements(tech, state.tech)) return state
+      return {
+        ...state,
+        xp: state.xp - cost,
+        tech: { ...state.tech, [tech.id]: level + 1 },
+        log: addLog(
+          state.log,
+          'success',
+          level === 0
+            ? `npm install ${tech.id} · added 1 package and 1.400 dependencies`
+            : `${tech.name} Nv.${level + 1} · ${tech.effect}`,
+        ),
       }
     }
 

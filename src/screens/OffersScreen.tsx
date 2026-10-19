@@ -10,6 +10,8 @@ type OffersScreenProps = {
   autoRate: number
   /** Contrato en curso: si hay uno, no se puede aceptar otro */
   activeFile: string | null
+  /** Si todavía no sabe JavaScript, mostramos una pista de que hay más contratos */
+  knowsJs: boolean
   onAccept: (offer: Contract) => void
 }
 
@@ -21,7 +23,7 @@ const DIFFICULTY_LABEL: Record<Difficulty, { text: string; className: string }> 
 
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'mid', 'hard']
 
-function OffersScreen({ offers, perClick, autoRate, activeFile, onAccept }: OffersScreenProps) {
+function OffersScreen({ offers, perClick, autoRate, activeFile, knowsJs, onAccept }: OffersScreenProps) {
   // Ordenamos una copia: nunca hay que modificar (mutar) las props ni el estado
   const sorted = [...offers].sort(
     (a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
@@ -88,6 +90,13 @@ function OffersScreen({ offers, perClick, autoRate, activeFile, onAccept }: Offe
           )
         })}
       </ul>
+
+      {!knowsJs && (
+        <p className="mt-4 rounded-xl border border-dashed border-line-2 px-4 py-3 font-mono text-xs text-muted">
+          🔒 Hay clientes que piden <b className="text-yellow">JavaScript</b>. Aprendelo con XP en Mejoras → tecnologías/
+          para desbloquear contratos .js mejor pagos.
+        </p>
+      )}
     </section>
   )
 }

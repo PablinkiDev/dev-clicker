@@ -1,3 +1,5 @@
+import type { Lang } from '../data/techs'
+
 // Formatos de texto que se usan en varias partes de la interfaz
 
 /** 75 → "1:15" */
@@ -12,6 +14,6 @@ export function formatMoney(amount: number): string {
 }
 
 /** "boton-mas-grande" + css → "boton-mas-grande.css" */
-export function fileName(id: string, lang: 'html' | 'css' = 'html'): string {
+export function fileName(id: string, lang: Lang = 'html'): string {
   return `${id}.${lang}`
 }

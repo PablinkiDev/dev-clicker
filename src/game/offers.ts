@@ -1,5 +1,6 @@
 // Generador de ofertas: funciones que arman el tablón a partir de las plantillas.
 import { CONTRACT_TEMPLATES, GUIDED_CONTRACT } from '../data/contracts'
+import { LANG_TECH, type TechLevels } from '../data/techs'
 import type { Contract, ContractTemplate, Difficulty } from './types'
 
 /** Cantidad de ofertas visibles (GDD §4: de 3 a 5 según reputación; por ahora fijo) */
@@ -32,9 +33,14 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)]
 }
 
+/** Un contrato se puede ofrecer si sabés la tecnología de su lenguaje */
+export function canTake(template: ContractTemplate, tech: TechLevels): boolean {
+  return tech[LANG_TECH[template.lang ?? 'html']] > 0
+}
+
 /** Tablón inicial: el contrato guiado + ofertas para completar */
-export function createInitialOffers(): Contract[] {
-  return refillOffers([createOffer(GUIDED_CONTRACT)], {}, null, Date.now())
+export function createInitialOffers(tech: TechLevels): Contract[] {
+  return refillOffers([createOffer(GUIDED_CONTRACT)], {}, null, Date.now(), tech)
 }
 
 /**
@@ -47,6 +53,7 @@ export function refillOffers(
   cooldowns: Cooldowns,
   activeId: string | null,
   now: number,
+  tech: TechLevels,
 ): Contract[] {
   const result = [...offers]
 
@@ -56,6 +63,7 @@ export function refillOffers(
         (!difficulty || t.difficulty === difficulty) &&
         !result.some((o) => o.id === t.id) &&
         t.id !== activeId &&
+        canTake(t, tech) &&
         (ignoreCooldown || (cooldowns[t.id] ?? 0) <= now),
     )
 

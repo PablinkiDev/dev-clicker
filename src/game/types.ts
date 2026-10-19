@@ -1,3 +1,5 @@
+import type { Lang } from '../data/techs'
+
 // Tipos del juego: describen la forma de los datos, no su comportamiento.
 
 export type Reward = {
@@ -22,7 +24,7 @@ export type ContractTemplate = {
   time: number
   reward: Reward
   /** Lenguaje del archivo que se escribe; si falta, es HTML */
-  lang?: 'html' | 'css'
+  lang?: Lang
   /** Contrato que aparece una sola vez (el guiado) */
   once?: boolean
 }

@@ -1,12 +1,13 @@
 // Guardado de la partida en localStorage, con versión y validación (GDD §14).
 import { EDITORS } from '../data/editors'
 import { INITIAL_SKILLS } from '../data/skills'
+import { INITIAL_TECH } from '../data/techs'
 import type { GameState } from './reducer'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 5
+export const SAVE_VERSION: number = 6
 
 type SaveFile = {
   version: number
@@ -82,6 +83,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 5 }
   }
 
+  // v5 → v6: tecnologías; se arranca sabiendo HTML y CSS
+  if (file.version === 5) {
+    state = { ...state, tech: INITIAL_TECH }
+    file = { ...file, version: 6 }
+  }
+
   return { ...file, state }
 }
 
@@ -120,6 +127,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     EDITORS.some((e) => e.id === s.look) &&
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
+    isObject(s.tech) &&
     Array.isArray(s.offers) &&
     s.offers.every(isContract) &&
     isObject(s.cooldowns) &&

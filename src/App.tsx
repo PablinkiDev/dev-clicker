@@ -110,7 +110,7 @@ function App() {
     dispatch({
       type: 'accept',
       offer,
-      offers: refillOffers(remaining, nextCooldowns, offer.id, now),
+      offers: refillOffers(remaining, nextCooldowns, offer.id, now, state.tech),
       cooldowns: nextCooldowns,
     })
     setView('work')
@@ -214,6 +214,7 @@ function App() {
               perClick={perClick}
               autoRate={auto}
               activeFile={activeFile}
+              knowsJs={state.tech.javascript > 0}
               onAccept={acceptContract}
             />
           )}
@@ -238,8 +239,10 @@ function App() {
           {currentView === 'skills' && (
             <SkillsScreen
               skills={skills}
+              tech={state.tech}
               xp={xp}
               onBuy={(skill) => dispatch({ type: 'buySkill', skill })}
+              onLearn={(tech) => dispatch({ type: 'learnTech', tech })}
               tools={<EditorShop editor={editor.id} money={money} onBuy={() => dispatch({ type: 'buyEditor' })} />}
             />
           )}
