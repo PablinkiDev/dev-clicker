@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+/*
+  Paleta del tema "Visual Estudio Code" del prototipo.
+  Cada variable --color-* se convierte en clases de Tailwind:
+  --color-bg → bg-bg, text-bg, border-bg…  /  --color-green → text-green, bg-green…
+*/
+@theme {
+  --color-bg: #0b0d17;
+  --color-panel: #10131f;
+  --color-panel-2: #151a2a;
+  --color-line: #232a40;
+  --color-text: #d6dcf0;
+  --color-muted: #7c86a6;
+  --color-faint: #4a5372;
+
+  --color-green: #5af78e;
+  --color-yellow: #ffcb6b;
+  --color-purple: #c792ea;
+  --color-cyan: #89ddff;
+  --color-red: #ff6e7f;
+
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Es un juego: evitamos que los clics rápidos seleccionen texto */
+body {
+  @apply bg-bg text-text font-ui antialiased select-none;
+}
