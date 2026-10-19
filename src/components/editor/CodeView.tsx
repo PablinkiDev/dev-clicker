@@ -31,12 +31,13 @@ function CodeView({ contract, code, syntax, lineNumbers }: CodeViewProps) {
   return (
     <div
       ref={scrollRef}
+      data-file={`${contract.id}.${contract.lang ?? 'html'}`}
       className="code-view min-h-0 flex-1 overflow-y-auto py-2 font-mono text-[13px] leading-[22px] md:text-sm"
     >
       {rows.map((i) => {
         const isCursor = i === written
         return (
-          <div key={i} className={`flex whitespace-pre ${isCursor ? 'bg-blue/5' : ''}`}>
+          <div key={i} className={`code-line flex whitespace-pre ${isCursor ? 'is-cursor bg-blue/5' : ''}`}>
             {lineNumbers ? (
               <span
                 className={`w-10 shrink-0 pr-4 text-right select-none md:w-14 ${isCursor ? 'text-text' : 'text-faint'}`}

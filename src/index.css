@@ -120,6 +120,56 @@
   border-top: 1px solid #383932;
 }
 
+/* Cladex Code: terminal cálida, el código aparece como un diff que escribe el agente */
+[data-editor='cladex'] {
+  --color-bg: #1a1918;
+  --color-panel: #141312;
+  --color-panel-2: #21201e;
+  --color-panel-3: #2d2a27;
+  --color-line: #363230;
+  --color-line-2: #524c46;
+  --color-text: #ebe6df;
+  --color-muted: #a59e94;
+  --color-faint: #6f6962;
+  --color-green: #8cc084;
+  --color-yellow: #e5c07b;
+  --color-purple: #c4a7e7;
+  --color-cyan: #7fc8d6;
+  --color-red: #e8838a;
+  --color-orange: #d97757;
+  --color-blue: #8fb3e8;
+  --font-ui: "JetBrains Mono", ui-monospace, monospace;
+}
+
+[data-editor='cladex'] .code-view {
+  margin: 0 12px 10px;
+  padding-top: 0;
+  border: 1px solid var(--color-line-2);
+  border-radius: 10px;
+}
+
+[data-editor='cladex'] .code-view::before {
+  content: '⏺ Write(' attr(data-file) ')';
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: block;
+  padding: 8px 14px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-orange);
+  font-weight: 700;
+}
+
+[data-editor='cladex'] .code-line {
+  background: rgb(140 192 132 / 0.06);
+}
+
+[data-editor='cladex'] .code-line:not(.is-cursor)::before {
+  content: '+';
+  color: var(--color-green);
+}
+
 [data-editor='bloc'] .code-view,
 [data-editor='notepad'] .code-view {
   margin: 0 12px 10px;

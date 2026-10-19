@@ -60,6 +60,19 @@ function TitleBar({ editor, title, modified }: TitleBarProps) {
     )
   }
 
+  if (editor === 'cladex') {
+    return (
+      <header className="hidden h-7.5 shrink-0 items-center justify-between border-b border-line bg-panel px-3.5 font-mono text-xs text-muted md:flex">
+        <span>
+          <span className="text-orange">✻</span> cladex — ~/dev-clicker · {title}
+        </span>
+        <span className="rounded-full border border-orange/35 bg-orange/10 px-2.5 py-0.5 text-[11px] text-orange">
+          Etapa 1 · Freelancer
+        </span>
+      </header>
+    )
+  }
+
   // IDE completo (VS Code en adelante)
   return (
     <header className="hidden h-9 shrink-0 items-center gap-3.5 border-b border-line bg-panel px-3.5 text-xs text-muted md:flex">

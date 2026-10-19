@@ -12,7 +12,7 @@ import Terminal from './components/layout/Terminal'
 import TitleBar from './components/layout/TitleBar'
 import Toast from './components/layout/Toast'
 import EditorShop from './components/EditorShop'
-import { MenuBar, NanoBar } from './components/layout/EditorNav'
+import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
@@ -227,7 +227,8 @@ function App() {
             onDeliver={deliver}
             critPop={critPop}
           />
-          <Terminal log={log} errors={errors} />
+          {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
+          {editor.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}
           <button
             type="button"
             onClick={resetGame}
@@ -236,6 +237,15 @@ function App() {
             rm -rf partida/ · empezar de cero
           </button>
           {editor.features.nav === 'nano' && <NanoBar view={currentView} onChange={setView} />}
+          {editor.features.nav === 'agent' && (
+            <AgentBar
+              view={currentView}
+              onChange={setView}
+              hasContract={contract !== null}
+              isComplete={isComplete}
+              elapsed={contract ? contract.time - timeLeft : 0}
+            />
+          )}
         </main>
       </div>
 

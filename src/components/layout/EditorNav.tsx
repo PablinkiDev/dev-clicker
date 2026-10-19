@@ -57,3 +57,50 @@ export function MenuBar({ editor, view, onChange }: EditorNavProps) {
     </nav>
   )
 }
+
+type AgentBarProps = {
+  view: View
+  onChange: (view: View) => void
+  hasContract: boolean
+  isComplete: boolean
+  /** Segundos desde que se aceptó el contrato: animan el spinner sin usar timers propios */
+  elapsed: number
+}
+
+const AGENT_WORDS = ['Programando', 'Refactorizando', 'Leyendo el pedido del cliente', 'Consultando la documentación', 'Pensando', 'Escribiendo tests (mentira)']
+const SPINNER = '·✢✳✻✽✻✳✢'
+
+/** Cladex Code: el estado del agente, una caja de prompt y la navegación como comandos */
+export function AgentBar({ view, onChange, hasContract, isComplete, elapsed }: AgentBarProps) {
+  let status = 'Esperando instrucciones. Elegí un trabajo con /ofertas.'
+  if (hasContract && isComplete) status = '✓ Listo. Escribí /deploy o tocá git push para entregar.'
+  else if (hasContract) {
+    const glyph = SPINNER[Math.floor(elapsed * 7) % SPINNER.length]
+    const word = AGENT_WORDS[Math.floor(elapsed / 4) % AGENT_WORDS.length]
+    status = `${glyph} ${word}… (${Math.floor(elapsed)}s · esc para interrumpir)`
+  }
+
+  return (
+    <div className="shrink-0 border-t border-line bg-panel px-3.5 pt-2 pb-[calc(10px+env(safe-area-inset-bottom))] font-mono text-xs">
+      <p className="truncate pb-1.5 text-orange">{status}</p>
+      <p className="flex items-center gap-2.5 rounded-lg border border-line-2 px-3 py-2 text-[13px]">
+        <b>&gt;</b>
+        <span className="truncate text-faint">Programá con Espacio · git push para entregar</span>
+      </p>
+      <div className="flex flex-wrap gap-1.5 pt-2">
+        {VIEWS.map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => onChange(v)}
+            className={`cursor-pointer rounded-md border px-2.5 py-0.5 ${
+              v === view ? 'border-orange text-orange' : 'border-line-2 text-muted hover:text-orange'
+            }`}
+          >
+            /{VIEW_LABEL[v].toLowerCase()}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}

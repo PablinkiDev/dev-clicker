@@ -1,7 +1,7 @@
 // Editores de código: se compran con dinero y cambian toda la interfaz.
 // Se suman de a uno, en el orden en que se compran.
 
-export type EditorId = 'nano' | 'bloc' | 'notepad' | 'sublime' | 'vscode'
+export type EditorId = 'nano' | 'bloc' | 'notepad' | 'sublime' | 'vscode' | 'cladex'
 
 /** Qué partes del IDE tiene cada editor */
 export type EditorFeatures = {
@@ -12,7 +12,7 @@ export type EditorFeatures = {
   /** Explorador, pestañas, minimapa y barra de estado: el IDE "completo" */
   ideChrome: boolean
   /** Cómo se navega: atajos de Nano, menú de ventana o barra de actividad del IDE */
-  nav: 'nano' | 'menu' | 'ide'
+  nav: 'nano' | 'menu' | 'ide' | 'agent'
 }
 
 export type Editor = {
@@ -86,6 +86,17 @@ export const EDITORS: Editor[] = [
     autoBonus: 1,
     bonusText: 'Autocompletado: +1 línea por segundo automática',
     features: { syntax: true, lineNumbers: true, ideChrome: true, nav: 'ide' },
+  },
+  {
+    id: 'cladex',
+    name: 'Cladex Code',
+    price: 12000,
+    clickBonus: 1,
+    critBonus: 0.05,
+    critMultiplier: 3,
+    autoBonus: 4,
+    bonusText: 'Agente IA: +4 líneas por segundo automáticas. Vos mirás, él programa',
+    features: { syntax: true, lineNumbers: false, ideChrome: false, nav: 'agent' },
   },
 ]
 
