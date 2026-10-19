@@ -1,47 +1,29 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import ContractCard from './components/ContractCard'
 import OfferBoard from './components/OfferBoard'
 import {
   DEVELOPER_PRICE,
-  FAILURE_REP_LOSS,
   FAST_TYPING_MAX_LEVEL,
   ROOM_CAPACITY,
-  addCode,
   autoRate,
-  failureMoneyLoss,
-  failureXp,
   fastTypingCost,
   linesPerClick,
 } from './game/formulas'
-import { CLIENT_COOLDOWN_MS, createInitialOffers, refillOffers, type Cooldowns } from './game/offers'
+import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
+import { createInitialState, gameReducer } from './game/reducer'
 import type { Contract } from './game/types'
-
-/** Mensaje que se muestra después de entregar o fallar un contrato */
-type Notice = {
-  kind: 'success' | 'error'
-  text: string
-}
 
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
 const TICK_MS = 100
 
 function App() {
-  // Estado: lo mínimo que el juego necesita recordar
-  const [code, setCode] = useState(0)
-  const [money, setMoney] = useState(0)
-  const [xp, setXp] = useState(0)
-  const [rep, setRep] = useState(0)
-  const [fastTypingLevel, setFastTypingLevel] = useState(0)
-  const [developers, setDevelopers] = useState(0)
-  const [offers, setOffers] = useState<Contract[]>(createInitialOffers)
-  const [cooldowns, setCooldowns] = useState<Cooldowns>({})
-  const [contract, setContract] = useState<Contract | null>(null)
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [isVisible, setIsVisible] = useState(() => document.visibilityState === 'visible')
-  const [notice, setNotice] = useState<Notice | null>(null)
+  // Todo el estado del juego vive en un solo objeto; las reglas están en game/reducer.ts
+  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState)
+  const { code, money, xp, rep, fastTypingLevel, developers, offers, cooldowns, contract, timeLeft, notice } =
+    state
 
-  // Ref: el tiempo "real" que usa el reloj. Cambiarlo NO provoca un render.
-  const timeLeftRef = useRef(0)
+  // Estado de la interfaz (no es parte de la partida): si la pestaña está visible
+  const [isVisible, setIsVisible] = useState(() => document.visibilityState === 'visible')
 
   // Valores derivados: se calculan a partir del estado en cada render
   const perClick = linesPerClick(fastTypingLevel)
@@ -61,93 +43,41 @@ function App() {
       setIsVisible(document.visibilityState === 'visible')
     }
     document.addEventListener('visibilitychange', handleVisibility)
-    // Limpieza: React la ejecuta cuando el componente se desmonta
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [])
 
-  // Efecto 2: el reloj del contrato. Solo existe mientras isRunning sea true.
+  // Efecto 2: el reloj. Solo avisa cuánto tiempo pasó; el reducer decide qué significa.
   useEffect(() => {
-    if (!isRunning || !contract) return
+    if (!isRunning) return
 
     let last = performance.now()
     const id = setInterval(() => {
-      // Medimos el tiempo real transcurrido: los intervalos no son exactos
       const now = performance.now()
-      const elapsed = (now - last) / 1000
+      dispatch({ type: 'tick', elapsed: (now - last) / 1000 })
       last = now
-
-      // El equipo escribe código solo mientras haya un contrato activo (GDD §5)
-      if (auto > 0) {
-        setCode((prev) => addCode(prev, auto * elapsed, contract.code))
-      }
-
-      timeLeftRef.current = Math.max(0, timeLeftRef.current - elapsed)
-      setTimeLeft(timeLeftRef.current)
-
-      if (timeLeftRef.current === 0) {
-        // Se venció el plazo (GDD §4): pérdidas leves y un poco de XP
-        const lostXp = failureXp(contract.reward.xp)
-        setMoney((prev) => prev - failureMoneyLoss(prev))
-        setRep((prev) => Math.max(0, prev - FAILURE_REP_LOSS))
-        setXp((prev) => prev + lostXp)
-        setCode(0)
-        setContract(null)
-        setNotice({
-          kind: 'error',
-          text: `Se venció el plazo: ${contract.client} contrató a un primo. −5 % de dinero · −${FAILURE_REP_LOSS} ★ · +${lostXp} XP por la experiencia`,
-        })
-      }
     }, TICK_MS)
 
-    // Limpieza: se ejecuta cuando isRunning cambia (pausa, entrega, fallo) o al desmontar
     return () => clearInterval(id)
-  }, [isRunning, contract, auto])
+  }, [isRunning])
 
   function acceptContract(offer: Contract) {
     if (contract) return
-    // El cliente aceptado entra en cooldown y su lugar en el tablón se completa al instante
-    const nextCooldowns = { ...cooldowns, [offer.id]: Date.now() + CLIENT_COOLDOWN_MS }
+    // El tablón nuevo usa azar y la hora, por eso se calcula acá y no dentro del reducer
+    const now = Date.now()
+    const nextCooldowns = { ...cooldowns, [offer.id]: now + CLIENT_COOLDOWN_MS }
     const remaining = offers.filter((o) => o.uid !== offer.uid)
-    setCooldowns(nextCooldowns)
-    setOffers(refillOffers(remaining, nextCooldowns, offer.id, Date.now()))
-
-    timeLeftRef.current = offer.time
-    setTimeLeft(offer.time)
-    setCode(0)
-    setContract(offer)
-    setNotice(null)
-  }
-
-  function program() {
-    if (!contract || isComplete) return
-    setCode((prev) => addCode(prev, perClick, contract.code))
-  }
-
-  function deliver() {
-    if (!contract || !isComplete) return
-    const { reward } = contract
-    setMoney((prev) => prev + reward.money)
-    setXp((prev) => prev + reward.xp)
-    setRep((prev) => prev + reward.rep)
-    setCode(0) // el código no se acumula entre contratos (GDD §3)
-    setContract(null)
-    setNotice({
-      kind: 'success',
-      text: `${contract.client} pagó: +$${reward.money} · +${reward.xp} XP · +${reward.rep} ★`,
+    dispatch({
+      type: 'accept',
+      offer,
+      offers: refillOffers(remaining, nextCooldowns, offer.id, now),
+      cooldowns: nextCooldowns,
     })
   }
 
-  function hireDeveloper() {
-    if (!canHireDeveloper) return
-    setMoney((prev) => prev - DEVELOPER_PRICE)
-    setDevelopers((prev) => prev + 1)
-  }
-
-  function buyUpgrade() {
-    if (!canBuyUpgrade) return
-    setXp((prev) => prev - upgradeCost)
-    setFastTypingLevel((prev) => prev + 1)
-  }
+  const program = () => dispatch({ type: 'program' })
+  const deliver = () => dispatch({ type: 'deliver' })
+  const hireDeveloper = () => dispatch({ type: 'hireDeveloper' })
+  const buyUpgrade = () => dispatch({ type: 'buyFastTyping' })
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-4">
