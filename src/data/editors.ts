@@ -1,7 +1,7 @@
 // Editores de código: se compran con dinero y cambian toda la interfaz.
 // Se suman de a uno, en el orden en que se compran.
 
-export type EditorId = 'nano' | 'bloc' | 'notepad' | 'sublime'
+export type EditorId = 'nano' | 'bloc' | 'notepad' | 'sublime' | 'vscode'
 
 /** Qué partes del IDE tiene cada editor */
 export type EditorFeatures = {
@@ -25,6 +25,8 @@ export type Editor = {
   critBonus: number
   /** Cuánto multiplica un crítico las líneas del clic */
   critMultiplier: number
+  /** Líneas por segundo automáticas que aporta el editor (autocompletado) */
+  autoBonus: number
   bonusText: string
   features: EditorFeatures
 }
@@ -37,6 +39,7 @@ export const EDITORS: Editor[] = [
     clickBonus: 0,
     critBonus: 0,
     critMultiplier: 2,
+    autoBonus: 0,
     bonusText: 'Sin mouse, sin colores, sin miedo',
     features: { syntax: false, lineNumbers: false, ideChrome: false, nav: 'nano' },
   },
@@ -47,6 +50,7 @@ export const EDITORS: Editor[] = [
     clickBonus: 1,
     critBonus: 0,
     critMultiplier: 2,
+    autoBonus: 0,
     bonusText: '+1 línea por clic: ¡ahora usás el mouse!',
     features: { syntax: false, lineNumbers: false, ideChrome: false, nav: 'menu' },
   },
@@ -57,6 +61,7 @@ export const EDITORS: Editor[] = [
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 2,
+    autoBonus: 0,
     bonusText: 'Resaltado de sintaxis: +5 % de probabilidad de crítico',
     features: { syntax: true, lineNumbers: true, ideChrome: false, nav: 'menu' },
   },
@@ -67,7 +72,19 @@ export const EDITORS: Editor[] = [
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 3,
+    autoBonus: 0,
     bonusText: 'Multicursor: los críticos valen x3 en vez de x2',
+    features: { syntax: true, lineNumbers: true, ideChrome: true, nav: 'ide' },
+  },
+  {
+    id: 'vscode',
+    name: 'Visual Estudio Code',
+    price: 4500,
+    clickBonus: 1,
+    critBonus: 0.05,
+    critMultiplier: 3,
+    autoBonus: 1,
+    bonusText: 'Autocompletado: +1 línea por segundo automática',
     features: { syntax: true, lineNumbers: true, ideChrome: true, nav: 'ide' },
   },
 ]

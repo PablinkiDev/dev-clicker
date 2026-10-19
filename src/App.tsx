@@ -44,7 +44,7 @@ function App() {
   const editor = getEditor(editorId)
   const { ideChrome } = editor.features
   const perClick = linesPerClick(skills.fastTyping, editor.clickBonus)
-  const auto = autoRate(developers)
+  const auto = autoRate(developers, editor.autoBonus)
   const isComplete = contract !== null && code >= contract.code
   const isRunning = contract !== null && !isComplete && isVisible
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón

@@ -148,7 +148,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
 
       // 1. El equipo escribe código (GDD §5)
-      const code = addCode(state.code, autoRate(state.developers) * action.elapsed, contract.code)
+      const code = addCode(state.code, autoRate(state.developers, getEditor(state.editor).autoBonus) * action.elapsed, contract.code)
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
         return { ...state, code, log: addLog(state.log, 'success', `✓ Build OK · el equipo terminó ${contract.code} líneas`) }

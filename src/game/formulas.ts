@@ -63,9 +63,9 @@ export const DEVELOPER_PRICE: number = 2600
 /** Líneas por segundo que escribe cada Desarrollador ★ (GDD §5, experimental) */
 export const DEVELOPER_RATE: number = 2
 
-/** Producción automática total del equipo, en líneas por segundo */
-export function autoRate(developers: number): number {
-  return developers * DEVELOPER_RATE
+/** Producción automática total, en líneas por segundo: el equipo + el bonus del editor */
+export function autoRate(developers: number, editorBonus: number): number {
+  return developers * DEVELOPER_RATE + editorBonus
 }
 
 /** Puestos para empleados en la habitación inicial: vos + 2 (GDD §6) */
