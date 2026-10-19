@@ -16,7 +16,7 @@ import { MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
-import { CRIT_MULTIPLIER, autoRate, critChance, linesPerClick, skillCost } from './game/formulas'
+import { autoRate, critChance, linesPerClick, skillCost } from './game/formulas'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
 import { createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
@@ -117,7 +117,7 @@ function App() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
     dispatch({ type: 'program', crit })
-    if (crit) setCritPop({ id: Date.now(), lines: perClick * CRIT_MULTIPLIER })
+    if (crit) setCritPop({ id: Date.now(), lines: perClick * editor.critMultiplier })
   }
 
   function deliver() {

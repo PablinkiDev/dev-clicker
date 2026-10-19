@@ -11,7 +11,8 @@ type StatusBarProps = {
 function StatusBar({ line, timeLeft, isUrgent, isPaused }: StatusBarProps) {
   return (
     <footer
-      className={`hidden h-6.5 shrink-0 items-center font-mono text-xs text-[#eafff2] transition-colors md:flex ${
+      data-urgent={isUrgent}
+      className={`status-bar hidden h-6.5 shrink-0 items-center font-mono text-xs text-[#eafff2] transition-colors md:flex ${
         isUrgent ? 'bg-linear-to-r from-[#b4344a] to-[#8b2a5c]' : 'bg-linear-to-r from-[#1f9d55] to-[#178a7a]'
       }`}
     >

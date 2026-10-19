@@ -87,6 +87,39 @@
   --syn-keyword: #000080;
 }
 
+/* Sublimado Text: Monokai */
+[data-editor='sublime'] {
+  --color-bg: #272822;
+  --color-panel: #1e1f1b;
+  --color-panel-2: #2f302a;
+  --color-panel-3: #3e3d32;
+  --color-line: #383932;
+  --color-line-2: #4d4c42;
+  --color-text: #f8f8f2;
+  --color-muted: #a8a38b;
+  --color-faint: #75715e;
+  --color-green: #a6e22e;
+  --color-yellow: #e6db74;
+  --color-purple: #ae81ff;
+  --color-cyan: #66d9ef;
+  --color-red: #f92672;
+  --color-orange: #fd971f;
+  --color-blue: #66d9ef;
+  --syn-tag: #f92672;
+  --syn-attr: #a6e22e;
+  --syn-string: #e6db74;
+  --syn-comment: #75715e;
+  --syn-number: #ae81ff;
+  --syn-keyword: #66d9ef;
+}
+
+/* Barra de estado sobria (salvo cuando el plazo está por vencer: ahí queda roja) */
+[data-editor='sublime'] .status-bar[data-urgent='false'] {
+  background: #1e1f1b;
+  color: #a8a38b;
+  border-top: 1px solid #383932;
+}
+
 [data-editor='bloc'] .code-view,
 [data-editor='notepad'] .code-view {
   margin: 0 12px 10px;

@@ -70,6 +70,7 @@ function TitleBar({ editor, title, modified }: TitleBarProps) {
       </div>
       <p className="flex-1 text-center font-mono">
         <b className="font-medium text-text">dev-clicker</b> — {title}
+        {editor === 'sublime' && <span className="opacity-55"> (UNREGISTERED)</span>}
       </p>
       <span className="rounded-full border border-green/25 bg-green/10 px-2.5 py-0.5 font-mono text-[11px] text-green">
         Etapa 1 · Freelancer

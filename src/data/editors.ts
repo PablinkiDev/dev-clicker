@@ -1,7 +1,7 @@
 // Editores de código: se compran con dinero y cambian toda la interfaz.
 // Se suman de a uno, en el orden en que se compran.
 
-export type EditorId = 'nano' | 'bloc' | 'notepad'
+export type EditorId = 'nano' | 'bloc' | 'notepad' | 'sublime'
 
 /** Qué partes del IDE tiene cada editor */
 export type EditorFeatures = {
@@ -23,6 +23,8 @@ export type Editor = {
   clickBonus: number
   /** Probabilidad extra de crítico (0.05 = +5 %) */
   critBonus: number
+  /** Cuánto multiplica un crítico las líneas del clic */
+  critMultiplier: number
   bonusText: string
   features: EditorFeatures
 }
@@ -34,6 +36,7 @@ export const EDITORS: Editor[] = [
     price: 0,
     clickBonus: 0,
     critBonus: 0,
+    critMultiplier: 2,
     bonusText: 'Sin mouse, sin colores, sin miedo',
     features: { syntax: false, lineNumbers: false, ideChrome: false, nav: 'nano' },
   },
@@ -43,6 +46,7 @@ export const EDITORS: Editor[] = [
     price: 250,
     clickBonus: 1,
     critBonus: 0,
+    critMultiplier: 2,
     bonusText: '+1 línea por clic: ¡ahora usás el mouse!',
     features: { syntax: false, lineNumbers: false, ideChrome: false, nav: 'menu' },
   },
@@ -52,8 +56,19 @@ export const EDITORS: Editor[] = [
     price: 800,
     clickBonus: 1,
     critBonus: 0.05,
+    critMultiplier: 2,
     bonusText: 'Resaltado de sintaxis: +5 % de probabilidad de crítico',
     features: { syntax: true, lineNumbers: true, ideChrome: false, nav: 'menu' },
+  },
+  {
+    id: 'sublime',
+    name: 'Sublimado Text',
+    price: 2000,
+    clickBonus: 1,
+    critBonus: 0.05,
+    critMultiplier: 3,
+    bonusText: 'Multicursor: los críticos valen x3 en vez de x2',
+    features: { syntax: true, lineNumbers: true, ideChrome: true, nav: 'ide' },
   },
 ]
 

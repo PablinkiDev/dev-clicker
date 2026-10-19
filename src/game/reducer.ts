@@ -4,7 +4,6 @@
 import {
   DEVELOPER_PRICE,
   FAILURE_REP_LOSS,
-  CRIT_MULTIPLIER,
   ROOM_CAPACITY,
   addCode,
   autoRate,
@@ -111,7 +110,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'program': {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
-      const lines = linesPerClick(state.skills.fastTyping, getEditor(state.editor).clickBonus) * (action.crit ? CRIT_MULTIPLIER : 1)
+      const editor = getEditor(state.editor)
+      const lines = linesPerClick(state.skills.fastTyping, editor.clickBonus) * (action.crit ? editor.critMultiplier : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (action.crit) log = addLog(log, 'crit', `⚡ Crítico: +${lines} líneas sin un solo typo. Sospechoso.`)

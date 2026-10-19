@@ -18,9 +18,6 @@ export function skillCost(baseCost: number, currentLevel: number): number {
 /** Probabilidad base de crítico */
 const BASE_CRIT_CHANCE: number = 0.05
 
-/** Un crítico multiplica las líneas del clic */
-export const CRIT_MULTIPLIER: number = 2
-
 /** Probabilidad de crítico: 5 % base + 2 puntos por nivel de "Código crítico" (GDD §8) + bonus del editor */
 export function critChance(criticalCodeLevel: number, editorBonus: number): number {
   return BASE_CRIT_CHANCE + 0.02 * criticalCodeLevel + editorBonus
