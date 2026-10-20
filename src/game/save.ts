@@ -4,12 +4,12 @@ import { INITIAL_SKILLS } from '../data/skills'
 import { INITIAL_TECH } from '../data/techs'
 import { ROLE_IDS } from '../data/roles'
 import { createCandidate, createInitialCandidates, type Employee } from './team'
-import type { GameState } from './reducer'
+import { INITIAL_STATS, type GameState } from './reducer'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 8
+export const SAVE_VERSION: number = 9
 
 type SaveFile = {
   version: number
@@ -107,6 +107,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 8 }
   }
 
+  // v8 → v9: estadísticas. No sabemos cuánto se ganó antes: como mínimo, lo que hay en mano
+  if (file.version === 8) {
+    state = { ...state, stats: { ...INITIAL_STATS, moneyEarned: isNumber(state.money) ? state.money : 0 } }
+    file = { ...file, version: 9 }
+  }
+
   return { ...file, state }
 }
 
@@ -144,6 +150,10 @@ function isEmployee(value: unknown): boolean {
   )
 }
 
+function isStats(value: unknown): boolean {
+  return isObject(value) && Object.keys(INITIAL_STATS).every((key) => isNumber(value[key]))
+}
+
 function isSaveFile(value: unknown): value is SaveFile {
   if (!isObject(value) || !isNumber(value.version) || !isObject(value.state)) return false
   const s = value.state
@@ -157,6 +167,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
     isObject(s.tech) &&
+    isStats(s.stats) &&
     Array.isArray(s.team) &&
     s.team.every(isEmployee) &&
     Array.isArray(s.candidates) &&

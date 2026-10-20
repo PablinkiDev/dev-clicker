@@ -268,6 +268,7 @@ function App() {
               onLookChange={(id) => dispatch({ type: 'setLook', look: id })}
               dim={state.dim}
               onDimChange={(dim) => dispatch({ type: 'setDim', dim })}
+              stats={state.stats}
               onReset={resetGame}
             />
           )}

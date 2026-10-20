@@ -1,6 +1,7 @@
 import ScreenHeader from '../components/ScreenHeader'
 import { EDITORS, type EditorId } from '../data/editors'
 import { formatMoney } from '../game/format'
+import type { Stats } from '../game/reducer'
 
 type SettingsScreenProps = {
   /** Mejor editor comprado */
@@ -10,10 +11,11 @@ type SettingsScreenProps = {
   onLookChange: (look: EditorId) => void
   dim: boolean
   onDimChange: (dim: boolean) => void
+  stats: Stats
   onReset: () => void
 }
 
-function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, onReset }: SettingsScreenProps) {
+function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, stats, onReset }: SettingsScreenProps) {
   const ownedIndex = EDITORS.findIndex((e) => e.id === editor)
 
   return (
@@ -65,6 +67,14 @@ function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, onReset 
       </label>
 
       <p className="mb-2.5 font-mono text-xs text-muted">partida/</p>
+      <dl className="mb-4 grid max-w-sm grid-cols-[1fr_auto] gap-x-4 gap-y-1 rounded-xl border border-line bg-panel-2 p-3.5 font-mono text-xs">
+        <dt className="text-muted">Dinero ganado</dt>
+        <dd className="text-right text-yellow">{formatMoney(stats.moneyEarned)}</dd>
+        <dt className="text-muted">Contratos entregados</dt>
+        <dd className="text-right text-green">{stats.contractsDone}</dd>
+        <dt className="text-muted">Contratos vencidos</dt>
+        <dd className="text-right text-red">{stats.contractsFailed}</dd>
+      </dl>
       <button
         type="button"
         onClick={onReset}

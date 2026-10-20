@@ -39,6 +39,16 @@ export type LogEntry = {
   text: string
 }
 
+/** Números de toda la partida: los usan los ascensos, el valor de la empresa y el historial */
+export type Stats = {
+  /** Dinero ganado con contratos (no baja al gastar) */
+  moneyEarned: number
+  contractsDone: number
+  contractsFailed: number
+}
+
+export const INITIAL_STATS: Stats = { moneyEarned: 0, contractsDone: 0, contractsFailed: 0 }
+
 /** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
 export const DARK_MODE_PRICE = 60
 
@@ -73,6 +83,7 @@ export type GameState = {
   contract: Contract | null
   timeLeft: number
   notice: Notice | null
+  stats: Stats
   /** Terminal: lo que fue pasando. No se guarda en localStorage */
   log: LogEntry[]
 }
@@ -126,6 +137,7 @@ export function createInitialState(): GameState {
     contract: null,
     timeLeft: 0,
     notice: null,
+    stats: INITIAL_STATS,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -179,6 +191,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         rep: state.rep + reward.rep,
         code: 0, // el código no se acumula entre contratos (GDD §3)
         contract: null,
+        stats: {
+          ...state.stats,
+          moneyEarned: state.stats.moneyEarned + money,
+          contractsDone: state.stats.contractsDone + 1,
+        },
         notice: {
           kind: 'success',
           text: `${contract.client} pagó: +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
@@ -225,6 +242,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         code: 0,
         contract: null,
         timeLeft: 0,
+        stats: { ...state.stats, contractsFailed: state.stats.contractsFailed + 1 },
         notice: {
           kind: 'error',
           text: `Se venció el plazo: ${contract.client} contrató a un primo. −$${lostMoney.toLocaleString('es-AR')} · −${FAILURE_REP_LOSS} ★ · +${gainedXp} XP por la experiencia`,
