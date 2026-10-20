@@ -13,9 +13,22 @@ type SettingsScreenProps = {
   onDimChange: (dim: boolean) => void
   stats: Stats
   onReset: () => void
+  onExport: () => void
+  /** Recibe el texto del archivo elegido */
+  onImport: (text: string) => void
 }
 
-function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, stats, onReset }: SettingsScreenProps) {
+function SettingsScreen({
+  editor,
+  look,
+  onLookChange,
+  dim,
+  onDimChange,
+  stats,
+  onReset,
+  onExport,
+  onImport,
+}: SettingsScreenProps) {
   const ownedIndex = EDITORS.findIndex((e) => e.id === editor)
 
   return (
@@ -54,8 +67,8 @@ function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, stats, o
         <span>
           <b className="block">Reducir brillo</b>
           <span className="text-xs text-muted">
-            Usa colores oscuros en Bloc de notas y Notepad. Siempre gratis: el modo oscuro de $60 es un chiste del juego,
-            la accesibilidad no se cobra.
+            Usa colores oscuros en Bloc de notas y Notepad. Siempre gratis: el modo oscuro de $60 es un chiste del
+            juego, la accesibilidad no se cobra.
           </span>
         </span>
         <input
@@ -75,6 +88,32 @@ function SettingsScreen({ editor, look, onLookChange, dim, onDimChange, stats, o
         <dt className="text-muted">Contratos vencidos</dt>
         <dd className="text-right text-red">{stats.contractsFailed}</dd>
       </dl>
+      <div className="mb-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onExport}
+          className="cursor-pointer rounded-lg border border-line-2 bg-panel-2 px-4 py-2 font-mono text-sm font-bold hover:bg-panel-3"
+        >
+          ⬇ Exportar partida (.json)
+        </button>
+        <label className="cursor-pointer rounded-lg border border-line-2 bg-panel-2 px-4 py-2 font-mono text-sm font-bold hover:bg-panel-3">
+          ⬆ Importar partida
+          <input
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = '' // para poder elegir el mismo archivo otra vez
+              if (file) onImport(await file.text())
+            }}
+          />
+        </label>
+      </div>
+      <p className="mb-4 max-w-md text-xs text-muted">
+        Sirve de backup o para pasarle tu partida a alguien (por ejemplo, si encontrás un bug).
+      </p>
+
       <button
         type="button"
         onClick={onReset}

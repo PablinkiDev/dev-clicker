@@ -21,7 +21,7 @@ import { autoRateOf, clickRate } from './game/rates'
 import { FOCUS_MULTIPLIER, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
-import { clearSave, loadGame, saveGame } from './game/save'
+import { clearSave, loadGame, parseGame, saveGame, serializeGame } from './game/save'
 import { replaceCandidate, rerollCandidates, type Employee } from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
@@ -197,6 +197,31 @@ function App() {
     setView('board')
   }
 
+  function exportGame() {
+    // Se arma un archivo en memoria y se "clickea" un link de descarga
+    const blob = new Blob([serializeGame(state)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `dev-clicker-${new Date().toISOString().slice(0, 10)}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function importGame(text: string) {
+    const imported = parseGame(text)
+    if (!imported) {
+      window.alert('Ese archivo no es una partida válida de Dev Clicker.')
+      return
+    }
+    if (!window.confirm('¿Reemplazar tu partida actual por la importada? No se puede deshacer.')) return
+    dispatch({
+      type: 'reset',
+      state: { ...imported, log: [{ id: 1, kind: 'info', text: 'Partida importada. git pull exitoso.' }] },
+    })
+    setView('board')
+  }
+
   function resetGame() {
     if (!window.confirm('¿Borrar la partida y empezar de cero? No se puede deshacer.')) return
     clearSave()
@@ -344,6 +369,8 @@ function App() {
               onDimChange={(dim) => dispatch({ type: 'setDim', dim })}
               stats={state.stats}
               onReset={resetGame}
+              onExport={exportGame}
+              onImport={importGame}
             />
           )}
           {currentView === 'skills' && (

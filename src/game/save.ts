@@ -40,11 +40,30 @@ type SaveFile = {
   state: GameState
 }
 
-export function saveGame(state: GameState): void {
+/** La partida como texto JSON, lista para guardar o exportar */
+export function serializeGame(state: GameState): string {
   // La terminal y los avisos son pasajeros: no se guardan
   const file: SaveFile = { version: SAVE_VERSION, savedAt: Date.now(), state: { ...state, notice: null, log: [] } }
+  return JSON.stringify(file)
+}
+
+/**
+ * Lee una partida desde texto JSON (de localStorage o de un archivo importado):
+ * la migra, la completa y la valida. Devuelve null si no es una partida válida.
+ */
+export function parseGame(raw: string): GameState | null {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(file))
+    const file = migrate(JSON.parse(raw))
+    if (!isSaveFile(file) || file.version !== SAVE_VERSION) return null
+    return { ...file.state, notice: null, log: [] }
+  } catch {
+    return null
+  }
+}
+
+export function saveGame(state: GameState): void {
+  try {
+    localStorage.setItem(SAVE_KEY, serializeGame(state))
   } catch {
     // Sin espacio o almacenamiento bloqueado (modo privado): el juego sigue sin guardar
   }
@@ -55,16 +74,12 @@ export function loadGame(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return null
-    const file = migrate(JSON.parse(raw))
-    if (!isSaveFile(file) || file.version !== SAVE_VERSION) {
+    const state = parseGame(raw)
+    if (!state) {
       backup(raw)
       return null
     }
-    return {
-      ...file.state,
-      notice: null,
-      log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }],
-    }
+    return { ...state, log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }] }
   } catch {
     backup(localStorage.getItem(SAVE_KEY))
     return null
