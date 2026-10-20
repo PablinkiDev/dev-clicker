@@ -2,10 +2,24 @@
 // Las dependencias nuevas piden nivel 3 (GDD §7).
 import { STAGES } from './stages'
 
-export type TechId = 'html' | 'css' | 'javascript' | 'typescript' | 'react' | 'node' | 'sql' | 'git' | 'ai'
+export type TechId =
+  | 'html'
+  | 'css'
+  | 'javascript'
+  | 'typescript'
+  | 'react'
+  | 'node'
+  | 'sql'
+  | 'git'
+  | 'ai'
+  | 'angular'
+  | 'nest'
+  | 'python'
+  | 'java'
+  | 'mongo'
 
 /** Lenguaje de un archivo de contrato */
-export type Lang = 'html' | 'css' | 'js' | 'ts' | 'jsx' | 'node' | 'sql'
+export type Lang = 'html' | 'css' | 'js' | 'ts' | 'jsx' | 'node' | 'sql' | 'ng' | 'nest' | 'py' | 'java' | 'mongo'
 
 /** Extensión del archivo de cada lenguaje (Node escribe .js, pero es otra tecnología) */
 export const LANG_EXT: Record<Lang, string> = {
@@ -16,6 +30,11 @@ export const LANG_EXT: Record<Lang, string> = {
   jsx: 'jsx',
   node: 'js',
   sql: 'sql',
+  ng: 'component.ts',
+  nest: 'controller.ts',
+  py: 'py',
+  java: 'java',
+  mongo: 'mongo.js',
 }
 
 export type Tech = {
@@ -103,6 +122,59 @@ export const TECHS: Tech[] = [
     minStage: 2,
     effect: 'Desbloquea contratos .sql y fullstack · +10 % de dinero por nivel en ellos',
   },
+  {
+    id: 'angular',
+    name: 'Angular',
+    icon: '▲',
+    baseCost: 500,
+    maxLevel: 5,
+    requires: [['typescript', 3]],
+    minStage: 2,
+    effect: 'Desbloquea contratos .component.ts · +10 % de dinero por nivel en ellos',
+  },
+  {
+    id: 'nest',
+    name: 'NestJS',
+    icon: 'NS',
+    baseCost: 600,
+    maxLevel: 5,
+    requires: [
+      ['node', 3],
+      ['typescript', 3],
+    ],
+    minStage: 3,
+    effect: 'Desbloquea contratos de backend empresarial · +10 % de dinero por nivel en ellos',
+  },
+  {
+    id: 'python',
+    name: 'Python',
+    icon: 'Py',
+    baseCost: 450,
+    maxLevel: 5,
+    requires: [['git', 1]],
+    minStage: 2,
+    effect: 'Desbloquea contratos .py · +10 % de dinero por nivel en ellos',
+  },
+  {
+    id: 'java',
+    name: 'Java',
+    icon: '☕',
+    baseCost: 550,
+    maxLevel: 5,
+    requires: [['git', 3]],
+    minStage: 3,
+    effect: 'Desbloquea contratos .java · +10 % de dinero por nivel en ellos',
+  },
+  {
+    id: 'mongo',
+    name: 'MongoDB',
+    icon: '🍃',
+    baseCost: 550,
+    maxLevel: 5,
+    requires: [['node', 3]],
+    minStage: 3,
+    effect: 'Desbloquea contratos NoSQL · +10 % de dinero por nivel en ellos',
+  },
   // Transversales: no tienen contratos propios, dan bonus a todo
   {
     id: 'git',
@@ -145,6 +217,11 @@ export const INITIAL_TECH: TechLevels = {
   sql: 0,
   git: 0,
   ai: 0,
+  angular: 0,
+  nest: 0,
+  python: 0,
+  java: 0,
+  mongo: 0,
 }
 
 /** Qué tecnología pide cada lenguaje de contrato */
@@ -156,6 +233,11 @@ export const LANG_TECH: Record<Lang, TechId> = {
   jsx: 'react',
   node: 'node',
   sql: 'sql',
+  ng: 'angular',
+  nest: 'nest',
+  py: 'python',
+  java: 'java',
+  mongo: 'mongo',
 }
 
 /**

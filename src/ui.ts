@@ -34,6 +34,11 @@ export const LANG_ICON: Record<Lang, { icon: string; className: string }> = {
   jsx: { icon: '⚛', className: 'text-cyan' },
   node: { icon: '⬢', className: 'text-green' },
   sql: { icon: '⛁', className: 'text-cyan' },
+  ng: { icon: '▲', className: 'text-red' },
+  nest: { icon: 'NS', className: 'text-red' },
+  py: { icon: 'Py', className: 'text-yellow' },
+  java: { icon: '☕', className: 'text-orange' },
+  mongo: { icon: '🍃', className: 'text-green' },
 }
 
 /** Ícono y color de cada tecnología (las que escriben archivos usan el de su lenguaje) */
@@ -45,6 +50,11 @@ export const TECH_ICON: Record<TechId, { icon: string; className: string }> = {
   react: LANG_ICON.jsx,
   node: LANG_ICON.node,
   sql: LANG_ICON.sql,
+  angular: LANG_ICON.ng,
+  nest: LANG_ICON.nest,
+  python: LANG_ICON.py,
+  java: LANG_ICON.java,
+  mongo: LANG_ICON.mongo,
   git: { icon: '⎇', className: 'text-orange' },
   ai: { icon: '✨', className: 'text-purple' },
 }
