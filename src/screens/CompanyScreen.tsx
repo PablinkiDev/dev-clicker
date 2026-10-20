@@ -1,6 +1,8 @@
 import ScreenHeader from '../components/ScreenHeader'
+import SellCard from '../components/SellCard'
 import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
+import type { Stats } from '../game/reducer'
 import { ENDLESS_GROWTH, type Requirement } from '../game/stages'
 
 type CompanyScreenProps = {
@@ -14,10 +16,26 @@ type CompanyScreenProps = {
   endless: number
   /** Valor de la empresa: dinero ganado + equipo */
   value: number
+  stats: Stats
+  teamSize: number
+  /** Tokens de inversión sin gastar */
+  tokens: number
   onAscend: () => void
+  onSell: () => void
 }
 
-function CompanyScreen({ stage, requirements, scale, endless, value, onAscend }: CompanyScreenProps) {
+function CompanyScreen({
+  stage,
+  requirements,
+  scale,
+  endless,
+  value,
+  stats,
+  teamSize,
+  tokens,
+  onAscend,
+  onSell,
+}: CompanyScreenProps) {
   const current = STAGES[stage]
   const next = STAGES[stage + 1]
   const ready = requirements !== null && requirements.every((r) => r.done)
@@ -27,6 +45,11 @@ function CompanyScreen({ stage, requirements, scale, endless, value, onAscend }:
       <ScreenHeader icon="▲" title={`Empresa · ${current.name}`}>
         Se asciende <b className="text-text">a mano</b> al cumplir los requisitos. Cada etapa desbloquea contratos y
         mejoras nuevas.
+        {tokens > 0 && (
+          <span className="mt-1 block font-mono text-xs">
+            Tokens de inversión: <b className="text-purple">{tokens}</b>
+          </span>
+        )}
       </ScreenHeader>
 
       <p className="mb-2.5 font-mono text-xs text-muted">etapas/</p>
@@ -116,12 +139,16 @@ function CompanyScreen({ stage, requirements, scale, endless, value, onAscend }:
           <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 font-mono text-xs">
             <dt className="text-muted">Valor de la empresa</dt>
             <dd className="text-right font-bold text-yellow">{formatMoney(value)}</dd>
+            <dt className="text-muted">Multiplicador de contratos</dt>
+            <dd className="text-right font-bold text-yellow">
+              ×{scale.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
+            </dd>
             <dt className="text-muted">Contratos en modo infinito</dt>
             <dd className="text-right">{endless}</dd>
           </dl>
-          <p className="mt-3 text-xs text-muted">La venta de la empresa llega pronto.</p>
         </div>
       )}
+      {!next && <SellCard value={value} stats={stats} teamSize={teamSize} onSell={onSell} />}
     </section>
   )
 }

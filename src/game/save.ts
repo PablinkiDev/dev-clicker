@@ -5,11 +5,12 @@ import { INITIAL_TECH } from '../data/techs'
 import { ROLE_IDS } from '../data/roles'
 import { createCandidate, createInitialCandidates, type Employee } from './team'
 import { INITIAL_STATS, type GameState } from './reducer'
+import { INITIAL_PRESTIGE } from './prestige'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 11
+export const SAVE_VERSION: number = 12
 
 type SaveFile = {
   version: number
@@ -125,6 +126,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 11 }
   }
 
+  // v11 → v12: prestigio (venta de la empresa)
+  if (file.version === 11) {
+    state = { ...state, prestige: INITIAL_PRESTIGE }
+    file = { ...file, version: 12 }
+  }
+
   return { ...file, state }
 }
 
@@ -180,6 +187,9 @@ function isSaveFile(value: unknown): value is SaveFile {
     typeof s.dim === 'boolean' &&
     isObject(s.tech) &&
     isStats(s.stats) &&
+    isObject(s.prestige) &&
+    isNumber(s.prestige.tokens) &&
+    isNumber(s.prestige.sales) &&
     Array.isArray(s.team) &&
     s.team.every(isEmployee) &&
     Array.isArray(s.candidates) &&

@@ -27,7 +27,7 @@ import SkillsScreen from './screens/SkillsScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import TeamScreen from './screens/TeamScreen'
 import CompanyScreen from './screens/CompanyScreen'
-import { canAscend, companyValue, contractScale, nextStageRequirements } from './game/stages'
+import { canAscend, companyValue, contractScale, isEndless, nextStageRequirements } from './game/stages'
 import type { View } from './ui'
 
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
@@ -146,6 +146,12 @@ function App() {
     dispatch({ type: 'ascend', offers })
   }
 
+  function sell() {
+    // La partida nueva tiene ofertas al azar: se arma acá y el reducer le pasa el prestigio
+    dispatch({ type: 'sell', fresh: createInitialState() })
+    setView('board')
+  }
+
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
@@ -190,6 +196,7 @@ function App() {
         title={titles[currentView]}
         modified={contract !== null && code > 0}
         stage={state.stage}
+        endlessScale={isEndless(state.stage) ? contractScale(state.stage, state.endless) : null}
       />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -285,7 +292,11 @@ function App() {
               scale={contractScale(state.stage, state.endless)}
               endless={state.endless}
               value={companyValue(state.stats.moneyEarned, team)}
+              stats={state.stats}
+              teamSize={team.length}
+              tokens={state.prestige.tokens}
               onAscend={ascend}
+              onSell={sell}
             />
           )}
           {currentView === 'settings' && (

@@ -4,14 +4,26 @@ import type { EditorId } from '../../data/editors'
 type TitleBarProps = {
   /** Índice de la etapa actual, para la etiqueta de la derecha */
   stage: number
+  /** En modo infinito: el multiplicador actual de los contratos; si no, null */
+  endlessScale: number | null
   editor: EditorId
   title: string
   /** Hay un contrato con código sin entregar */
   modified: boolean
 }
 
+/** Etiqueta de modo infinito con el multiplicador de los contratos */
+function EndlessBadge({ scale }: { scale: number | null }) {
+  if (scale === null) return null
+  return (
+    <span className="rounded-full border border-yellow/35 bg-yellow/10 px-2.5 py-0.5 font-mono text-[11px] text-yellow">
+      ♾️ Modo infinito · ×{scale.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
+    </span>
+  )
+}
+
 /** Barra de título de la "ventana" (solo escritorio). Cada editor tiene la suya */
-function TitleBar({ editor, title, modified, stage }: TitleBarProps) {
+function TitleBar({ editor, title, modified, stage, endlessScale }: TitleBarProps) {
   if (editor === 'nano') {
     return (
       <header className="hidden h-6.5 shrink-0 items-center justify-between bg-text px-3 font-mono text-xs text-bg md:flex">
@@ -71,8 +83,11 @@ function TitleBar({ editor, title, modified, stage }: TitleBarProps) {
         <span>
           <span className="text-orange">✻</span> cladex — ~/dev-clicker · {title}
         </span>
-        <span className="rounded-full border border-orange/35 bg-orange/10 px-2.5 py-0.5 text-[11px] text-orange">
-          Etapa {stage + 1} · {STAGES[stage].name}
+        <span className="flex gap-1.5">
+          <EndlessBadge scale={endlessScale} />
+          <span className="rounded-full border border-orange/35 bg-orange/10 px-2.5 py-0.5 text-[11px] text-orange">
+            Etapa {stage + 1} · {STAGES[stage].name}
+          </span>
         </span>
       </header>
     )
@@ -90,8 +105,11 @@ function TitleBar({ editor, title, modified, stage }: TitleBarProps) {
         <b className="font-medium text-text">dev-clicker</b> — {title}
         {editor === 'sublime' && <span className="opacity-55"> (UNREGISTERED)</span>}
       </p>
-      <span className="rounded-full border border-green/25 bg-green/10 px-2.5 py-0.5 font-mono text-[11px] text-green">
-        Etapa {stage + 1} · {STAGES[stage].name}
+      <span className="flex gap-1.5">
+        <EndlessBadge scale={endlessScale} />
+        <span className="rounded-full border border-green/25 bg-green/10 px-2.5 py-0.5 font-mono text-[11px] text-green">
+          Etapa {stage + 1} · {STAGES[stage].name}
+        </span>
       </span>
     </header>
   )

@@ -15,7 +15,8 @@ import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
 import { STAGES } from '../data/stages'
-import { canAscend, isEndless } from './stages'
+import { canAscend, companyValue, isEndless } from './stages'
+import { INITIAL_PRESTIGE, tokensForValue, type Prestige } from './prestige'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
   REROLL_PRICE,
@@ -90,6 +91,8 @@ export type GameState = {
   timeLeft: number
   notice: Notice | null
   stats: Stats
+  /** Lo único que sobrevive a vender la empresa */
+  prestige: Prestige
   /** Terminal: lo que fue pasando. No se guarda en localStorage */
   log: LogEntry[]
 }
@@ -123,6 +126,8 @@ export type GameAction =
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
   // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
   | { type: 'reset'; state: GameState }
+  // Vender la empresa: arranca una partida nueva (armada afuera, tiene azar) conservando el prestigio
+  | { type: 'sell'; fresh: GameState }
   | { type: 'dismissNotice' }
 
 export function createInitialState(): GameState {
@@ -148,6 +153,7 @@ export function createInitialState(): GameState {
     timeLeft: 0,
     notice: null,
     stats: INITIAL_STATS,
+    prestige: INITIAL_PRESTIGE,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -302,6 +308,26 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'reset':
       return action.state
+
+    case 'sell': {
+      if (!isEndless(state.stage)) return state
+      const value = companyValue(state.stats.moneyEarned, state.team)
+      const tokens = tokensForValue(value)
+      return {
+        ...action.fresh,
+        dim: state.dim, // la accesibilidad no es progreso: se conserva
+        prestige: { tokens: state.prestige.tokens + tokens, sales: state.prestige.sales + 1 },
+        notice: {
+          kind: 'success',
+          text: `💼 Vendiste la empresa por $${value.toLocaleString('es-AR')}. +${tokens} tokens de inversión. A empezar de nuevo.`,
+        },
+        log: addLog(
+          action.fresh.log,
+          'success',
+          `git init · nueva empresa (venta n.º ${state.prestige.sales + 1}) · +${tokens} tokens`,
+        ),
+      }
+    }
 
     case 'dismissNotice':
       return { ...state, notice: null }
