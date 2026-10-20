@@ -1,7 +1,7 @@
 // Guardado de la partida en localStorage, con versión y validación (GDD §14).
 import { EDITORS } from '../data/editors'
 import { INITIAL_SKILLS } from '../data/skills'
-import { INITIAL_TECH } from '../data/techs'
+import { INITIAL_TECH, LANG_EXT } from '../data/techs'
 import { ROLE_IDS } from '../data/roles'
 import { createCandidate, createInitialCandidates, type Employee } from './team'
 import { INITIAL_STATS, type GameState } from './reducer'
@@ -321,7 +321,11 @@ function isContract(value: unknown): boolean {
     typeof value.id === 'string' &&
     isNumber(value.code) &&
     isNumber(value.time) &&
-    isObject(value.reward)
+    isObject(value.reward) &&
+    // El lenguaje y el stack tienen que existir en el juego (si no, la interfaz no sabe dibujarlos)
+    (value.lang === undefined || (typeof value.lang === 'string' && value.lang in LANG_EXT)) &&
+    (value.stack === undefined ||
+      (Array.isArray(value.stack) && value.stack.every((id) => typeof id === 'string' && id in INITIAL_TECH)))
   )
 }
 
