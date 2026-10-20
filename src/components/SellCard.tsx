@@ -38,12 +38,14 @@ function SellCard({ value, stats, teamSize, onSell }: SellCardProps) {
         </dd>
         <dt className="text-muted">Empleados</dt>
         <dd className="text-right">{teamSize}</dd>
+        <dt className="text-muted">Valor de la empresa (dinero ganado + equipo)</dt>
+        <dd className="text-right font-bold text-yellow">{formatMoney(value)}</dd>
         <dt className="font-bold text-text">Tokens que ganás</dt>
         <dd className="text-right font-bold text-purple">+{tokens}</dd>
       </dl>
 
       <p className="mb-1 flex justify-between font-mono text-xs">
-        <span className="text-muted">+1 token al llegar a {formatMoney(target)}</span>
+        <span className="text-muted">+1 token cuando el valor de la empresa llegue a {formatMoney(target)}</span>
         <span>{Math.floor(ratio * 100)}%</span>
       </p>
       <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-panel-3">

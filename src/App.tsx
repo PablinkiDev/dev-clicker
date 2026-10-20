@@ -18,7 +18,7 @@ import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
 import { critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate } from './game/rates'
-import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
+import { CLIENT_COOLDOWN_MS, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
 import { replaceCandidate, rerollCandidates, type Employee } from './game/team'
@@ -67,6 +67,8 @@ function App() {
   const { ideChrome } = look.features
   const perClick = clickRate(state)
   const auto = autoRateOf(state)
+  // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
+  const offerContext: OfferContext = { tech: state.tech, stage: state.stage, endless: state.endless, rep }
   const isComplete = contract !== null && code >= contract.code
   const isRunning = contract !== null && !isComplete && isVisible
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
@@ -129,7 +131,7 @@ function App() {
     dispatch({
       type: 'accept',
       offer,
-      offers: refillOffers(remaining, nextCooldowns, offer.id, now, state.tech, state.stage, state.endless),
+      offers: refillOffers(remaining, nextCooldowns, offer.id, now, offerContext),
       cooldowns: nextCooldowns,
     })
     setView('work')
@@ -143,7 +145,10 @@ function App() {
 
   function ascend() {
     // El tablón se rearma entero con contratos de la etapa nueva
-    const offers = refillOffers([], cooldowns, contract?.id ?? null, Date.now(), state.tech, state.stage + 1)
+    const offers = refillOffers([], cooldowns, contract?.id ?? null, Date.now(), {
+      ...offerContext,
+      stage: state.stage + 1,
+    })
     dispatch({ type: 'ascend', offers })
   }
 

@@ -23,6 +23,8 @@ type CodeLineProps = {
   text: string
   syntax: boolean
   lineNumbers: boolean
+  /** Dígitos del número de línea más grande: define el ancho del margen */
+  digits: number
   /** Línea que se está escribiendo: muestra el cursor */
   isCursor?: boolean
 }
@@ -31,11 +33,21 @@ type CodeLineProps = {
  * Una línea del editor. memo: si sus props no cambian, React no la vuelve a dibujar.
  * Importa porque la animación redibuja el editor unas 60 veces por segundo.
  */
-const CodeLine = memo(function CodeLine({ number, text, syntax, lineNumbers, isCursor = false }: CodeLineProps) {
+const CodeLine = memo(function CodeLine({
+  number,
+  text,
+  syntax,
+  lineNumbers,
+  digits,
+  isCursor = false,
+}: CodeLineProps) {
   return (
     <div className={`code-line flex whitespace-pre ${isCursor ? 'is-cursor bg-blue/5' : ''}`}>
       {lineNumbers ? (
-        <span className={`w-10 shrink-0 pr-4 text-right select-none md:w-14 ${isCursor ? 'text-text' : 'text-faint'}`}>
+        <span
+          className={`shrink-0 pr-4 pl-2 text-right select-none ${isCursor ? 'text-text' : 'text-faint'}`}
+          style={{ width: `calc(${digits}ch + 1.5rem)` }}
+        >
           {number}
         </span>
       ) : (
@@ -85,6 +97,8 @@ function CodeView({ contract, code, syntax, lineNumbers }: CodeViewProps) {
   }, [code])
 
   const written = Math.floor(shown)
+  // Como en un editor real: el margen se ensancha si el archivo tiene números de línea más largos
+  const digits = Math.max(3, String(contract.code).length)
   const isComplete = written >= contract.code
 
   // Mantener el cursor a la vista. useLayoutEffect: antes de pintar, así no "tiembla"
@@ -107,9 +121,25 @@ function CodeView({ contract, code, syntax, lineNumbers }: CodeViewProps) {
       className="code-view min-h-0 flex-1 overflow-y-auto py-2 font-mono text-[13px] leading-[22px] md:text-sm"
     >
       {rows.map((i) => (
-        <CodeLine key={i} number={i + 1} text={lines[i % lines.length]} syntax={syntax} lineNumbers={lineNumbers} />
+        <CodeLine
+          key={i}
+          number={i + 1}
+          text={lines[i % lines.length]}
+          syntax={syntax}
+          lineNumbers={lineNumbers}
+          digits={digits}
+        />
       ))}
-      {!isComplete && <CodeLine number={written + 1} text={typed} syntax={syntax} lineNumbers={lineNumbers} isCursor />}
+      {!isComplete && (
+        <CodeLine
+          number={written + 1}
+          text={typed}
+          syntax={syntax}
+          lineNumbers={lineNumbers}
+          digits={digits}
+          isCursor
+        />
+      )}
     </div>
   )
 }

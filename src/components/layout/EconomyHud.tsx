@@ -1,6 +1,6 @@
-import { formatRate } from '../../game/format'
 import type { ReactNode } from 'react'
-import { formatMoney } from '../../game/format'
+import { formatMoney, formatRate } from '../../game/format'
+import { nextRepThreshold, repLevel } from '../../game/reputation'
 
 type EconomyHudProps = {
   money: number
@@ -42,7 +42,12 @@ function EconomyHud({ money, xp, rep, perClick, auto, critPercent }: EconomyHudP
     <section className="grid shrink-0 grid-cols-4 gap-1.5 border-b border-line bg-panel px-2.5 pt-[calc(8px+env(safe-area-inset-top))] pb-2 md:gap-2.5 md:px-4.5 md:py-3">
       <Stat label="Dinero" icon="$" value={formatMoney(money)} color="text-yellow" />
       <Stat label="Experiencia" icon="XP" value={xp.toLocaleString('es-AR')} color="text-purple" />
-      <Stat label="Reputación" icon="★" value={rep.toLocaleString('es-AR')} color="text-cyan" />
+      <Stat label="Reputación" icon="★" value={rep.toLocaleString('es-AR')} color="text-cyan">
+        <p className="hidden font-mono text-[11px] text-muted md:block">
+          Ofertas Nv.{repLevel(rep) + 1}
+          {nextRepThreshold(rep) !== null ? ` · ${nextRepThreshold(rep)} ★ para Nv.${repLevel(rep) + 2}` : ' · máximo'}
+        </p>
+      </Stat>
       <Stat label="Producción" icon="{}" value={`${formatRate(perClick)}/clic`} color="text-green">
         <p className="hidden font-mono text-[11px] text-muted md:block">
           +{formatRate(auto)} l/s · {critPercent}% crit
