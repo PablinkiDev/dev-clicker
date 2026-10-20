@@ -6,11 +6,12 @@ import { ROLE_IDS } from '../data/roles'
 import { createCandidate, createInitialCandidates, type Employee } from './team'
 import { INITIAL_STATS, type GameState } from './reducer'
 import { INITIAL_PRESTIGE } from './prestige'
+import { INITIAL_INVESTMENTS } from '../data/investments'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 12
+export const SAVE_VERSION: number = 13
 
 type SaveFile = {
   version: number
@@ -132,6 +133,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 12 }
   }
 
+  // v12 → v13: árbol de prestigio
+  if (file.version === 12 && isObject(state.prestige)) {
+    state = { ...state, prestige: { ...state.prestige, investments: INITIAL_INVESTMENTS } }
+    file = { ...file, version: 13 }
+  }
+
   return { ...file, state }
 }
 
@@ -173,6 +180,12 @@ function isStats(value: unknown): boolean {
   return isObject(value) && Object.keys(INITIAL_STATS).every((key) => isNumber(value[key]))
 }
 
+function isPrestige(value: unknown): boolean {
+  if (!isObject(value) || !isNumber(value.tokens) || !isNumber(value.sales)) return false
+  const investments = value.investments
+  return isObject(investments) && Object.keys(INITIAL_INVESTMENTS).every((key) => isNumber(investments[key]))
+}
+
 function isSaveFile(value: unknown): value is SaveFile {
   if (!isObject(value) || !isNumber(value.version) || !isObject(value.state)) return false
   const s = value.state
@@ -187,9 +200,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     typeof s.dim === 'boolean' &&
     isObject(s.tech) &&
     isStats(s.stats) &&
-    isObject(s.prestige) &&
-    isNumber(s.prestige.tokens) &&
-    isNumber(s.prestige.sales) &&
+    isPrestige(s.prestige) &&
     Array.isArray(s.team) &&
     s.team.every(isEmployee) &&
     Array.isArray(s.candidates) &&

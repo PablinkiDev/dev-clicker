@@ -6,18 +6,21 @@ type SkillCardProps = {
   maxLevel: number
   /** Costo en XP del siguiente nivel */
   cost: number
+  /** Lo que tenés para gastar (XP o tokens) */
   xp: number
+  /** Moneda del costo; por defecto XP */
+  currency?: string
   /** Si falta un requisito, el texto que lo explica ("Requiere JavaScript Nv.3") */
   locked?: string | null
   onBuy: () => void
 }
 
 /** Tarjeta de algo que se mejora con XP: habilidades y tecnologías */
-function SkillCard({ icon, name, effect, level, maxLevel, cost, xp, locked, onBuy }: SkillCardProps) {
+function SkillCard({ icon, name, effect, level, maxLevel, cost, xp, currency = 'XP', locked, onBuy }: SkillCardProps) {
   const isMax = level >= maxLevel
   const canBuy = !isMax && !locked && xp >= cost
 
-  let label = `${level === 0 ? 'Aprender' : 'Mejorar'} · ${cost} XP`
+  let label = `${level === 0 ? 'Aprender' : 'Mejorar'} · ${cost} ${currency}`
   if (isMax) label = '✓ Nivel máximo'
   else if (locked) label = `🔒 ${locked}`
 

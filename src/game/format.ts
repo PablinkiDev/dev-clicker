@@ -17,3 +17,8 @@ export function formatMoney(amount: number): string {
 export function fileName(id: string, lang: Lang = 'html'): string {
   return `${id}.${lang}`
 }
+
+/** 7.7 → "7,7" · 7 → "7" (como mucho un decimal) */
+export function formatRate(amount: number): string {
+  return amount.toLocaleString('es-AR', { maximumFractionDigits: 1 })
+}

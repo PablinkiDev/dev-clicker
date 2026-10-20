@@ -1,4 +1,5 @@
 // Prestigio: vender la empresa a cambio de tokens de inversión (GDD §10).
+import { INITIAL_INVESTMENTS, type InvestmentLevels } from '../data/investments'
 
 /** Lo que sobrevive a una venta */
 export type Prestige = {
@@ -6,9 +7,11 @@ export type Prestige = {
   tokens: number
   /** Cuántas empresas vendiste */
   sales: number
+  /** Niveles del árbol de prestigio */
+  investments: InvestmentLevels
 }
 
-export const INITIAL_PRESTIGE: Prestige = { tokens: 0, sales: 0 }
+export const INITIAL_PRESTIGE: Prestige = { tokens: 0, sales: 0, investments: INITIAL_INVESTMENTS }
 
 /** Tokens por vender apenas se abre el modo infinito */
 export const BASE_TOKENS: number = 3
@@ -31,4 +34,9 @@ export function tokensForValue(value: number): number {
 /** Valor que hace falta para ganar un token más */
 export function nextMilestone(value: number): number {
   return milestoneValue(tokensForValue(value) - BASE_TOKENS)
+}
+
+/** Multiplicador de una mejora de prestigio de +10 % por nivel */
+export function investmentBonus(level: number): number {
+  return 1 + 0.1 * level
 }

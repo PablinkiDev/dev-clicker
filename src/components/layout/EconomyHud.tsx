@@ -1,3 +1,4 @@
+import { formatRate } from '../../game/format'
 import type { ReactNode } from 'react'
 import { formatMoney } from '../../game/format'
 
@@ -42,9 +43,9 @@ function EconomyHud({ money, xp, rep, perClick, auto, critPercent }: EconomyHudP
       <Stat label="Dinero" icon="$" value={formatMoney(money)} color="text-yellow" />
       <Stat label="Experiencia" icon="XP" value={xp.toLocaleString('es-AR')} color="text-purple" />
       <Stat label="Reputación" icon="★" value={rep.toLocaleString('es-AR')} color="text-cyan" />
-      <Stat label="Producción" icon="{}" value={`${perClick}/clic`} color="text-green">
+      <Stat label="Producción" icon="{}" value={`${formatRate(perClick)}/clic`} color="text-green">
         <p className="hidden font-mono text-[11px] text-muted md:block">
-          +{auto.toLocaleString('es-AR', { maximumFractionDigits: 1 })} l/s · {critPercent}% crit
+          +{formatRate(auto)} l/s · {critPercent}% crit
         </p>
       </Stat>
     </section>

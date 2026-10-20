@@ -1,26 +1,20 @@
 // Todo el estado del juego y las reglas que lo cambian.
 // El reducer es una función pura: (estado, acción) → estado nuevo. No usa React,
 // no lee la hora ni números al azar: eso llega desde afuera, dentro de las acciones.
-import {
-  FAILURE_REP_LOSS,
-  addCode,
-  failureMoneyLoss,
-  failureXp,
-  linesPerClick,
-  skillCost,
-  xpMultiplier,
-} from './formulas'
+import { FAILURE_REP_LOSS, addCode, failureMoneyLoss, failureXp, skillCost, xpMultiplier } from './formulas'
 import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
 import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
+import { formatRate } from './format'
 import { STAGES } from '../data/stages'
 import { canAscend, companyValue, isEndless } from './stages'
-import { INITIAL_PRESTIGE, tokensForValue, type Prestige } from './prestige'
+import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
+import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
+import { autoRateOf, clickRate } from './rates'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
   REROLL_PRICE,
-  autoRate,
   createInitialCandidates,
   employeeEffect,
   employeePrice,
@@ -128,6 +122,7 @@ export type GameAction =
   | { type: 'reset'; state: GameState }
   // Vender la empresa: arranca una partida nueva (armada afuera, tiene azar) conservando el prestigio
   | { type: 'sell'; fresh: GameState }
+  | { type: 'invest'; investment: InvestmentId }
   | { type: 'dismissNotice' }
 
 export function createInitialState(): GameState {
@@ -182,11 +177,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
       const editor = getEditor(state.editor)
-      const lines =
-        linesPerClick(state.skills.fastTyping, editor.clickBonus) * (action.crit ? editor.critMultiplier : 1)
+      const lines = clickRate(state) * (action.crit ? editor.critMultiplier : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
-      if (action.crit) log = addLog(log, 'crit', `⚡ Crítico: +${lines} líneas sin un solo typo. Sospechoso.`)
+      if (action.crit)
+        log = addLog(log, 'crit', `⚡ Crítico: +${formatRate(lines)} líneas sin un solo typo. Sospechoso.`)
       if (code >= contract.code)
         log = addLog(log, 'success', `✓ Build OK · ${contract.code} líneas · listo para git push`)
       return { ...state, code, log }
@@ -196,10 +191,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { contract } = state
       if (!contract || state.code < contract.code) return state
       const { reward } = contract
-      const xp = Math.round(reward.xp * xpMultiplier(state.skills.logicalThinking) * qaMultiplier(state.team))
+      const { investments } = state.prestige
+      const xp = Math.round(
+        reward.xp *
+          xpMultiplier(state.skills.logicalThinking) *
+          qaMultiplier(state.team) *
+          investmentBonus(investments.fastLearning),
+      )
       // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
       const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
-      const money = Math.round((reward.money * (1 + 0.1 * Math.max(0, techLevel - 1))) / 5) * 5
+      // Grupos distintos se multiplican: tecnología × Contratos premium (GDD §10)
+      const techBonus = 1 + 0.1 * Math.max(0, techLevel - 1)
+      const money = Math.round((reward.money * techBonus * investmentBonus(investments.premiumContracts)) / 5) * 5
       return {
         ...state,
         money: state.money + money,
@@ -230,11 +233,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
 
       // 1. El equipo escribe código (GDD §5)
-      const code = addCode(
-        state.code,
-        autoRate(state.team, getEditor(state.editor).autoBonus) * action.elapsed,
-        contract.code,
-      )
+      const code = addCode(state.code, autoRateOf(state) * action.elapsed, contract.code)
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
         return {
@@ -313,10 +312,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!isEndless(state.stage)) return state
       const value = companyValue(state.stats.moneyEarned, state.team)
       const tokens = tokensForValue(value)
+      const { investments } = state.prestige
       return {
         ...action.fresh,
+        // Ventajas iniciales de Innovación
+        money: action.fresh.money + 250 * investments.seedCapital,
+        rep: action.fresh.rep + 5 * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
-        prestige: { tokens: state.prestige.tokens + tokens, sales: state.prestige.sales + 1 },
+        prestige: { tokens: state.prestige.tokens + tokens, sales: state.prestige.sales + 1, investments },
         notice: {
           kind: 'success',
           text: `💼 Vendiste la empresa por $${value.toLocaleString('es-AR')}. +${tokens} tokens de inversión. A empezar de nuevo.`,
@@ -325,6 +328,29 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           action.fresh.log,
           'success',
           `git init · nueva empresa (venta n.º ${state.prestige.sales + 1}) · +${tokens} tokens`,
+        ),
+      }
+    }
+
+    case 'invest': {
+      const investment = INVESTMENTS.find((i) => i.id === action.investment)
+      if (!investment) return state
+      const { investments, tokens } = state.prestige
+      const level = investments[investment.id]
+      const cost = investmentCost(level)
+      const locked = investment.requires && investments[investment.requires] === 0
+      if (level >= investment.maxLevel || tokens < cost || locked) return state
+      return {
+        ...state,
+        prestige: {
+          ...state.prestige,
+          tokens: tokens - cost,
+          investments: { ...investments, [investment.id]: level + 1 },
+        },
+        log: addLog(
+          state.log,
+          'success',
+          `${investment.icon} ${investment.name} Nv.${level + 1} · ${investment.effect}`,
         ),
       }
     }

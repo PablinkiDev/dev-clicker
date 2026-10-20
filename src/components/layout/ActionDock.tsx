@@ -1,3 +1,4 @@
+import { formatRate } from '../../game/format'
 type ActionDockProps = {
   hasContract: boolean
   isComplete: boolean
@@ -13,7 +14,7 @@ type ActionDockProps = {
 function ActionDock({ hasContract, isComplete, isWorkView, perClick, onProgram, onDeliver, critPop }: ActionDockProps) {
   const canProgram = hasContract && !isComplete && isWorkView
 
-  let hint = `+${perClick} ${perClick === 1 ? 'línea' : 'líneas'}`
+  let hint = `+${formatRate(perClick)} ${perClick === 1 ? 'línea' : 'líneas'}`
   if (!hasContract) hint = 'elegí un contrato primero'
   else if (isComplete) hint = 'objetivo alcanzado'
   else if (!isWorkView) hint = 'volvé al código'
@@ -40,7 +41,7 @@ function ActionDock({ hasContract, isComplete, isWorkView, perClick, onProgram, 
           key={critPop.id}
           className="pointer-events-none absolute -top-3 left-1/3 -translate-x-1/2 animate-float-up font-mono text-xl font-extrabold text-yellow [text-shadow:0_0_16px_rgba(255,203,107,.8)]"
         >
-          ⚡ ¡Crítico! +{critPop.lines}
+          ⚡ ¡Crítico! +{formatRate(critPop.lines)}
         </span>
       )}
 
@@ -54,7 +55,15 @@ function ActionDock({ hasContract, isComplete, isWorkView, perClick, onProgram, 
             : 'cursor-default border border-line-2 bg-panel-2 text-faint'
         }`}
       >
-        <svg viewBox="0 0 24 24" className="size-5.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 24 24"
+          className="size-5.5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M12 19V5M5 12l7-7 7 7" />
         </svg>
         <span>

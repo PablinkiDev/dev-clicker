@@ -16,11 +16,12 @@ import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
-import { critChance, linesPerClick, skillCost } from './game/formulas'
+import { critChance, skillCost } from './game/formulas'
+import { autoRateOf, clickRate } from './game/rates'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
-import { autoRate, replaceCandidate, rerollCandidates, type Employee } from './game/team'
+import { replaceCandidate, rerollCandidates, type Employee } from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
@@ -64,8 +65,8 @@ function App() {
   const editor = getEditor(editorId)
   const look = getEditor(lookId)
   const { ideChrome } = look.features
-  const perClick = linesPerClick(skills.fastTyping, editor.clickBonus)
-  const auto = autoRate(team, editor.autoBonus)
+  const perClick = clickRate(state)
+  const auto = autoRateOf(state)
   const isComplete = contract !== null && code >= contract.code
   const isRunning = contract !== null && !isComplete && isVisible
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
@@ -317,6 +318,8 @@ function App() {
               xp={xp}
               onBuy={(skill) => dispatch({ type: 'buySkill', skill })}
               onLearn={(tech) => dispatch({ type: 'learnTech', tech })}
+              prestige={state.prestige}
+              onInvest={(investment) => dispatch({ type: 'invest', investment })}
               tools={<EditorShop editor={editor.id} money={money} onBuy={() => dispatch({ type: 'buyEditor' })} />}
             />
           )}
