@@ -27,6 +27,8 @@ export type ContractTemplate = {
   lang?: Lang
   /** Etapa mínima para que aparezca (índice en STAGES); si falta, desde el principio */
   minStage?: number
+  /** Última etapa en la que aparece; si falta, la siguiente a minStage */
+  maxStage?: number
   /** Contrato que aparece una sola vez (el guiado) */
   once?: boolean
 }

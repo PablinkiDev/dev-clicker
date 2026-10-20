@@ -50,9 +50,15 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)]
 }
 
-/** Un contrato se puede ofrecer si sabés la tecnología de su lenguaje y la empresa llegó a su etapa */
+/**
+ * Un contrato se puede ofrecer si sabés la tecnología de su lenguaje y la empresa está en su rango
+ * de etapas: desde minStage hasta maxStage (por defecto, la etapa siguiente). Así en Corporación no
+ * aparece la verdulería del barrio.
+ */
 export function canTake(template: ContractTemplate, tech: TechLevels, stage: number): boolean {
-  return tech[LANG_TECH[template.lang ?? 'html']] > 0 && stage >= (template.minStage ?? 0)
+  const min = template.minStage ?? 0
+  const max = template.maxStage ?? min + 1
+  return tech[LANG_TECH[template.lang ?? 'html']] > 0 && stage >= min && stage <= max
 }
 
 /** Tablón inicial: el contrato guiado + ofertas para completar */
