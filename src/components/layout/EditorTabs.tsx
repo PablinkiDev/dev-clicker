@@ -1,6 +1,6 @@
 import { fileName } from '../../game/format'
 import type { Contract } from '../../game/types'
-import type { View } from '../../ui'
+import { LANG_ICON, type View } from '../../ui'
 
 type EditorTabsProps = {
   view: View
@@ -14,7 +14,15 @@ type Tab = { view: View; icon: string; iconClass: string; name: string; modified
 function EditorTabs({ view, contract, onChange }: EditorTabsProps) {
   const tabs: Tab[] = [
     ...(contract
-      ? [{ view: 'work' as const, icon: '<>', iconClass: 'text-orange', name: fileName(contract.id, contract.lang), modified: true }]
+      ? [
+          {
+            view: 'work' as const,
+            icon: LANG_ICON[contract.lang ?? 'html'].icon,
+            iconClass: LANG_ICON[contract.lang ?? 'html'].className,
+            name: fileName(contract.id, contract.lang),
+            modified: true,
+          },
+        ]
       : []),
     { view: 'board', icon: '▤', iconClass: 'text-muted', name: 'ofertas/' },
     { view: 'team', icon: '●', iconClass: 'text-cyan', name: 'equipo/' },

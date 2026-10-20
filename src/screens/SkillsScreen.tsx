@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { LANG_ICON, TECH_LANG } from '../ui'
 import ScreenHeader from '../components/ScreenHeader'
 import SkillCard from '../components/SkillCard'
 import { SKILLS, type SkillId, type SkillLevels } from '../data/skills'
@@ -10,6 +11,8 @@ import type { Prestige } from '../game/prestige'
 type SkillsScreenProps = {
   skills: SkillLevels
   tech: TechLevels
+  /** Etapa de la empresa: algunas tecnologías piden una mínima */
+  stage: number
   xp: number
   onBuy: (skill: SkillId) => void
   onLearn: (tech: TechId) => void
@@ -21,7 +24,7 @@ type SkillsScreenProps = {
 
 const GRID = 'mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]'
 
-function SkillsScreen({ skills, tech, xp, onBuy, onLearn, tools, prestige, onInvest }: SkillsScreenProps) {
+function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige, onInvest }: SkillsScreenProps) {
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
       <ScreenHeader icon="⑂" title="Mejoras">
@@ -37,14 +40,15 @@ function SkillsScreen({ skills, tech, xp, onBuy, onLearn, tools, prestige, onInv
         {TECHS.map((t) => (
           <SkillCard
             key={t.id}
-            icon={t.icon}
+            icon={LANG_ICON[TECH_LANG[t.id]].icon}
+            iconClass={LANG_ICON[TECH_LANG[t.id]].className}
             name={t.name}
             effect={t.effect}
             level={tech[t.id]}
             maxLevel={t.maxLevel}
             cost={skillCost(t.baseCost, tech[t.id])}
             xp={xp}
-            locked={missingRequirements(t, tech) && `Requiere ${missingRequirements(t, tech)}`}
+            locked={missingRequirements(t, tech, stage) && `Requiere ${missingRequirements(t, tech, stage)}`}
             onBuy={() => onLearn(t.id)}
           />
         ))}

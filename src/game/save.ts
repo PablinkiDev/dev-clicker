@@ -11,7 +11,7 @@ import { INITIAL_INVESTMENTS } from '../data/investments'
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 14
+export const SAVE_VERSION: number = 15
 
 type SaveFile = {
   version: number
@@ -145,6 +145,22 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 14 }
   }
 
+  // v14 → v15: TypeScript, React y Node.js (sin aprender)
+  if (file.version === 14 && isObject(state.tech)) {
+    state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
+    file = { ...file, version: 15 }
+  }
+
+  // Siempre: completar claves nuevas que falten (por ejemplo, una partida guardada con la versión
+  // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
+  if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
+  if (isObject(state.prestige) && isObject(state.prestige.investments)) {
+    state = {
+      ...state,
+      prestige: { ...state.prestige, investments: { ...INITIAL_INVESTMENTS, ...state.prestige.investments } },
+    }
+  }
+
   return { ...file, state }
 }
 
@@ -158,6 +174,11 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
+}
+
+/** ¿Es un objeto con un número en cada clave del modelo? (niveles de tecnologías, etc.) */
+function hasNumbers(value: unknown, model: object): boolean {
+  return isObject(value) && Object.keys(model).every((key) => isNumber(value[key]))
 }
 
 function isContract(value: unknown): boolean {
@@ -209,7 +230,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     EDITORS.some((e) => e.id === s.look) &&
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
-    isObject(s.tech) &&
+    hasNumbers(s.tech, INITIAL_TECH) &&
     isStats(s.stats) &&
     isPrestige(s.prestige) &&
     Array.isArray(s.team) &&

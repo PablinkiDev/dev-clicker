@@ -1,7 +1,8 @@
 import { OFFICES } from '../../data/offices'
 import { ROLES } from '../../data/roles'
 import { employeePrice, type Employee } from '../../game/team'
-import { ROLE_STYLE } from '../../ui'
+import { LANG_ICON, ROLE_STYLE } from '../../ui'
+import type { Lang } from '../../data/techs'
 import { fileName, formatMoney } from '../../game/format'
 import type { Contract, Difficulty } from '../../game/types'
 import type { View } from '../../ui'
@@ -19,6 +20,14 @@ const DIFFICULTY_MARK: Record<Difficulty, { letter: string; className: string }>
   easy: { letter: 'F', className: 'text-green' },
   mid: { letter: 'M', className: 'text-orange' },
   hard: { letter: 'D', className: 'text-red' },
+}
+
+function LangIcon({ lang = 'html' }: { lang?: Lang }) {
+  return (
+    <span className={`w-4 shrink-0 text-center font-mono text-[10px] font-extrabold ${LANG_ICON[lang].className}`}>
+      {LANG_ICON[lang].icon}
+    </span>
+  )
 }
 
 function Folder({ children, extra }: { children: string; extra?: string }) {
@@ -45,7 +54,7 @@ function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarP
         <Folder>en curso</Folder>
         {contract ? (
           <button type="button" onClick={() => onNavigate('work')} className={`${FILE_ROW} bg-panel-3 text-text`}>
-            <span className="w-4 text-center font-mono text-[10px] font-extrabold text-orange">&lt;&gt;</span>
+            <LangIcon lang={contract.lang} />
             <span className="truncate">{fileName(contract.id, contract.lang)}</span>
             <span className="ml-auto font-mono text-[11px] font-extrabold text-yellow">M</span>
           </button>
@@ -61,7 +70,7 @@ function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarP
             onClick={() => onNavigate('board')}
             className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
           >
-            <span className="w-4 text-center font-mono text-[10px] font-extrabold text-orange">&lt;&gt;</span>
+            <LangIcon lang={o.lang} />
             <span className="truncate">{fileName(o.id, o.lang)}</span>
             <span className={`ml-auto font-mono text-[11px] font-extrabold ${DIFFICULTY_MARK[o.difficulty].className}`}>
               {DIFFICULTY_MARK[o.difficulty].letter}
@@ -70,7 +79,11 @@ function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarP
         ))}
 
         <Folder extra={`${1 + team.length}/${1 + OFFICES[office].capacity}`}>equipo</Folder>
-        <button type="button" onClick={() => onNavigate('team')} className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}>
+        <button
+          type="button"
+          onClick={() => onNavigate('team')}
+          className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
+        >
           <span className="w-4 text-center text-green">●</span>vos.exe
         </button>
         {team.map((e) => (

@@ -1,5 +1,7 @@
 type SkillCardProps = {
   icon: string
+  /** Color del ícono (las tecnologías usan el de su lenguaje) */
+  iconClass?: string
   name: string
   effect: string
   level: number
@@ -16,7 +18,19 @@ type SkillCardProps = {
 }
 
 /** Tarjeta de algo que se mejora con XP: habilidades y tecnologías */
-function SkillCard({ icon, name, effect, level, maxLevel, cost, xp, currency = 'XP', locked, onBuy }: SkillCardProps) {
+function SkillCard({
+  icon,
+  iconClass,
+  name,
+  effect,
+  level,
+  maxLevel,
+  cost,
+  xp,
+  currency = 'XP',
+  locked,
+  onBuy,
+}: SkillCardProps) {
   const isMax = level >= maxLevel
   const canBuy = !isMax && !locked && xp >= cost
 
@@ -29,7 +43,7 @@ function SkillCard({ icon, name, effect, level, maxLevel, cost, xp, currency = '
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-bold">
-            {icon} {name}
+            <span className={iconClass ? `font-mono font-extrabold ${iconClass}` : undefined}>{icon}</span> {name}
           </p>
           <p className="text-xs text-muted">{effect}</p>
         </div>

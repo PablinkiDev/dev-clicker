@@ -125,7 +125,6 @@ const GENERIC_HTML = [
   '</html>',
 ]
 
-
 const GENERIC_CSS = [
   '/* boton-mas-grande.css — v47 */',
   '/* no preguntar por las otras 46 versiones */',
@@ -274,9 +273,95 @@ const GENERIC_JS = [
   'setTimeout(() => location.reload(), 0) // arregla todo',
 ]
 
+const GENERIC_TS = [
+  '// strict: true (lo prendimos un viernes, error)',
+  'interface Usuario {',
+  '  id: number',
+  '  nombre: string',
+  '  email?: string // opcional, como los tests',
+  '}',
+  '',
+  'type Respuesta<T> = { ok: true; data: T } | { ok: false; error: string }',
+  '',
+  'export async function traerUsuario(id: number): Promise<Respuesta<Usuario>> {',
+  '  const res = await fetch(`/api/usuarios/${id}`)',
+  '  if (!res.ok) return { ok: false, error: "Algo salió mal" }',
+  '  return { ok: true, data: (await res.json()) as Usuario } // confiá en mí, compilador',
+  '}',
+  '',
+  'const config: any = {} // TODO: tiparlo bien algún día',
+  '',
+  'function sumar(a: number, b: number): number {',
+  '  return a + b',
+  '}',
+  '',
+  '// @ts-ignore porque son las 18:59',
+  'sumar("2", 2)',
+]
+
+const GENERIC_REACT = [
+  "import { useEffect, useState } from 'react'",
+  '',
+  'export function Carrito({ productos }) {',
+  '  const [total, setTotal] = useState(0)',
+  '  const [abierto, setAbierto] = useState(false)',
+  '',
+  '  useEffect(() => {',
+  '    setTotal(productos.reduce((a, p) => a + p.precio, 0))',
+  '  }, [productos]) // el array de dependencias, la parte fácil',
+  '',
+  '  if (!productos.length) return <p>Tu carrito está vacío :(</p>',
+  '',
+  '  return (',
+  '    <div className="carrito">',
+  '      <button onClick={() => setAbierto(!abierto)}>Ver carrito</button>',
+  '      {abierto && productos.map((p) => (',
+  '        <Item key={Math.random()} producto={p} /> // ¿por qué se re-renderiza todo?',
+  '      ))}',
+  '      <b>Total: ${total}</b>',
+  '    </div>',
+  '  )',
+  '}',
+  '',
+]
+
+const GENERIC_NODE = [
+  "import express from 'express'",
+  '',
+  'const app = express()',
+  'app.use(express.json())',
+  '',
+  "app.get('/api/salud', (req, res) => {",
+  "  res.json({ estado: 'vivo', cafe: 'bajo' })",
+  '})',
+  '',
+  "app.post('/api/pedidos', async (req, res) => {",
+  '  try {',
+  '    const pedido = await db.pedidos.create(req.body) // validar es para débiles',
+  '    res.status(201).json(pedido)',
+  '  } catch (e) {',
+  '    console.error(e) // nadie lee los logs',
+  '    res.status(500).json({ error: "Reintente más tarde (o nunca)" })',
+  '  }',
+  '})',
+  '',
+  'const PORT = process.env.PORT ?? 3000',
+  'app.listen(PORT, () => console.log(`Escuchando en ${PORT}, a veces`))',
+  '',
+]
+
+/** Líneas genéricas para cada lenguaje */
+const BY_LANG: Record<Lang, string[]> = {
+  html: GENERIC_HTML,
+  css: GENERIC_CSS,
+  js: GENERIC_JS,
+  ts: GENERIC_TS,
+  jsx: GENERIC_REACT,
+  node: GENERIC_NODE,
+}
+
 /** Las líneas que corresponden a un contrato */
 export function snippetsFor(contractId: string, lang: Lang = 'html'): string[] {
   if (contractId === 'mi-sobrino') return TIA_NORMA
-  if (lang === 'js') return GENERIC_JS
-  return lang === 'css' ? GENERIC_CSS : GENERIC_HTML
+  return BY_LANG[lang]
 }

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
-// Resaltado de sintaxis mínimo para HTML y CSS: alcanza para que el editor se vea vivo.
+// Resaltado de sintaxis mínimo para HTML, CSS y JS/TS: alcanza para que el editor se vea vivo.
 // Cada grupo de la expresión regular es un tipo de token, en este orden:
 //   1 comentario · 2 etiqueta · 3 texto entre comillas · 4 atributo · 5 selector · 6 número · 7 palabra clave
 const TOKEN =
-  /(<!--.*?-->|\/\*.*?\*\/)|(<\/?[\w!-]+|\/?>)|("[^"]*"|'[^']*')|([\w-]+)(?==)|([.#@][\w-]+)|(\b\d+(?:\.\d+)?(?:px|rem|s|%|deg)?\b)|(!important|\b(?:display|transform|animation|background|cursor|padding|font-size|z-index|opacity|gap|border-radius)\b)/g
+  /(<!--.*?-->|\/\*.*?\*\/)|(<\/?[\w!-]+|\/?>)|("[^"]*"|'[^']*')|([\w-]+)(?==)|([.#@][\w-]+)|(\b\d+(?:\.\d+)?(?:px|rem|s|%|deg)?\b)|(!important|\b(?:display|transform|animation|background|cursor|padding|font-size|z-index|opacity|gap|border-radius|const|let|function|return|if|else|async|await|import|export|from|interface|type|new|try|catch)\b)/g
 
 // Cada color usa una variable --syn-* (definida por el editor en index.css) y, si no existe, la paleta común
 const CLASSES = [

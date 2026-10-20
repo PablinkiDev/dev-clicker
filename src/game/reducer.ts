@@ -276,7 +276,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!tech) return state
       const level = state.tech[tech.id]
       const cost = skillCost(tech.baseCost, level)
-      if (level >= tech.maxLevel || state.xp < cost || missingRequirements(tech, state.tech)) return state
+      if (level >= tech.maxLevel || state.xp < cost || missingRequirements(tech, state.tech, state.stage)) return state
       return {
         ...state,
         xp: state.xp - cost,

@@ -1,5 +1,6 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { snippetsFor } from '../../data/snippets'
+import { fileName } from '../../game/format'
 import type { Contract } from '../../game/types'
 import { highlight } from './highlight'
 
@@ -117,7 +118,7 @@ function CodeView({ contract, code, syntax, lineNumbers }: CodeViewProps) {
   return (
     <div
       ref={scrollRef}
-      data-file={`${contract.id}.${contract.lang ?? 'html'}`}
+      data-file={fileName(contract.id, contract.lang)}
       className="code-view min-h-0 flex-1 overflow-y-auto py-2 font-mono text-[13px] leading-[22px] md:text-sm"
     >
       {rows.map((i) => (

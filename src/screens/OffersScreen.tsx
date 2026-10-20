@@ -1,3 +1,4 @@
+import { LANG_ICON } from '../ui'
 import ScreenHeader from '../components/ScreenHeader'
 import { estimateSeconds } from '../game/formulas'
 import { fileName } from '../game/format'
@@ -67,7 +68,10 @@ function OffersScreen({ offers, perClick, autoRate, activeFile, knowsJs, onAccep
                 className="h-full w-full cursor-pointer rounded-xl border border-line bg-panel-2 p-3.5 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-cyan/50 disabled:cursor-default disabled:opacity-60"
               >
                 <p className="mb-1 truncate font-mono text-[11px] text-muted">
-                  <span className="text-orange">&lt;&gt;</span> {fileName(offer.id, offer.lang)}
+                  <span className={LANG_ICON[offer.lang ?? 'html'].className}>
+                    {LANG_ICON[offer.lang ?? 'html'].icon}
+                  </span>{' '}
+                  {fileName(offer.id, offer.lang)}
                 </p>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-muted">{offer.client}</p>
@@ -83,7 +87,8 @@ function OffersScreen({ offers, perClick, autoRate, activeFile, knowsJs, onAccep
                   <span className="text-purple">+{offer.reward.xp} XP</span>
                 </p>
                 <p className="mt-2 border-t border-dashed border-line pt-2 font-mono text-xs text-muted">
-                  <span className={verdict.className}>● {verdict.text}</span> · ~{Math.ceil(estimate)} s de {offer.time} s
+                  <span className={verdict.className}>● {verdict.text}</span> · ~{Math.ceil(estimate)} s de {offer.time}{' '}
+                  s
                 </p>
               </button>
             </li>
@@ -93,8 +98,8 @@ function OffersScreen({ offers, perClick, autoRate, activeFile, knowsJs, onAccep
 
       {!knowsJs && (
         <p className="mt-4 rounded-xl border border-dashed border-line-2 px-4 py-3 font-mono text-xs text-muted">
-          🔒 Hay clientes que piden <b className="text-yellow">JavaScript</b>. Aprendelo con XP en Mejoras → tecnologías/
-          para desbloquear contratos .js mejor pagos.
+          🔒 Hay clientes que piden <b className="text-yellow">JavaScript</b>. Aprendelo con XP en Mejoras →
+          tecnologías/ para desbloquear contratos .js mejor pagos.
         </p>
       )}
     </section>

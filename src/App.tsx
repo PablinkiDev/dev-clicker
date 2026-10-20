@@ -321,6 +321,7 @@ function App() {
             <SkillsScreen
               skills={skills}
               tech={state.tech}
+              stage={state.stage}
               xp={xp}
               onBuy={(skill) => dispatch({ type: 'buySkill', skill })}
               onLearn={(tech) => dispatch({ type: 'learnTech', tech })}
