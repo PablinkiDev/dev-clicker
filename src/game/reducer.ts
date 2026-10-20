@@ -153,6 +153,58 @@ export function createInitialState(): GameState {
   }
 }
 
+/**
+ * Entrega el contrato en curso: cobra, suma XP y reputación y libera el editor.
+ * La usan la acción 'deliver' (botón git push) y la Entrega continua (automática).
+ */
+/** Con Entrega continua, un contrato completo se entrega solo (GDD §9) */
+function finishIfDone(state: GameState): GameState {
+  const done = state.contract !== null && state.code >= state.contract.code
+  return done && state.skills.autoDeliver > 0 ? deliverContract(state) : state
+}
+
+function deliverContract(state: GameState): GameState {
+  const { contract } = state
+  if (!contract || state.code < contract.code) return state
+  const { reward } = contract
+  const { investments } = state.prestige
+  const xp = Math.round(
+    reward.xp *
+      xpMultiplier(state.skills.logicalThinking) *
+      (1 + 0.05 * state.skills.knowledge) *
+      qaMultiplier(state.team) *
+      investmentBonus(investments.fastLearning),
+  )
+  // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
+  const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
+  // Grupos distintos se multiplican: tecnología × Contratos premium (GDD §10)
+  const techBonus = 1 + 0.1 * Math.max(0, techLevel - 1)
+  const money = Math.round((reward.money * techBonus * investmentBonus(investments.premiumContracts)) / 5) * 5
+  return {
+    ...state,
+    money: state.money + money,
+    xp: state.xp + xp,
+    rep: state.rep + reward.rep,
+    code: 0, // el código no se acumula entre contratos (GDD §3)
+    contract: null,
+    endless: isEndless(state.stage) ? state.endless + 1 : state.endless,
+    stats: {
+      ...state.stats,
+      moneyEarned: state.stats.moneyEarned + money,
+      contractsDone: state.stats.contractsDone + 1,
+    },
+    notice: {
+      kind: 'success',
+      text: `${contract.client} pagó: +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
+    },
+    log: addLog(
+      state.log,
+      'success',
+      `git push origin main → deploy exitoso 🚀 +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
+    ),
+  }
+}
+
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'accept': {
@@ -184,50 +236,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         log = addLog(log, 'crit', `⚡ Crítico: +${formatRate(lines)} líneas sin un solo typo. Sospechoso.`)
       if (code >= contract.code)
         log = addLog(log, 'success', `✓ Build OK · ${contract.code} líneas · listo para git push`)
-      return { ...state, code, log }
+      return finishIfDone({ ...state, code, log })
     }
 
-    case 'deliver': {
-      const { contract } = state
-      if (!contract || state.code < contract.code) return state
-      const { reward } = contract
-      const { investments } = state.prestige
-      const xp = Math.round(
-        reward.xp *
-          xpMultiplier(state.skills.logicalThinking) *
-          (1 + 0.05 * state.skills.knowledge) *
-          qaMultiplier(state.team) *
-          investmentBonus(investments.fastLearning),
-      )
-      // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
-      const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
-      // Grupos distintos se multiplican: tecnología × Contratos premium (GDD §10)
-      const techBonus = 1 + 0.1 * Math.max(0, techLevel - 1)
-      const money = Math.round((reward.money * techBonus * investmentBonus(investments.premiumContracts)) / 5) * 5
-      return {
-        ...state,
-        money: state.money + money,
-        xp: state.xp + xp,
-        rep: state.rep + reward.rep,
-        code: 0, // el código no se acumula entre contratos (GDD §3)
-        contract: null,
-        endless: isEndless(state.stage) ? state.endless + 1 : state.endless,
-        stats: {
-          ...state.stats,
-          moneyEarned: state.stats.moneyEarned + money,
-          contractsDone: state.stats.contractsDone + 1,
-        },
-        notice: {
-          kind: 'success',
-          text: `${contract.client} pagó: +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
-        },
-        log: addLog(
-          state.log,
-          'success',
-          `git push origin main → deploy exitoso 🚀 +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
-        ),
-      }
-    }
+    case 'deliver':
+      return deliverContract(state)
 
     case 'tick': {
       const { contract } = state
@@ -237,11 +250,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const code = addCode(state.code, autoRateOf(state) * action.elapsed, contract.code)
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
-        return {
+        return finishIfDone({
           ...state,
           code,
           log: addLog(state.log, 'success', `✓ Build OK · el equipo terminó ${contract.code} líneas`),
-        }
+        })
       }
 
       // 2. Corre el reloj

@@ -1,6 +1,6 @@
 // Habilidades del árbol personal (GDD §8). Valores experimentales.
 
-export type SkillId = 'fastTyping' | 'criticalCode' | 'logicalThinking' | 'teamwork' | 'knowledge'
+export type SkillId = 'fastTyping' | 'criticalCode' | 'logicalThinking' | 'teamwork' | 'knowledge' | 'autoDeliver'
 
 export type Skill = {
   id: SkillId
@@ -65,6 +65,17 @@ export const SKILLS: Skill[] = [
     group: 'company',
     minStage: 1,
   },
+  // Automatización (GDD §9): se compra una sola vez
+  {
+    id: 'autoDeliver',
+    name: 'Entrega continua',
+    icon: '🤖',
+    effect: 'Los contratos se entregan solos al completar el código (CI/CD, pero de verdad)',
+    baseCost: 500,
+    maxLevel: 1,
+    group: 'company',
+    minStage: 1,
+  },
 ]
 
 export type SkillLevels = Record<SkillId, number>
@@ -75,4 +86,5 @@ export const INITIAL_SKILLS: SkillLevels = {
   logicalThinking: 0,
   teamwork: 0,
   knowledge: 0,
+  autoDeliver: 0,
 }
