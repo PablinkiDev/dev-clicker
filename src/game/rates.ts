@@ -6,17 +6,18 @@ import { investmentBonus } from './prestige'
 import type { GameState } from './reducer'
 import { autoRate } from './team'
 
-/** Líneas por clic (sin crítico): habilidad + editor, × Código heredado */
+/** Líneas por clic (sin crítico): habilidad + editor, × IA asistida × Código heredado */
 export function clickRate(state: GameState): number {
   const base = linesPerClick(state.skills.fastTyping, getEditor(state.editor).clickBonus)
-  return base * investmentBonus(state.prestige.investments.legacyCode)
+  return base * (1 + 0.1 * state.tech.ai) * investmentBonus(state.prestige.investments.legacyCode)
 }
 
-/** Líneas por segundo del equipo y el editor, × Trabajo en equipo × Equipo experimentado */
+/** Líneas por segundo del equipo y el editor, × Trabajo en equipo × Git × Equipo experimentado */
 export function autoRateOf(state: GameState): number {
   return (
     autoRate(state.team, getEditor(state.editor).autoBonus) *
     (1 + 0.05 * state.skills.teamwork) *
+    (1 + 0.1 * state.tech.git) *
     investmentBonus(state.prestige.investments.seniorTeam)
   )
 }

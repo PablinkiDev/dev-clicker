@@ -2,7 +2,7 @@
 // Las dependencias nuevas piden nivel 3 (GDD §7).
 import { STAGES } from './stages'
 
-export type TechId = 'html' | 'css' | 'javascript' | 'typescript' | 'react' | 'node' | 'sql'
+export type TechId = 'html' | 'css' | 'javascript' | 'typescript' | 'react' | 'node' | 'sql' | 'git' | 'ai'
 
 /** Lenguaje de un archivo de contrato */
 export type Lang = 'html' | 'css' | 'js' | 'ts' | 'jsx' | 'node' | 'sql'
@@ -103,12 +103,49 @@ export const TECHS: Tech[] = [
     minStage: 2,
     effect: 'Desbloquea contratos .sql y fullstack · +10 % de dinero por nivel en ellos',
   },
+  // Transversales: no tienen contratos propios, dan bonus a todo
+  {
+    id: 'git',
+    name: 'Git',
+    icon: '⎇',
+    baseCost: 150,
+    maxLevel: 5,
+    requires: [
+      ['html', 1],
+      ['css', 1],
+    ],
+    minStage: 1,
+    effect: '+10 % de producción automática por nivel (se acabó el final_final_v3.zip)',
+  },
+  {
+    id: 'ai',
+    name: 'IA asistida',
+    icon: '✨',
+    baseCost: 800,
+    maxLevel: 5,
+    requires: [
+      ['git', 3],
+      ['javascript', 3],
+    ],
+    minStage: 3,
+    effect: '+10 % de líneas por clic por nivel (revisá lo que escribe)',
+  },
 ]
 
 export type TechLevels = Record<TechId, number>
 
 /** Arrancás sabiendo HTML y CSS (GDD §7) */
-export const INITIAL_TECH: TechLevels = { html: 1, css: 1, javascript: 0, typescript: 0, react: 0, node: 0, sql: 0 }
+export const INITIAL_TECH: TechLevels = {
+  html: 1,
+  css: 1,
+  javascript: 0,
+  typescript: 0,
+  react: 0,
+  node: 0,
+  sql: 0,
+  git: 0,
+  ai: 0,
+}
 
 /** Qué tecnología pide cada lenguaje de contrato */
 export const LANG_TECH: Record<Lang, TechId> = {

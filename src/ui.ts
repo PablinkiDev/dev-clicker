@@ -45,4 +45,6 @@ export const TECH_ICON: Record<TechId, { icon: string; className: string }> = {
   react: LANG_ICON.jsx,
   node: LANG_ICON.node,
   sql: LANG_ICON.sql,
+  git: { icon: '⎇', className: 'text-orange' },
+  ai: { icon: '✨', className: 'text-purple' },
 }

@@ -11,6 +11,26 @@ import { INITIAL_INVESTMENTS } from '../data/investments'
 
 const SAVE_KEY = 'dev-clicker:save'
 
+/** Si una partida no se puede cargar, se copia acá antes de que el juego la pise con una nueva */
+const BACKUP_KEY = 'dev-clicker:save-backup'
+
+/**
+ * Valores por defecto de los campos que se fueron agregando. Si a una partida le falta alguno,
+ * se completa en vez de descartarla. Pasa sobre todo en desarrollo: con la recarga en caliente de
+ * Vite, el estado viejo en memoria se guarda con la versión nueva y quedan campos sin migrar.
+ */
+const FIELD_DEFAULTS: Partial<GameState> = {
+  stage: 0,
+  endless: 0,
+  office: 0,
+  dim: false,
+  darkMode: { owned: false, on: false },
+  autoAccept: true,
+  focus: INITIAL_FOCUS,
+  stats: INITIAL_STATS,
+  prestige: INITIAL_PRESTIGE,
+}
+
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
 export const SAVE_VERSION: number = 17
 
@@ -36,14 +56,29 @@ export function loadGame(): GameState | null {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return null
     const file = migrate(JSON.parse(raw))
-    if (!isSaveFile(file) || file.version !== SAVE_VERSION) return null
+    if (!isSaveFile(file) || file.version !== SAVE_VERSION) {
+      backup(raw)
+      return null
+    }
     return {
       ...file.state,
       notice: null,
       log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }],
     }
   } catch {
+    backup(localStorage.getItem(SAVE_KEY))
     return null
+  }
+}
+
+/** Guarda una copia de la partida que no se pudo cargar (para revisarla o recuperarla a mano) */
+function backup(raw: string | null): void {
+  if (!raw) return
+  try {
+    localStorage.setItem(BACKUP_KEY, raw)
+    console.warn(`No se pudo cargar la partida. Hay una copia en localStorage["${BACKUP_KEY}"].`)
+  } catch {
+    // sin espacio: no hay nada más que hacer
   }
 }
 
@@ -166,12 +201,17 @@ function migrate(raw: unknown): unknown {
 
   // Siempre: completar claves nuevas que falten (por ejemplo, una partida guardada con la versión
   // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
+  state = { ...FIELD_DEFAULTS, ...state }
   if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
   if (isObject(state.skills)) state = { ...state, skills: { ...INITIAL_SKILLS, ...state.skills } }
   if (isObject(state.prestige) && isObject(state.prestige.investments)) {
     state = {
       ...state,
-      prestige: { ...state.prestige, investments: { ...INITIAL_INVESTMENTS, ...state.prestige.investments } },
+      prestige: {
+        ...INITIAL_PRESTIGE,
+        ...state.prestige,
+        investments: { ...INITIAL_INVESTMENTS, ...state.prestige.investments },
+      },
     }
   }
 
