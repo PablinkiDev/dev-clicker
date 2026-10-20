@@ -104,7 +104,7 @@ function migrate(raw: unknown): unknown {
     const { developers, ...rest } = state
     const team: Employee[] = []
     const count = isNumber(developers) ? developers : 0
-    for (let i = 0; i < count; i++) team.push(createCandidate('dev', team, 1))
+    for (let i = 0; i < count; i++) team.push(createCandidate('dev', team, 0, 1))
     state = { ...rest, team, candidates: createInitialCandidates(team) }
     file = { ...file, version: 8 }
   }

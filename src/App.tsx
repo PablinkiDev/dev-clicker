@@ -139,7 +139,7 @@ function App() {
 
   function hire(candidate: Employee, replaceUid?: string) {
     // Igual que con las ofertas: el candidato que ocupa su lugar se genera acá (azar)
-    const candidates = replaceCandidate(state.candidates, candidate, team)
+    const candidates = replaceCandidate(state.candidates, candidate, team, state.stage)
     dispatch({ type: 'hire', uid: candidate.uid, replaceUid, candidates })
   }
 
@@ -149,7 +149,8 @@ function App() {
       ...offerContext,
       stage: state.stage + 1,
     })
-    dispatch({ type: 'ascend', offers })
+    // Y llegan candidatos nuevos, con las estrellas que permite la etapa nueva
+    dispatch({ type: 'ascend', offers, candidates: rerollCandidates(team, state.stage + 1) })
   }
 
   function sell() {
@@ -287,7 +288,7 @@ function App() {
               autoRate={auto}
               isWorking={isRunning}
               onHire={hire}
-              onReroll={() => dispatch({ type: 'rerollCandidates', candidates: rerollCandidates(team) })}
+              onReroll={() => dispatch({ type: 'rerollCandidates', candidates: rerollCandidates(team, state.stage) })}
               onMove={() => dispatch({ type: 'moveOffice' })}
             />
           )}

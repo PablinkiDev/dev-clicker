@@ -4,7 +4,7 @@ import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES } from '../data/offices'
 import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
-import { REROLL_PRICE, employeePrice, qaMultiplier, type Employee } from '../game/team'
+import { REROLL_PRICE, employeePrice, maxStars, qaMultiplier, type Employee } from '../game/team'
 
 type TeamScreenProps = {
   team: Employee[]
@@ -174,6 +174,9 @@ function TeamScreen({
         >
           🔄 Buscar otros · {formatMoney(REROLL_PRICE)}
         </button>
+        <span className="ml-auto font-mono text-[11px] text-muted">
+          hasta <b className="text-yellow">{'★'.repeat(maxStars(stage))}</b> como {STAGES[stage].name}
+        </span>
       </div>
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))]">
         {candidates.map((c) => {

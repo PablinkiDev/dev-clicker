@@ -111,7 +111,7 @@ export type GameAction =
   | { type: 'rerollCandidates'; candidates: Employee[] }
   | { type: 'moveOffice' }
   // Al ascender se arma un tablón nuevo con contratos de la etapa nueva (usa azar: llega calculado)
-  | { type: 'ascend'; offers: Contract[] }
+  | { type: 'ascend'; offers: Contract[]; candidates: Employee[] }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
   | { type: 'toggleDarkMode' }
@@ -435,6 +435,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         stage: state.stage + 1,
         offers: action.offers,
+        candidates: action.candidates,
         notice: {
           kind: 'success',
           text: `${next.icon} ¡Ahora sos ${next.name}! Se desbloquea: ${next.unlocks.toLowerCase()}`,

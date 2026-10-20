@@ -56,14 +56,36 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)]
 }
 
-/** 60 % 1★, 30 % 2★, 10 % 3★. Las 4★ y 5★ quedan para oficinas más grandes */
-function randomStars(): number {
-  const r = Math.random()
-  return r < 0.6 ? 1 : r < 0.9 ? 2 : 3
+/**
+ * Probabilidad de cada cantidad de estrellas (1★ a 5★) según la etapa de la empresa.
+ * Freelancer llega a 3★, Estudio y Startup a 4★, y desde Empresa tecnológica aparecen las 5★.
+ */
+export const STAR_ODDS: number[][] = [
+  [0.6, 0.3, 0.1, 0, 0],
+  [0.4, 0.35, 0.2, 0.05, 0],
+  [0.2, 0.35, 0.3, 0.15, 0],
+  [0.1, 0.25, 0.35, 0.2, 0.1],
+  [0.05, 0.15, 0.3, 0.3, 0.2],
+]
+
+/** Estrellas al azar con las probabilidades de la etapa */
+function randomStars(stage: number): number {
+  const odds = STAR_ODDS[Math.min(stage, STAR_ODDS.length - 1)]
+  let r = Math.random()
+  for (let i = 0; i < odds.length; i++) {
+    r -= odds[i]
+    if (r < 0) return i + 1
+  }
+  return 1
+}
+
+/** Estrellas máximas que pueden aparecer en una etapa */
+export function maxStars(stage: number): number {
+  return STAR_ODDS[Math.min(stage, STAR_ODDS.length - 1)].findLastIndex((p) => p > 0) + 1
 }
 
 /** Un candidato nuevo, con un nombre que no esté ya en uso */
-export function createCandidate(role: RoleId, taken: Employee[], stars = randomStars()): Employee {
+export function createCandidate(role: RoleId, taken: Employee[], stage: number, stars = randomStars(stage)): Employee {
   const used = new Set(taken.map((e) => e.name))
   const free = NAMES.filter((n) => !used.has(n))
   return {
@@ -79,7 +101,7 @@ export function createCandidate(role: RoleId, taken: Employee[], stars = randomS
 export function createInitialCandidates(team: Employee[] = []): Employee[] {
   const result: Employee[] = []
   for (const [role, stars] of [['dev', 1], ['qa'], ['ops'], ['dev']] as const) {
-    result.push(createCandidate(role, [...team, ...result], stars))
+    result.push(createCandidate(role, [...team, ...result], 0, stars))
   }
   return result
 }
@@ -88,14 +110,15 @@ export function createInitialCandidates(team: Employee[] = []): Employee[] {
 export const REROLL_PRICE: number = 100
 
 /** Lista nueva de candidatos, todos al azar (el dev 1★ asegurado es solo para el arranque) */
-export function rerollCandidates(team: Employee[]): Employee[] {
+export function rerollCandidates(team: Employee[], stage: number): Employee[] {
   const result: Employee[] = []
-  for (const role of ['dev', 'qa', 'ops', 'dev'] as const) result.push(createCandidate(role, [...team, ...result]))
+  for (const role of ['dev', 'qa', 'ops', 'dev'] as const)
+    result.push(createCandidate(role, [...team, ...result], stage))
   return result
 }
 
 /** Al contratar a alguien, su lugar en la lista lo ocupa un candidato nuevo de la misma profesión */
-export function replaceCandidate(candidates: Employee[], hired: Employee, team: Employee[]): Employee[] {
+export function replaceCandidate(candidates: Employee[], hired: Employee, team: Employee[], stage: number): Employee[] {
   const taken = [...team, ...candidates, hired]
-  return candidates.map((c) => (c.uid === hired.uid ? createCandidate(hired.role, taken) : c))
+  return candidates.map((c) => (c.uid === hired.uid ? createCandidate(hired.role, taken, stage) : c))
 }
