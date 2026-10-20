@@ -1,6 +1,20 @@
 // Prestigio: vender la empresa a cambio de tokens de inversión (GDD §10).
 import { INITIAL_INVESTMENTS, type InvestmentLevels } from '../data/investments'
 
+/** Registro de una empresa vendida (GDD §10: historial) */
+export type SaleRecord = {
+  /** Fecha de la venta (timestamp) */
+  soldAt: number
+  value: number
+  tokens: number
+  moneyEarned: number
+  contractsDone: number
+  contractsFailed: number
+  teamSize: number
+  /** Contratos entregados en modo infinito */
+  endless: number
+}
+
 /** Lo que sobrevive a una venta */
 export type Prestige = {
   /** Tokens de inversión sin gastar */
@@ -9,9 +23,11 @@ export type Prestige = {
   sales: number
   /** Niveles del árbol de prestigio */
   investments: InvestmentLevels
+  /** Empresas vendidas, la más reciente primero */
+  history: SaleRecord[]
 }
 
-export const INITIAL_PRESTIGE: Prestige = { tokens: 0, sales: 0, investments: INITIAL_INVESTMENTS }
+export const INITIAL_PRESTIGE: Prestige = { tokens: 0, sales: 0, investments: INITIAL_INVESTMENTS, history: [] }
 
 /** Tokens por vender apenas se abre el modo infinito */
 export const BASE_TOKENS: number = 3

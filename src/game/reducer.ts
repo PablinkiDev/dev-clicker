@@ -121,7 +121,7 @@ export type GameAction =
   // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
   | { type: 'reset'; state: GameState }
   // Vender la empresa: arranca una partida nueva (armada afuera, tiene azar) conservando el prestigio
-  | { type: 'sell'; fresh: GameState }
+  | { type: 'sell'; fresh: GameState; now: number }
   | { type: 'invest'; investment: InvestmentId }
   | { type: 'dismissNotice' }
 
@@ -319,7 +319,24 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         money: action.fresh.money + 250 * investments.seedCapital,
         rep: action.fresh.rep + 5 * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
-        prestige: { tokens: state.prestige.tokens + tokens, sales: state.prestige.sales + 1, investments },
+        prestige: {
+          tokens: state.prestige.tokens + tokens,
+          sales: state.prestige.sales + 1,
+          investments,
+          history: [
+            {
+              soldAt: action.now,
+              value,
+              tokens,
+              moneyEarned: state.stats.moneyEarned,
+              contractsDone: state.stats.contractsDone,
+              contractsFailed: state.stats.contractsFailed,
+              teamSize: state.team.length,
+              endless: state.endless,
+            },
+            ...state.prestige.history,
+          ],
+        },
         notice: {
           kind: 'success',
           text: `💼 Vendiste la empresa por $${value.toLocaleString('es-AR')}. +${tokens} tokens de inversión. A empezar de nuevo.`,

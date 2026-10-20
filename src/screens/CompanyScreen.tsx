@@ -1,5 +1,7 @@
 import ScreenHeader from '../components/ScreenHeader'
 import SellCard from '../components/SellCard'
+import SalesHistory from '../components/SalesHistory'
+import type { SaleRecord } from '../game/prestige'
 import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
 import type { Stats } from '../game/reducer'
@@ -20,6 +22,7 @@ type CompanyScreenProps = {
   teamSize: number
   /** Tokens de inversión sin gastar */
   tokens: number
+  history: SaleRecord[]
   onAscend: () => void
   onSell: () => void
 }
@@ -33,6 +36,7 @@ function CompanyScreen({
   stats,
   teamSize,
   tokens,
+  history,
   onAscend,
   onSell,
 }: CompanyScreenProps) {
@@ -149,6 +153,7 @@ function CompanyScreen({
         </div>
       )}
       {!next && <SellCard value={value} stats={stats} teamSize={teamSize} onSell={onSell} />}
+      <SalesHistory history={history} />
     </section>
   )
 }

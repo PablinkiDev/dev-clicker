@@ -11,7 +11,7 @@ import { INITIAL_INVESTMENTS } from '../data/investments'
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 13
+export const SAVE_VERSION: number = 14
 
 type SaveFile = {
   version: number
@@ -139,6 +139,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 13 }
   }
 
+  // v13 → v14: historial de empresas vendidas
+  if (file.version === 13 && isObject(state.prestige)) {
+    state = { ...state, prestige: { ...state.prestige, history: [] } }
+    file = { ...file, version: 14 }
+  }
+
   return { ...file, state }
 }
 
@@ -183,7 +189,12 @@ function isStats(value: unknown): boolean {
 function isPrestige(value: unknown): boolean {
   if (!isObject(value) || !isNumber(value.tokens) || !isNumber(value.sales)) return false
   const investments = value.investments
-  return isObject(investments) && Object.keys(INITIAL_INVESTMENTS).every((key) => isNumber(investments[key]))
+  return (
+    isObject(investments) &&
+    Object.keys(INITIAL_INVESTMENTS).every((key) => isNumber(investments[key])) &&
+    Array.isArray(value.history) &&
+    value.history.every((sale) => isObject(sale) && isNumber(sale.soldAt) && isNumber(sale.value))
+  )
 }
 
 function isSaveFile(value: unknown): value is SaveFile {

@@ -17,11 +17,12 @@ Tamaño: cantidad estimada de commits chicos.
 - Árbol personal: Escritura veloz, Código crítico y Pensamiento lógico
 - Equipo: Dev, QA y DevOps con estrellas, candidatos, reemplazos y "Buscar otros"
 - Oficinas: Habitación y Oficina pequeña
-- Guardado en localStorage con migraciones (v8)
+- Guardado en localStorage con migraciones (v14)
+- **Hito A completo:** estadísticas, 5 etapas con ascenso, contratos escalados por etapa, oficina corporativa, modo infinito, venta de empresa, árbol de prestigio e historial
 
 ---
 
-## Hito A — Esqueleto del ciclo (llegar al prestigio)
+## Hito A — Esqueleto del ciclo (llegar al prestigio) ✅
 
 | # | Historia | Prioridad | Tamaño |
 |---|----------|-----------|--------|

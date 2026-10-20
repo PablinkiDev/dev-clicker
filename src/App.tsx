@@ -149,7 +149,7 @@ function App() {
 
   function sell() {
     // La partida nueva tiene ofertas al azar: se arma acá y el reducer le pasa el prestigio
-    dispatch({ type: 'sell', fresh: createInitialState() })
+    dispatch({ type: 'sell', fresh: createInitialState(), now: Date.now() })
     setView('board')
   }
 
@@ -296,6 +296,7 @@ function App() {
               stats={state.stats}
               teamSize={team.length}
               tokens={state.prestige.tokens}
+              history={state.prestige.history}
               onAscend={ascend}
               onSell={sell}
             />
