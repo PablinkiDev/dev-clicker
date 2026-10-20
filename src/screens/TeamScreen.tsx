@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
 import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES } from '../data/offices'
 import { formatMoney } from '../game/format'
-import { employeePrice, qaMultiplier, type Employee } from '../game/team'
+import { REROLL_PRICE, employeePrice, qaMultiplier, type Employee } from '../game/team'
 
 type TeamScreenProps = {
   team: Employee[]
@@ -14,23 +15,53 @@ type TeamScreenProps = {
   autoRate: number
   /** Si hay un contrato en curso, el equipo está "trabajando" */
   isWorking: boolean
-  onHire: (candidate: Employee) => void
+  /** replaceUid: a quién se reemplaza si la oficina está llena */
+  onHire: (candidate: Employee, replaceUid?: string) => void
+  onReroll: () => void
   onMove: () => void
 }
 
-function TeamScreen({ team, candidates, office, money, autoRate, isWorking, onHire, onMove }: TeamScreenProps) {
+function TeamScreen({
+  team,
+  candidates,
+  office,
+  money,
+  autoRate,
+  isWorking,
+  onHire,
+  onReroll,
+  onMove,
+}: TeamScreenProps) {
   const current = OFFICES[office]
   const next = OFFICES[office + 1]
   const isFull = team.length >= current.capacity
   const seats = 1 + current.capacity
   const qaPercent = Math.round((qaMultiplier(team) - 1) * 100)
 
+  // Estado solo de esta pantalla: el candidato elegido mientras se busca a quién reemplazar.
+  // Si ese candidato ya no está en la lista (o hay lugar libre), no se está reemplazando a nadie.
+  const [replacingUid, setReplacingUid] = useState<string | null>(null)
+  const replacing = isFull ? (candidates.find((c) => c.uid === replacingUid) ?? null) : null
+  const replacingPrice = replacing ? employeePrice(replacing.role, replacing.stars) : 0
+
+  function handleHire(candidate: Employee) {
+    if (!isFull) onHire(candidate)
+    else setReplacingUid(replacing?.uid === candidate.uid ? null : candidate.uid)
+  }
+
+  function handleReplace(leaving: Employee) {
+    if (!replacing) return
+    onHire(replacing, leaving.uid)
+    setReplacingUid(null)
+  }
+
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
       <ScreenHeader icon="👥" title={`Equipo · ${current.name}`}>
         Se paga <b className="text-text">una sola vez</b>, sin sueldos. Producen solo mientras haya un contrato activo.
         <span className="mt-1 block font-mono text-xs">
-          Producción: <b className="text-green">+{autoRate.toLocaleString('es-AR', { maximumFractionDigits: 1 })} l/s</b>
+          Producción:{' '}
+          <b className="text-green">+{autoRate.toLocaleString('es-AR', { maximumFractionDigits: 1 })} l/s</b>
           {qaPercent > 0 && (
             <>
               {' '}
@@ -84,6 +115,22 @@ function TeamScreen({ team, candidates, office, money, autoRate, isWorking, onHi
         )}
       </div>
 
+      {replacing && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-xl border border-yellow/45 bg-yellow/10 px-3.5 py-2.5 text-[13px]">
+          <span>
+            ↺ Elegí a quién reemplazar por <b>{replacing.name}</b> ({formatMoney(replacingPrice)}). Lo que pagaste por
+            la otra persona <b>no se recupera</b>.
+          </span>
+          <button
+            type="button"
+            onClick={() => setReplacingUid(null)}
+            className="ml-auto cursor-pointer rounded-md bg-panel-3 px-3 py-1 text-xs font-bold"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
       <p className="mb-2.5 font-mono text-xs text-muted">en tu equipo/</p>
       <ul className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))]">
         <li className="rounded-xl border border-purple/45 bg-panel-2 p-3.5">
@@ -93,27 +140,54 @@ function TeamScreen({ team, candidates, office, money, autoRate, isWorking, onHi
         </li>
         {team.map((e) => (
           <EmployeeCard key={e.uid} employee={e}>
-            <p className="flex items-center gap-2 border-t border-dashed border-line pt-2 font-mono text-[11px] text-muted">
-              <i className={`size-2 rounded-full ${isWorking ? 'animate-pulse bg-green' : 'bg-faint'}`} />
-              {isWorking ? 'trabajando' : 'esperando un contrato'}
-            </p>
+            {replacing ? (
+              <button
+                type="button"
+                onClick={() => handleReplace(e)}
+                disabled={money < replacingPrice}
+                className="w-full cursor-pointer rounded-lg border border-yellow/50 bg-yellow/15 py-2 text-sm font-bold text-yellow transition-colors hover:bg-yellow/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
+              >
+                ↺ Reemplazar a {e.name}
+              </button>
+            ) : (
+              <p className="flex items-center gap-2 border-t border-dashed border-line pt-2 font-mono text-[11px] text-muted">
+                <i className={`size-2 rounded-full ${isWorking ? 'animate-pulse bg-green' : 'bg-faint'}`} />
+                {isWorking ? 'trabajando' : 'esperando un contrato'}
+              </p>
+            )}
           </EmployeeCard>
         ))}
       </ul>
 
-      <p className="mb-2.5 font-mono text-xs text-muted">candidatos/</p>
+      <div className="mb-2.5 flex items-center gap-3">
+        <p className="font-mono text-xs text-muted">candidatos/</p>
+        <button
+          type="button"
+          onClick={onReroll}
+          disabled={money < REROLL_PRICE}
+          className="cursor-pointer rounded-md border border-line-2 bg-panel-2 px-2.5 py-1 font-mono text-[11px] font-bold transition-colors hover:bg-panel-3 disabled:cursor-default disabled:text-faint"
+        >
+          🔄 Buscar otros · {formatMoney(REROLL_PRICE)}
+        </button>
+      </div>
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))]">
         {candidates.map((c) => {
           const price = employeePrice(c.role, c.stars)
+          const isSelected = replacing?.uid === c.uid
+          let label = `Contratar · ${formatMoney(price)}`
+          if (isSelected) label = '✕ Cancelar reemplazo'
+          else if (isFull) label = `↺ Contratar reemplazando · ${formatMoney(price)}`
           return (
             <EmployeeCard key={c.uid} employee={c}>
               <button
                 type="button"
-                onClick={() => onHire(c)}
-                disabled={isFull || money < price}
-                className="w-full cursor-pointer rounded-lg bg-green py-2 text-sm font-extrabold text-[#062312] disabled:cursor-default disabled:border disabled:border-line-2 disabled:bg-panel-3 disabled:text-faint"
+                onClick={() => handleHire(c)}
+                disabled={!isSelected && money < price}
+                className={`w-full cursor-pointer rounded-lg py-2 text-sm font-extrabold disabled:cursor-default disabled:border disabled:border-line-2 disabled:bg-panel-3 disabled:text-faint ${
+                  isFull ? 'border border-yellow/50 bg-yellow/15 text-yellow' : 'bg-green text-[#062312]'
+                }`}
               >
-                {isFull ? '🪑 No entra nadie más' : `Contratar · ${formatMoney(price)}`}
+                {label}
               </button>
             </EmployeeCard>
           )

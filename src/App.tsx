@@ -20,7 +20,7 @@ import { critChance, linesPerClick, skillCost } from './game/formulas'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
-import { autoRate, replaceCandidate, type Employee } from './game/team'
+import { autoRate, replaceCandidate, rerollCandidates, type Employee } from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
@@ -35,7 +35,22 @@ function App() {
   // Todo el estado de la partida vive en un solo objeto; las reglas están en game/reducer.ts.
   // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva.
   const [state, dispatch] = useReducer(gameReducer, undefined, () => loadGame() ?? createInitialState())
-  const { code, money, xp, rep, skills, editor: editorId, look: lookId, team, offers, cooldowns, contract, timeLeft, notice, log } = state
+  const {
+    code,
+    money,
+    xp,
+    rep,
+    skills,
+    editor: editorId,
+    look: lookId,
+    team,
+    offers,
+    cooldowns,
+    contract,
+    timeLeft,
+    notice,
+    log,
+  } = state
 
   // Estado de la interfaz (no es parte de la partida)
   const [view, setView] = useState<View>(() => (state.contract ? 'work' : 'board'))
@@ -117,9 +132,10 @@ function App() {
     setView('work')
   }
 
-  function hire(candidate: Employee) {
-    // Igual que con las ofertas: el candidato que lo reemplaza se genera acá (azar)
-    dispatch({ type: 'hire', uid: candidate.uid, candidates: replaceCandidate(state.candidates, candidate, team) })
+  function hire(candidate: Employee, replaceUid?: string) {
+    // Igual que con las ofertas: el candidato que ocupa su lugar se genera acá (azar)
+    const candidates = replaceCandidate(state.candidates, candidate, team)
+    dispatch({ type: 'hire', uid: candidate.uid, replaceUid, candidates })
   }
 
   function program() {
@@ -158,7 +174,8 @@ function App() {
     <div
       data-editor={look.id}
       data-dark={(state.darkMode.owned && state.darkMode.on) || state.dim ? '' : undefined}
-      className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text">
+      className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text"
+    >
       <TitleBar editor={look.id} title={titles[currentView]} modified={contract !== null && code > 0} />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -170,7 +187,14 @@ function App() {
               offersCount={offers.length}
               skillsAvailable={skillsAvailable}
             />
-            <Sidebar contract={contract} offers={offers} team={team} office={state.office} money={money} onNavigate={setView} />
+            <Sidebar
+              contract={contract}
+              offers={offers}
+              team={team}
+              office={state.office}
+              money={money}
+              onNavigate={setView}
+            />
           </>
         )}
 
@@ -233,6 +257,7 @@ function App() {
               autoRate={auto}
               isWorking={isRunning}
               onHire={hire}
+              onReroll={() => dispatch({ type: 'rerollCandidates', candidates: rerollCandidates(team) })}
               onMove={() => dispatch({ type: 'moveOffice' })}
             />
           )}

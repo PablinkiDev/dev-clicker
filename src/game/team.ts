@@ -84,6 +84,16 @@ export function createInitialCandidates(team: Employee[] = []): Employee[] {
   return result
 }
 
+/** Precio de "Buscar otros": una lista nueva de candidatos */
+export const REROLL_PRICE: number = 100
+
+/** Lista nueva de candidatos, todos al azar (el dev 1★ asegurado es solo para el arranque) */
+export function rerollCandidates(team: Employee[]): Employee[] {
+  const result: Employee[] = []
+  for (const role of ['dev', 'qa', 'ops', 'dev'] as const) result.push(createCandidate(role, [...team, ...result]))
+  return result
+}
+
 /** Al contratar a alguien, su lugar en la lista lo ocupa un candidato nuevo de la misma profesión */
 export function replaceCandidate(candidates: Employee[], hired: Employee, team: Employee[]): Employee[] {
   const taken = [...team, ...candidates, hired]

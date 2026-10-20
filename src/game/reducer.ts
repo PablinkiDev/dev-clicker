@@ -15,7 +15,15 @@ import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
 import { createInitialOffers, type Cooldowns } from './offers'
-import { autoRate, createInitialCandidates, employeeEffect, employeePrice, qaMultiplier, type Employee } from './team'
+import {
+  REROLL_PRICE,
+  autoRate,
+  createInitialCandidates,
+  employeeEffect,
+  employeePrice,
+  qaMultiplier,
+  type Employee,
+} from './team'
 import type { Contract } from './types'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
@@ -84,7 +92,9 @@ export type GameAction =
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
   // Los candidatos nuevos se generan afuera (usan azar) y llegan ya calculados
-  | { type: 'hire'; uid: string; candidates: Employee[] }
+  // replaceUid: a quién se despide para hacer lugar si la oficina está llena (no se recupera el dinero)
+  | { type: 'hire'; uid: string; replaceUid?: string; candidates: Employee[] }
+  | { type: 'rerollCandidates'; candidates: Employee[] }
   | { type: 'moveOffice' }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
@@ -132,7 +142,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         timeLeft: action.offer.time,
         code: 0,
         notice: null,
-        log: addLog(state.log, 'info', `git checkout -b ${action.offer.id} · ${action.offer.client} · el reloj arrancó`),
+        log: addLog(
+          state.log,
+          'info',
+          `git checkout -b ${action.offer.id} · ${action.offer.client} · el reloj arrancó`,
+        ),
       }
     }
 
@@ -140,11 +154,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
       const editor = getEditor(state.editor)
-      const lines = linesPerClick(state.skills.fastTyping, editor.clickBonus) * (action.crit ? editor.critMultiplier : 1)
+      const lines =
+        linesPerClick(state.skills.fastTyping, editor.clickBonus) * (action.crit ? editor.critMultiplier : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (action.crit) log = addLog(log, 'crit', `⚡ Crítico: +${lines} líneas sin un solo typo. Sospechoso.`)
-      if (code >= contract.code) log = addLog(log, 'success', `✓ Build OK · ${contract.code} líneas · listo para git push`)
+      if (code >= contract.code)
+        log = addLog(log, 'success', `✓ Build OK · ${contract.code} líneas · listo para git push`)
       return { ...state, code, log }
     }
 
@@ -180,10 +196,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
 
       // 1. El equipo escribe código (GDD §5)
-      const code = addCode(state.code, autoRate(state.team, getEditor(state.editor).autoBonus) * action.elapsed, contract.code)
+      const code = addCode(
+        state.code,
+        autoRate(state.team, getEditor(state.editor).autoBonus) * action.elapsed,
+        contract.code,
+      )
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
-        return { ...state, code, log: addLog(state.log, 'success', `✓ Build OK · el equipo terminó ${contract.code} líneas`) }
+        return {
+          ...state,
+          code,
+          log: addLog(state.log, 'success', `✓ Build OK · el equipo terminó ${contract.code} líneas`),
+        }
       }
 
       // 2. Corre el reloj
@@ -205,7 +229,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           kind: 'error',
           text: `Se venció el plazo: ${contract.client} contrató a un primo. −$${lostMoney.toLocaleString('es-AR')} · −${FAILURE_REP_LOSS} ★ · +${gainedXp} XP por la experiencia`,
         },
-        log: addLog(state.log, 'error', `✗ DeadlineExceededException en ${contract.id} (${Math.floor(code)}/${contract.code})`),
+        log: addLog(
+          state.log,
+          'error',
+          `✗ DeadlineExceededException en ${contract.id} (${Math.floor(code)}/${contract.code})`,
+        ),
       }
     }
 
@@ -304,19 +332,44 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'hire': {
       const candidate = state.candidates.find((c) => c.uid === action.uid)
-      if (!candidate || state.team.length >= OFFICES[state.office].capacity) return state
+      if (!candidate) return state
       const price = employeePrice(candidate.role, candidate.stars)
       if (state.money < price) return state
+
+      let team = state.team
+      let log = state.log
+      if (team.length >= OFFICES[state.office].capacity) {
+        // Oficina llena: solo se puede contratar reemplazando a alguien (GDD §5)
+        const leaving = team.find((e) => e.uid === action.replaceUid)
+        if (!leaving) return state
+        team = team.filter((e) => e !== leaving)
+        log = addLog(
+          log,
+          'error',
+          `kill -9 ${leaving.role}-${leaving.name.toLowerCase()}.exe · ${leaving.name} se fue (sin reintegro)`,
+        )
+      }
+
       return {
         ...state,
         money: state.money - price,
-        team: [...state.team, candidate],
+        team: [...team, candidate],
         candidates: action.candidates,
         log: addLog(
-          state.log,
+          log,
           'success',
           `sudo useradd ${candidate.role}-${candidate.name.toLowerCase()} · ${employeeEffect(candidate.role, candidate.stars)}`,
         ),
+      }
+    }
+
+    case 'rerollCandidates': {
+      if (state.money < REROLL_PRICE) return state
+      return {
+        ...state,
+        money: state.money - REROLL_PRICE,
+        candidates: action.candidates,
+        log: addLog(state.log, 'info', 'Publicaste otra búsqueda en LinkedIn · llegaron candidatos nuevos'),
       }
     }
   }
