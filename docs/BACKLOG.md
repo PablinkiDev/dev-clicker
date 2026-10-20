@@ -17,8 +17,9 @@ Tamaño: cantidad estimada de commits chicos.
 - Árbol personal: Escritura veloz, Código crítico y Pensamiento lógico
 - Equipo: Dev, QA y DevOps con estrellas, candidatos, reemplazos y "Buscar otros"
 - Oficinas: Habitación y Oficina pequeña
-- Guardado en localStorage con migraciones (v14)
+- Guardado en localStorage con migraciones (v17)
 - **Hito A completo:** estadísticas, 5 etapas con ascenso, contratos escalados por etapa, oficina corporativa, modo infinito, venta de empresa, árbol de prestigio e historial
+- **Hito B (salvo B4 y B10):** contratos por etapa, reputación que escala ofertas, TypeScript/React/Node.js, candidatos 4★–5★, árbol empresarial, Entrega continua, Captación automática y Concentración
 
 ---
 

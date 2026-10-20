@@ -18,6 +18,7 @@ import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
 import { critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate } from './game/rates'
+import { FOCUS_MULTIPLIER, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
@@ -65,7 +66,16 @@ function App() {
   const editor = getEditor(editorId)
   const look = getEditor(lookId)
   const { ideChrome } = look.features
-  const perClick = clickRate(state)
+  // Reloj de la Concentración: solo hace falta mientras está activa o recargándose
+  const [now, setNow] = useState(() => Date.now())
+  const focusBusy = now < state.focus.readyAt
+  useEffect(() => {
+    if (!focusBusy) return
+    const id = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(id)
+  }, [focusBusy])
+  const focusing = isFocused(state.focus, now)
+  const perClick = clickRate(state) * (focusing ? FOCUS_MULTIPLIER : 1)
   const auto = autoRateOf(state)
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
   const offerContext: OfferContext = { tech: state.tech, stage: state.stage, endless: state.endless, rep }
@@ -175,7 +185,7 @@ function App() {
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
-    dispatch({ type: 'program', crit })
+    dispatch({ type: 'program', crit, now: Date.now() })
     if (crit) setCritPop({ id: Date.now(), lines: perClick * editor.critMultiplier })
   }
 
@@ -355,6 +365,19 @@ function App() {
             onProgram={program}
             onDeliver={deliver}
             critPop={critPop}
+            focus={
+              skills.focus > 0
+                ? {
+                    active: focusing,
+                    seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000),
+                  }
+                : null
+            }
+            onFocus={() => {
+              const t = Date.now()
+              setNow(t)
+              dispatch({ type: 'focus', now: t })
+            }}
           />
           {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
           {look.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}

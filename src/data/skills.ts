@@ -1,7 +1,7 @@
-// Habilidades del árbol personal (GDD §8). Valores experimentales.
+// Habilidades del árbol personal (GDD §8) y del empresarial (GDD §9). Valores experimentales.
 
 export type SkillId =
-  'fastTyping' | 'criticalCode' | 'logicalThinking' | 'teamwork' | 'knowledge' | 'autoDeliver' | 'autoAccept'
+  'fastTyping' | 'criticalCode' | 'logicalThinking' | 'focus' | 'teamwork' | 'knowledge' | 'autoDeliver' | 'autoAccept'
 
 export type Skill = {
   id: SkillId
@@ -42,6 +42,15 @@ export const SKILLS: Skill[] = [
     icon: '🧠',
     effect: '+5 % de XP por contrato por nivel',
     baseCost: 100,
+    maxLevel: 5,
+    group: 'personal',
+  },
+  {
+    id: 'focus',
+    name: 'Concentración',
+    icon: '🎯',
+    effect: 'Activala para ×2 líneas por clic: 24 s (+9 s por nivel). Se recarga en 2 min',
+    baseCost: 250,
     maxLevel: 5,
     group: 'personal',
   },
@@ -95,6 +104,7 @@ export const INITIAL_SKILLS: SkillLevels = {
   fastTyping: 0,
   criticalCode: 0,
   logicalThinking: 0,
+  focus: 0,
   teamwork: 0,
   knowledge: 0,
   autoDeliver: 0,

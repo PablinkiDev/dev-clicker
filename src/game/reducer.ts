@@ -12,6 +12,7 @@ import { canAscend, companyValue, isEndless } from './stages'
 import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
 import { autoRateOf, clickRate } from './rates'
+import { FOCUS_COOLDOWN, FOCUS_MULTIPLIER, INITIAL_FOCUS, focusDuration, isFocused, type Focus } from './focus'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
   REROLL_PRICE,
@@ -70,6 +71,8 @@ export type GameState = {
   dim: boolean
   /** Interruptor de la Captación automática (sirve solo si la mejora está comprada) */
   autoAccept: boolean
+  /** Concentración: cuándo termina y cuándo se recarga */
+  focus: Focus
   /** Empleados contratados (sin contarte a vos) */
   team: Employee[]
   /** Candidatos que se pueden contratar */
@@ -102,7 +105,9 @@ function addLog(log: LogEntry[], kind: LogEntry['kind'], text: string): LogEntry
 /** Todo lo que puede pasar en el juego. Cada acción describe QUÉ pasó, no cómo cambia el estado */
 export type GameAction =
   // Si el clic fue crítico se decide afuera (es azar) con la probabilidad de critChance()
-  | { type: 'program'; crit: boolean }
+  // now: para saber si la Concentración sigue activa (la hora llega de afuera, el reducer es puro)
+  | { type: 'program'; crit: boolean; now: number }
+  | { type: 'focus'; now: number }
   | { type: 'deliver' }
   | { type: 'tick'; elapsed: number }
   | { type: 'buySkill'; skill: SkillId }
@@ -141,6 +146,7 @@ export function createInitialState(): GameState {
     darkMode: { owned: false, on: false },
     dim: false,
     autoAccept: true,
+    focus: INITIAL_FOCUS,
     team: [],
     candidates: createInitialCandidates(),
     stage: 0,
@@ -233,7 +239,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
       const editor = getEditor(state.editor)
-      const lines = clickRate(state) * (action.crit ? editor.critMultiplier : 1)
+      const focus = isFocused(state.focus, action.now) ? FOCUS_MULTIPLIER : 1
+      const lines = clickRate(state) * focus * (action.crit ? editor.critMultiplier : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (action.crit)
@@ -415,6 +422,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'setDim':
       return { ...state, dim: action.dim }
+
+    case 'focus': {
+      const level = state.skills.focus
+      if (level === 0 || action.now < state.focus.readyAt) return state
+      const endsAt = action.now + focusDuration(level) * 1000
+      return {
+        ...state,
+        focus: { endsAt, readyAt: endsAt + FOCUS_COOLDOWN * 1000 },
+        log: addLog(
+          state.log,
+          'crit',
+          `🎯 Concentración: auriculares puestos, Slack cerrado. ×${FOCUS_MULTIPLIER} por ${focusDuration(level)} s`,
+        ),
+      }
+    }
 
     case 'setAutoAccept':
       return { ...state, autoAccept: action.on }

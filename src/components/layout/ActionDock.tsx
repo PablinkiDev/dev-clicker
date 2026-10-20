@@ -8,10 +8,23 @@ type ActionDockProps = {
   onDeliver: () => void
   /** Último crítico, para el "+N" flotante: el id cambia en cada crítico y reinicia la animación */
   critPop: { id: number; lines: number } | null
+  /** Concentración: null si no se aprendió; si no, si está activa y los segundos que le quedan (o de recarga) */
+  focus: { active: boolean; seconds: number } | null
+  onFocus: () => void
 }
 
 /** Botones principales: Programar y git push */
-function ActionDock({ hasContract, isComplete, isWorkView, perClick, onProgram, onDeliver, critPop }: ActionDockProps) {
+function ActionDock({
+  hasContract,
+  isComplete,
+  isWorkView,
+  perClick,
+  onProgram,
+  onDeliver,
+  critPop,
+  focus,
+  onFocus,
+}: ActionDockProps) {
   const canProgram = hasContract && !isComplete && isWorkView
 
   let hint = `+${formatRate(perClick)} ${perClick === 1 ? 'línea' : 'líneas'}`
@@ -20,7 +33,9 @@ function ActionDock({ hasContract, isComplete, isWorkView, perClick, onProgram, 
   else if (!isWorkView) hint = 'volvé al código'
 
   return (
-    <div className="relative grid shrink-0 grid-cols-[1fr_auto] gap-2.5 border-t border-line bg-panel px-2.5 pt-2.5 pb-3 md:gap-3 md:px-4.5 md:pt-3 md:pb-3.5">
+    <div
+      className={`relative grid shrink-0 ${focus ? 'grid-cols-[1fr_auto_auto]' : 'grid-cols-[1fr_auto]'} gap-2.5 border-t border-line bg-panel px-2.5 pt-2.5 pb-3 md:gap-3 md:px-4.5 md:pt-3 md:pb-3.5`}
+    >
       <button
         type="button"
         onClick={onProgram}
@@ -43,6 +58,25 @@ function ActionDock({ hasContract, isComplete, isWorkView, perClick, onProgram, 
         >
           ⚡ ¡Crítico! +{formatRate(critPop.lines)}
         </span>
+      )}
+
+      {focus && (
+        <button
+          type="button"
+          onClick={onFocus}
+          disabled={focus.seconds > 0}
+          title="Concentración: ×2 líneas por clic"
+          className={`flex h-16 cursor-pointer flex-col items-center justify-center rounded-2xl px-3 font-mono text-[11px] font-bold md:h-18 md:px-4 ${
+            focus.active
+              ? 'border border-purple/60 bg-purple/20 text-purple'
+              : focus.seconds > 0
+                ? 'cursor-default border border-line-2 bg-panel-2 text-faint'
+                : 'border border-purple/50 bg-purple/10 text-purple hover:bg-purple/20'
+          }`}
+        >
+          <span className="text-xl">🎯</span>
+          {focus.active ? `×2 · ${focus.seconds}s` : focus.seconds > 0 ? `${focus.seconds}s` : 'Foco'}
+        </button>
       )}
 
       <button

@@ -6,12 +6,13 @@ import { ROLE_IDS } from '../data/roles'
 import { createCandidate, createInitialCandidates, type Employee } from './team'
 import { INITIAL_STATS, type GameState } from './reducer'
 import { INITIAL_PRESTIGE } from './prestige'
+import { INITIAL_FOCUS } from './focus'
 import { INITIAL_INVESTMENTS } from '../data/investments'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 16
+export const SAVE_VERSION: number = 17
 
 type SaveFile = {
   version: number
@@ -157,6 +158,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 16 }
   }
 
+  // v16 → v17: Concentración
+  if (file.version === 16) {
+    state = { ...state, focus: INITIAL_FOCUS }
+    file = { ...file, version: 17 }
+  }
+
   // Siempre: completar claves nuevas que falten (por ejemplo, una partida guardada con la versión
   // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
   if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
@@ -238,6 +245,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
     typeof s.autoAccept === 'boolean' &&
+    hasNumbers(s.focus, INITIAL_FOCUS) &&
     hasNumbers(s.tech, INITIAL_TECH) &&
     isStats(s.stats) &&
     isPrestige(s.prestige) &&
