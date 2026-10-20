@@ -128,7 +128,7 @@ function App() {
     dispatch({
       type: 'accept',
       offer,
-      offers: refillOffers(remaining, nextCooldowns, offer.id, now, state.tech),
+      offers: refillOffers(remaining, nextCooldowns, offer.id, now, state.tech, state.stage),
       cooldowns: nextCooldowns,
     })
     setView('work')
@@ -138,6 +138,12 @@ function App() {
     // Igual que con las ofertas: el candidato que ocupa su lugar se genera acá (azar)
     const candidates = replaceCandidate(state.candidates, candidate, team)
     dispatch({ type: 'hire', uid: candidate.uid, replaceUid, candidates })
+  }
+
+  function ascend() {
+    // El tablón se rearma entero con contratos de la etapa nueva
+    const offers = refillOffers([], cooldowns, contract?.id ?? null, Date.now(), state.tech, state.stage + 1)
+    dispatch({ type: 'ascend', offers })
   }
 
   function program() {
@@ -271,11 +277,7 @@ function App() {
             />
           )}
           {currentView === 'company' && (
-            <CompanyScreen
-              stage={state.stage}
-              requirements={nextStageRequirements(state)}
-              onAscend={() => dispatch({ type: 'ascend' })}
-            />
+            <CompanyScreen stage={state.stage} requirements={nextStageRequirements(state)} onAscend={ascend} />
           )}
           {currentView === 'settings' && (
             <SettingsScreen

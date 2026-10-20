@@ -53,6 +53,10 @@ function CompanyScreen({ stage, requirements, onAscend }: CompanyScreenProps) {
           {current.icon} {current.name}
         </p>
         <p className="text-xs text-muted">{current.description}</p>
+        <p className="mt-2 font-mono text-xs">
+          Contratos de esta etapa: <b className="text-yellow">×{current.contractScale.toLocaleString('es-AR')}</b> de
+          código y de paga
+        </p>
       </div>
 
       {next && requirements ? (
@@ -61,7 +65,9 @@ function CompanyScreen({ stage, requirements, onAscend }: CompanyScreenProps) {
           <p className="font-extrabold">
             {next.icon} {next.name}
           </p>
-          <p className="mb-3 text-xs text-muted">Desbloquea: {next.unlocks}</p>
+          <p className="mb-3 text-xs text-muted">
+            Desbloquea: {next.unlocks}. Contratos ×{next.contractScale.toLocaleString('es-AR')}.
+          </p>
 
           <ul className="mb-3 flex flex-col gap-2.5">
             {requirements.map((r) => (

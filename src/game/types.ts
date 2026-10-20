@@ -25,6 +25,8 @@ export type ContractTemplate = {
   reward: Reward
   /** Lenguaje del archivo que se escribe; si falta, es HTML */
   lang?: Lang
+  /** Etapa mínima para que aparezca (índice en STAGES); si falta, desde el principio */
+  minStage?: number
   /** Contrato que aparece una sola vez (el guiado) */
   once?: boolean
 }
