@@ -1,4 +1,4 @@
-import type { Lang } from '../data/techs'
+import type { Lang, TechId } from '../data/techs'
 
 // Tipos del juego: describen la forma de los datos, no su comportamiento.
 
@@ -25,6 +25,8 @@ export type ContractTemplate = {
   reward: Reward
   /** Lenguaje del archivo que se escribe; si falta, es HTML */
   lang?: Lang
+  /** Otras tecnologías que pide (contratos fullstack), además de la del lenguaje */
+  stack?: TechId[]
   /** Etapa mínima para que aparezca (índice en STAGES); si falta, desde el principio */
   minStage?: number
   /** Última etapa en la que aparece; si falta, la siguiente a minStage */

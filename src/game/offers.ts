@@ -51,14 +51,16 @@ function pickRandom<T>(items: T[]): T {
 }
 
 /**
- * Un contrato se puede ofrecer si sabés la tecnología de su lenguaje y la empresa está en su rango
+ * Un contrato se puede ofrecer si sabés la tecnología de su lenguaje (y las de su stack, si es fullstack)
+ * y la empresa está en su rango
  * de etapas: desde minStage hasta maxStage (por defecto, la etapa siguiente). Así en Corporación no
  * aparece la verdulería del barrio.
  */
 export function canTake(template: ContractTemplate, tech: TechLevels, stage: number): boolean {
   const min = template.minStage ?? 0
   const max = template.maxStage ?? min + 1
-  return tech[LANG_TECH[template.lang ?? 'html']] > 0 && stage >= min && stage <= max
+  const knowsAll = [LANG_TECH[template.lang ?? 'html'], ...(template.stack ?? [])].every((id) => tech[id] > 0)
+  return knowsAll && stage >= min && stage <= max
 }
 
 /**

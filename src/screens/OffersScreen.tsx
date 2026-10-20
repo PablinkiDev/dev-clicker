@@ -1,4 +1,5 @@
-import { LANG_ICON } from '../ui'
+import { LANG_ICON, TECH_ICON } from '../ui'
+import { TECHS } from '../data/techs'
 import ScreenHeader from '../components/ScreenHeader'
 import { estimateSeconds } from '../game/formulas'
 import { fileName } from '../game/format'
@@ -102,6 +103,17 @@ function OffersScreen({
                   </span>{' '}
                   {fileName(offer.id, offer.lang)}
                 </p>
+                {offer.stack && (
+                  <p className="mb-1.5 flex flex-wrap gap-1 font-mono text-[10px] text-muted">
+                    <span className="py-px">fullstack:</span>
+                    {offer.stack.map((id) => (
+                      <span key={id} className="rounded bg-panel-3 px-1.5 py-px whitespace-nowrap">
+                        + <span className={TECH_ICON[id].className}>{TECH_ICON[id].icon}</span>{' '}
+                        {TECHS.find((t) => t.id === id)?.name}
+                      </span>
+                    ))}
+                  </p>
+                )}
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xs text-muted">{offer.client}</p>
                   <span className={`rounded px-2 py-0.5 text-[10px] font-extrabold uppercase ${label.className}`}>

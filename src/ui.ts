@@ -33,14 +33,16 @@ export const LANG_ICON: Record<Lang, { icon: string; className: string }> = {
   ts: { icon: 'TS', className: 'text-blue' },
   jsx: { icon: '⚛', className: 'text-cyan' },
   node: { icon: '⬢', className: 'text-green' },
+  sql: { icon: '⛁', className: 'text-cyan' },
 }
 
-/** El lenguaje que "representa" a cada tecnología, para usar el mismo ícono */
-export const TECH_LANG: Record<TechId, Lang> = {
-  html: 'html',
-  css: 'css',
-  javascript: 'js',
-  typescript: 'ts',
-  react: 'jsx',
-  node: 'node',
+/** Ícono y color de cada tecnología (las que escriben archivos usan el de su lenguaje) */
+export const TECH_ICON: Record<TechId, { icon: string; className: string }> = {
+  html: LANG_ICON.html,
+  css: LANG_ICON.css,
+  javascript: LANG_ICON.js,
+  typescript: LANG_ICON.ts,
+  react: LANG_ICON.jsx,
+  node: LANG_ICON.node,
+  sql: LANG_ICON.sql,
 }

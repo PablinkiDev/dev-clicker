@@ -350,6 +350,31 @@ const GENERIC_NODE = [
   '',
 ]
 
+const GENERIC_SQL = [
+  '-- backup: no hay. fe: mucha.',
+  'CREATE TABLE clientes (',
+  '  id SERIAL PRIMARY KEY,',
+  '  nombre VARCHAR(100) NOT NULL,',
+  "  email VARCHAR(255), -- a veces 'asdasd'",
+  '  creado_en TIMESTAMP DEFAULT NOW()',
+  ');',
+  '',
+  'CREATE INDEX idx_clientes_email ON clientes (email); -- ahora vuela',
+  '',
+  'SELECT c.nombre, COUNT(p.id) AS pedidos',
+  'FROM clientes c',
+  'LEFT JOIN pedidos p ON p.cliente_id = c.id',
+  'GROUP BY c.nombre',
+  'ORDER BY pedidos DESC;',
+  '',
+  'UPDATE productos SET precio = precio * 1.1; -- olvidé el WHERE (es broma) (¿no?)',
+  '',
+  'BEGIN;',
+  "DELETE FROM logs WHERE creado_en < NOW() - INTERVAL '30 days';",
+  'COMMIT; -- respirá',
+  '',
+]
+
 /** Líneas genéricas para cada lenguaje */
 const BY_LANG: Record<Lang, string[]> = {
   html: GENERIC_HTML,
@@ -358,6 +383,7 @@ const BY_LANG: Record<Lang, string[]> = {
   ts: GENERIC_TS,
   jsx: GENERIC_REACT,
   node: GENERIC_NODE,
+  sql: GENERIC_SQL,
 }
 
 /** Las líneas que corresponden a un contrato */

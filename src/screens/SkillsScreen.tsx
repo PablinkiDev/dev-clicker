@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { LANG_ICON, TECH_LANG } from '../ui'
+import { TECH_ICON } from '../ui'
 import ScreenHeader from '../components/ScreenHeader'
 import SkillCard from '../components/SkillCard'
 import { STAGES } from '../data/stages'
@@ -41,8 +41,8 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
         {TECHS.map((t) => (
           <SkillCard
             key={t.id}
-            icon={LANG_ICON[TECH_LANG[t.id]].icon}
-            iconClass={LANG_ICON[TECH_LANG[t.id]].className}
+            icon={TECH_ICON[t.id].icon}
+            iconClass={TECH_ICON[t.id].className}
             name={t.name}
             effect={t.effect}
             level={tech[t.id]}

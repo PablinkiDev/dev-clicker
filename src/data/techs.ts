@@ -1,14 +1,22 @@
 // Árbol de tecnologías (GDD §7). Se aprenden y suben de nivel con XP.
+// Las dependencias nuevas piden nivel 3 (GDD §7).
 import { STAGES } from './stages'
-// Solo están las que tienen contratos propios. Las dependencias nuevas piden nivel 3 (GDD §7).
 
-export type TechId = 'html' | 'css' | 'javascript' | 'typescript' | 'react' | 'node'
+export type TechId = 'html' | 'css' | 'javascript' | 'typescript' | 'react' | 'node' | 'sql'
 
 /** Lenguaje de un archivo de contrato */
-export type Lang = 'html' | 'css' | 'js' | 'ts' | 'jsx' | 'node'
+export type Lang = 'html' | 'css' | 'js' | 'ts' | 'jsx' | 'node' | 'sql'
 
 /** Extensión del archivo de cada lenguaje (Node escribe .js, pero es otra tecnología) */
-export const LANG_EXT: Record<Lang, string> = { html: 'html', css: 'css', js: 'js', ts: 'ts', jsx: 'jsx', node: 'js' }
+export const LANG_EXT: Record<Lang, string> = {
+  html: 'html',
+  css: 'css',
+  js: 'js',
+  ts: 'ts',
+  jsx: 'jsx',
+  node: 'js',
+  sql: 'sql',
+}
 
 export type Tech = {
   id: TechId
@@ -85,12 +93,22 @@ export const TECHS: Tech[] = [
     minStage: 2,
     effect: 'Desbloquea contratos de backend · +10 % de dinero por nivel en ellos',
   },
+  {
+    id: 'sql',
+    name: 'SQL',
+    icon: '⛁',
+    baseCost: 450,
+    maxLevel: 5,
+    requires: [['node', 1]],
+    minStage: 2,
+    effect: 'Desbloquea contratos .sql y fullstack · +10 % de dinero por nivel en ellos',
+  },
 ]
 
 export type TechLevels = Record<TechId, number>
 
 /** Arrancás sabiendo HTML y CSS (GDD §7) */
-export const INITIAL_TECH: TechLevels = { html: 1, css: 1, javascript: 0, typescript: 0, react: 0, node: 0 }
+export const INITIAL_TECH: TechLevels = { html: 1, css: 1, javascript: 0, typescript: 0, react: 0, node: 0, sql: 0 }
 
 /** Qué tecnología pide cada lenguaje de contrato */
 export const LANG_TECH: Record<Lang, TechId> = {
@@ -100,6 +118,7 @@ export const LANG_TECH: Record<Lang, TechId> = {
   ts: 'typescript',
   jsx: 'react',
   node: 'node',
+  sql: 'sql',
 }
 
 /**
