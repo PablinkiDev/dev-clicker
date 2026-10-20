@@ -346,7 +346,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'moveOffice': {
       const next = OFFICES[state.office + 1]
-      if (!next || state.money < next.price) return state
+      if (!next || state.money < next.price || state.stage < next.minStage) return state
       return {
         ...state,
         money: state.money - next.price,

@@ -44,7 +44,7 @@ function EconomyHud({ money, xp, rep, perClick, auto, critPercent }: EconomyHudP
       <Stat label="Reputación" icon="★" value={rep.toLocaleString('es-AR')} color="text-cyan" />
       <Stat label="Producción" icon="{}" value={`${perClick}/clic`} color="text-green">
         <p className="hidden font-mono text-[11px] text-muted md:block">
-          +{auto} l/s · {critPercent}% crit
+          +{auto.toLocaleString('es-AR', { maximumFractionDigits: 1 })} l/s · {critPercent}% crit
         </p>
       </Stat>
     </section>

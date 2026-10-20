@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
 import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES } from '../data/offices'
+import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
 import { REROLL_PRICE, employeePrice, qaMultiplier, type Employee } from '../game/team'
 
@@ -10,6 +11,8 @@ type TeamScreenProps = {
   candidates: Employee[]
   /** Índice de la oficina actual */
   office: number
+  /** Índice de la etapa: algunas oficinas piden una etapa mínima */
+  stage: number
   money: number
   /** Producción automática total (líneas/seg) */
   autoRate: number
@@ -25,6 +28,7 @@ function TeamScreen({
   team,
   candidates,
   office,
+  stage,
   money,
   autoRate,
   isWorking,
@@ -35,6 +39,7 @@ function TeamScreen({
   const current = OFFICES[office]
   const next = OFFICES[office + 1]
   const isFull = team.length >= current.capacity
+  const nextLocked = next !== undefined && stage < next.minStage
   const seats = 1 + current.capacity
   const qaPercent = Math.round((qaMultiplier(team) - 1) * 100)
 
@@ -106,10 +111,10 @@ function TeamScreen({
             <button
               type="button"
               onClick={onMove}
-              disabled={money < next.price}
+              disabled={nextLocked || money < next.price}
               className="mt-3 w-full cursor-pointer rounded-lg border border-yellow/50 bg-yellow/15 py-2 font-mono text-sm font-bold text-yellow transition-colors hover:bg-yellow/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
             >
-              Mudarse · {formatMoney(next.price)}
+              {nextLocked ? `🔒 Requiere etapa ${STAGES[next.minStage].name}` : `Mudarse · ${formatMoney(next.price)}`}
             </button>
           </div>
         )}

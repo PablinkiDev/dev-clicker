@@ -29,7 +29,7 @@ export function nextStageRequirements(state: GameState): Requirement[] | null {
     item('Dinero ganado', state.stats.moneyEarned, req.moneyEarned, formatMoney),
     {
       label: 'Oficina',
-      progress: OFFICES[req.office]?.name ?? 'Oficina corporativa (próximamente)',
+      progress: OFFICES[req.office].name,
       ratio: state.office >= req.office ? 1 : 0,
       done: state.office >= req.office,
     },

@@ -244,6 +244,7 @@ function App() {
                 )}
                 <ContractCard contract={contract} code={code} timeLeft={timeLeft} />
                 <CodeView
+                  key={contract.uid}
                   contract={contract}
                   code={code}
                   syntax={look.features.syntax}
@@ -268,6 +269,7 @@ function App() {
               team={team}
               candidates={state.candidates}
               office={state.office}
+              stage={state.stage}
               money={money}
               autoRate={auto}
               isWorking={isRunning}
