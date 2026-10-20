@@ -13,6 +13,9 @@ type OffersScreenProps = {
   activeFile: string | null
   /** Si todavía no sabe JavaScript, mostramos una pista de que hay más contratos */
   knowsJs: boolean
+  /** Interruptor de la Captación automática; null si la mejora no está comprada */
+  autoAccept: boolean | null
+  onAutoAcceptChange: (on: boolean) => void
   onAccept: (offer: Contract) => void
 }
 
@@ -24,7 +27,16 @@ const DIFFICULTY_LABEL: Record<Difficulty, { text: string; className: string }> 
 
 const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'mid', 'hard']
 
-function OffersScreen({ offers, perClick, autoRate, activeFile, knowsJs, onAccept }: OffersScreenProps) {
+function OffersScreen({
+  offers,
+  perClick,
+  autoRate,
+  activeFile,
+  knowsJs,
+  onAccept,
+  autoAccept,
+  onAutoAcceptChange,
+}: OffersScreenProps) {
   // Ordenamos una copia: nunca hay que modificar (mutar) las props ni el estado
   const sorted = [...offers].sort(
     (a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
@@ -40,6 +52,23 @@ function OffersScreen({ offers, perClick, autoRate, activeFile, knowsJs, onAccep
         <ScreenHeader icon="</>" title="Ningún contrato abierto">
           Elegí una oferta para empezar. <b className="font-mono text-text">El reloj no corre</b> hasta que la aceptes.
         </ScreenHeader>
+      )}
+
+      {autoAccept !== null && (
+        <label className="mb-3 flex cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-panel-2 px-3.5 py-2.5 text-[13px]">
+          <input
+            type="checkbox"
+            checked={autoAccept}
+            onChange={(e) => onAutoAcceptChange(e.target.checked)}
+            className="size-4 accent-green"
+          />
+          <span>
+            📨 <b>Captación automática</b>{' '}
+            <span className="text-muted">
+              · acepta la que mejor paga entre las que el equipo termina solo en el 80 % del plazo
+            </span>
+          </span>
+        </label>
       )}
 
       <p className="mb-2.5 flex justify-between font-mono text-xs text-muted">

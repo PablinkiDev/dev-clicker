@@ -11,7 +11,7 @@ import { INITIAL_INVESTMENTS } from '../data/investments'
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 15
+export const SAVE_VERSION: number = 16
 
 type SaveFile = {
   version: number
@@ -151,6 +151,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 15 }
   }
 
+  // v15 → v16: interruptor de la Captación automática
+  if (file.version === 15) {
+    state = { ...state, autoAccept: true }
+    file = { ...file, version: 16 }
+  }
+
   // Siempre: completar claves nuevas que falten (por ejemplo, una partida guardada con la versión
   // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
   if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
@@ -231,6 +237,7 @@ function isSaveFile(value: unknown): value is SaveFile {
     EDITORS.some((e) => e.id === s.look) &&
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
+    typeof s.autoAccept === 'boolean' &&
     hasNumbers(s.tech, INITIAL_TECH) &&
     isStats(s.stats) &&
     isPrestige(s.prestige) &&

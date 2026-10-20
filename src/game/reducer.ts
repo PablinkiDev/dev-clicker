@@ -68,6 +68,8 @@ export type GameState = {
   darkMode: { owned: boolean; on: boolean }
   /** Accesibilidad: fuerza colores oscuros en los editores claros. Siempre gratis */
   dim: boolean
+  /** Interruptor de la Captación automática (sirve solo si la mejora está comprada) */
+  autoAccept: boolean
   /** Empleados contratados (sin contarte a vos) */
   team: Employee[]
   /** Candidatos que se pueden contratar */
@@ -116,6 +118,7 @@ export type GameAction =
   | { type: 'setLook'; look: EditorId }
   | { type: 'toggleDarkMode' }
   | { type: 'setDim'; dim: boolean }
+  | { type: 'setAutoAccept'; on: boolean }
   // El tablón nuevo se arma afuera (usa azar y la hora) y llega ya calculado
   | { type: 'accept'; offer: Contract; offers: Contract[]; cooldowns: Cooldowns }
   // Empezar de cero: el estado inicial también se arma afuera (tiene ofertas al azar)
@@ -137,6 +140,7 @@ export function createInitialState(): GameState {
     look: 'nano',
     darkMode: { owned: false, on: false },
     dim: false,
+    autoAccept: true,
     team: [],
     candidates: createInitialCandidates(),
     stage: 0,
@@ -411,6 +415,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'setDim':
       return { ...state, dim: action.dim }
+
+    case 'setAutoAccept':
+      return { ...state, autoAccept: action.on }
 
     case 'setLook': {
       const owned = EDITORS.findIndex((e) => e.id === state.editor)

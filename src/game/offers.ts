@@ -61,6 +61,16 @@ export function canTake(template: ContractTemplate, tech: TechLevels, stage: num
   return tech[LANG_TECH[template.lang ?? 'html']] > 0 && stage >= min && stage <= max
 }
 
+/**
+ * Captación automática (GDD §9) con reglas seguras: solo considera las ofertas que el equipo
+ * termina solo (sin clics) usando como mucho el 80 % del plazo, y elige la que mejor paga.
+ */
+export function pickAutoOffer(offers: Contract[], autoRate: number): Contract | null {
+  if (autoRate <= 0) return null
+  const viable = offers.filter((o) => o.code / autoRate <= o.time * 0.8)
+  return viable.reduce<Contract | null>((best, o) => (!best || o.reward.money > best.reward.money ? o : best), null)
+}
+
 /** Tablón inicial: el contrato guiado + ofertas para completar */
 export function createInitialOffers(tech: TechLevels): Contract[] {
   const ctx: OfferContext = { tech, stage: 0, endless: 0, rep: 0 }

@@ -18,7 +18,7 @@ import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
 import { critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate } from './game/rates'
-import { CLIENT_COOLDOWN_MS, refillOffers, type OfferContext } from './game/offers'
+import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
 import { replaceCandidate, rerollCandidates, type Employee } from './game/team'
@@ -122,7 +122,8 @@ function App() {
     return () => window.removeEventListener('keydown', onSpace)
   }, [])
 
-  function acceptContract(offer: Contract) {
+  /** switchView: ir al código al aceptar (no cuando acepta la Captación automática) */
+  function acceptContract(offer: Contract, switchView = true) {
     if (contract) return
     // El tablón nuevo usa azar y la hora, por eso se calcula acá y no dentro del reducer
     const now = Date.now()
@@ -134,8 +135,20 @@ function App() {
       offers: refillOffers(remaining, nextCooldowns, offer.id, now, offerContext),
       cooldowns: nextCooldowns,
     })
-    setView('work')
+    if (switchView) setView('work')
   }
+
+  // Captación automática: sin contrato, espera un momento (para que se vea) y acepta la mejor oferta viable
+  const autoAccepting = state.skills.autoAccept > 0 && state.autoAccept && !contract && isVisible
+  const acceptAuto = useEffectEvent(() => {
+    const offer = pickAutoOffer(offers, auto)
+    if (offer) acceptContract(offer, false)
+  })
+  useEffect(() => {
+    if (!autoAccepting) return
+    const id = setTimeout(acceptAuto, 1500)
+    return () => clearTimeout(id)
+  }, [autoAccepting, offers, auto])
 
   function hire(candidate: Employee, replaceUid?: string) {
     // Igual que con las ofertas: el candidato que ocupa su lugar se genera acá (azar)
@@ -276,6 +289,8 @@ function App() {
               activeFile={activeFile}
               knowsJs={state.tech.javascript > 0}
               onAccept={acceptContract}
+              autoAccept={state.skills.autoAccept > 0 ? state.autoAccept : null}
+              onAutoAcceptChange={(on) => dispatch({ type: 'setAutoAccept', on })}
             />
           )}
           {currentView === 'team' && (
