@@ -13,6 +13,8 @@ export type SaleRecord = {
   teamSize: number
   /** Contratos entregados en modo infinito */
   endless: number
+  /** Segundos jugados con esa empresa (las ventas viejas no lo tienen) */
+  playTime?: number
 }
 
 /** Lo que sobrevive a una venta */

@@ -22,3 +22,12 @@ export function fileName(id: string, lang: Lang = 'html'): string {
 export function formatRate(amount: number): string {
   return amount.toLocaleString('es-AR', { maximumFractionDigits: 1 })
 }
+
+/** 45 → "45 s" · 754 → "12 min" · 8100 → "2 h 15 min" */
+export function formatDuration(seconds: number): string {
+  const s = Math.floor(seconds)
+  if (s < 60) return `${s} s`
+  const minutes = Math.floor(s / 60)
+  if (minutes < 60) return `${minutes} min`
+  return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`
+}

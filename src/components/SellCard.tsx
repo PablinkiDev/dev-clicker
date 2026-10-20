@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatMoney } from '../game/format'
+import { formatDuration, formatMoney } from '../game/format'
 import { BASE_TOKENS, milestoneValue, nextMilestone, tokensForValue } from '../game/prestige'
 import type { Stats } from '../game/reducer'
 
@@ -38,6 +38,8 @@ function SellCard({ value, stats, teamSize, onSell }: SellCardProps) {
         </dd>
         <dt className="text-muted">Empleados</dt>
         <dd className="text-right">{teamSize}</dd>
+        <dt className="text-muted">Tiempo jugado</dt>
+        <dd className="text-right">{formatDuration(stats.playTime)}</dd>
         <dt className="text-muted">Valor de la empresa (dinero ganado + equipo)</dt>
         <dd className="text-right font-bold text-yellow">{formatMoney(value)}</dd>
         <dt className="font-bold text-text">Tokens que ganás</dt>

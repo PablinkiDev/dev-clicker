@@ -5,6 +5,7 @@ import { INITIAL_TECH } from '../data/techs'
 import { ROLE_IDS } from '../data/roles'
 import { createCandidate, createInitialCandidates, type Employee } from './team'
 import { INITIAL_STATS, type GameState } from './reducer'
+import { sanitize } from './sanitize'
 import { INITIAL_PRESTIGE } from './prestige'
 import { INITIAL_FOCUS } from './focus'
 import { INITIAL_INVESTMENTS } from '../data/investments'
@@ -55,7 +56,69 @@ export function parseGame(raw: string): GameState | null {
   try {
     const file = migrate(JSON.parse(raw))
     if (!isSaveFile(file) || file.version !== SAVE_VERSION) return null
-    return { ...file.state, notice: null, log: [] }
+    return sanitize({ ...file.state, notice: null, log: [] })
+  } catch {
+    return null
+  }
+}
+
+// --- Exportar / importar ------------------------------------------------------
+// El archivo exportado va en base64 y con una firma. No es seguridad de verdad (el juego corre
+// en la compu del jugador y cualquiera puede leer este código), pero frena al que abre el archivo
+// con el Bloc de notas para ponerse un millón de dólares. Y si lo hace, el juego se da cuenta.
+
+const EXPORT_PREFIX = 'DEVCLICKER1:'
+const SIGNATURE_SALT = 'cafe-ilimitado-sueno-limitado'
+
+/** Hash rápido (cyrb53): mismo texto → misma firma; un cambio mínimo → firma totalmente distinta */
+function checksum(text: string): string {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)
+}
+
+/** base64 que soporta tildes y emojis (btoa solo entiende Latin-1) */
+function toBase64(text: string): string {
+  const bytes = new TextEncoder().encode(text)
+  let binary = ''
+  for (const b of bytes) binary += String.fromCharCode(b)
+  return btoa(binary)
+}
+
+function fromBase64(base64: string): string {
+  const binary = atob(base64)
+  return new TextDecoder().decode(Uint8Array.from(binary, (c) => c.charCodeAt(0)))
+}
+
+/** Texto del archivo exportado: prefijo + partida en base64 + "." + firma */
+export function exportGame(state: GameState): string {
+  const json = serializeGame(state)
+  return `${EXPORT_PREFIX}${toBase64(json)}.${checksum(json + SIGNATURE_SALT)}`
+}
+
+/**
+ * Lee un archivo exportado. tampered = la firma no coincide (o es un JSON a mano): la partida
+ * se carga igual, pero el juego avisa. Devuelve null si no es una partida válida.
+ */
+export function importGame(text: string): { state: GameState; tampered: boolean } | null {
+  const raw = text.trim()
+  if (!raw.startsWith(EXPORT_PREFIX)) {
+    const state = parseGame(raw) // un JSON plano: válido, pero sin firma
+    return state && { state, tampered: true }
+  }
+  const body = raw.slice(EXPORT_PREFIX.length)
+  const dot = body.lastIndexOf('.')
+  try {
+    const json = fromBase64(body.slice(0, dot))
+    const state = parseGame(json)
+    return state && { state, tampered: checksum(json + SIGNATURE_SALT) !== body.slice(dot + 1) }
   } catch {
     return null
   }
@@ -218,6 +281,7 @@ function migrate(raw: unknown): unknown {
   // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
   state = { ...FIELD_DEFAULTS, ...state }
   if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
+  if (isObject(state.stats)) state = { ...state, stats: { ...INITIAL_STATS, ...state.stats } }
   if (isObject(state.skills)) state = { ...state, skills: { ...INITIAL_SKILLS, ...state.skills } }
   if (isObject(state.prestige) && isObject(state.prestige.investments)) {
     state = {

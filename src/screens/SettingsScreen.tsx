@@ -1,6 +1,6 @@
 import ScreenHeader from '../components/ScreenHeader'
 import { EDITORS, type EditorId } from '../data/editors'
-import { formatMoney } from '../game/format'
+import { formatDuration, formatMoney } from '../game/format'
 import type { Stats } from '../game/reducer'
 
 type SettingsScreenProps = {
@@ -87,6 +87,8 @@ function SettingsScreen({
         <dd className="text-right text-green">{stats.contractsDone}</dd>
         <dt className="text-muted">Contratos vencidos</dt>
         <dd className="text-right text-red">{stats.contractsFailed}</dd>
+        <dt className="text-muted">Tiempo jugado</dt>
+        <dd className="text-right">{formatDuration(stats.playTime)}</dd>
       </dl>
       <div className="mb-3 flex flex-wrap gap-2">
         <button
@@ -94,13 +96,13 @@ function SettingsScreen({
           onClick={onExport}
           className="cursor-pointer rounded-lg border border-line-2 bg-panel-2 px-4 py-2 font-mono text-sm font-bold hover:bg-panel-3"
         >
-          ⬇ Exportar partida (.json)
+          ⬇ Exportar partida
         </button>
         <label className="cursor-pointer rounded-lg border border-line-2 bg-panel-2 px-4 py-2 font-mono text-sm font-bold hover:bg-panel-3">
           ⬆ Importar partida
           <input
             type="file"
-            accept="application/json,.json"
+            accept=".devclicker,.json,.txt"
             className="sr-only"
             onChange={async (e) => {
               const file = e.target.files?.[0]

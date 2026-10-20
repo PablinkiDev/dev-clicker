@@ -21,7 +21,7 @@ import { autoRateOf, clickRate } from './game/rates'
 import { FOCUS_MULTIPLIER, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
-import { clearSave, loadGame, parseGame, saveGame, serializeGame } from './game/save'
+import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
 import { replaceCandidate, rerollCandidates, type Employee } from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
@@ -100,6 +100,13 @@ function App() {
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [])
+
+  // Reloj del tiempo jugado: suma un segundo por segundo, solo con la pestaña visible
+  useEffect(() => {
+    if (!isVisible) return
+    const id = setInterval(() => dispatch({ type: 'playTime', seconds: 1 }), 1000)
+    return () => clearInterval(id)
+  }, [isVisible])
 
   // Efecto 2: guardar la partida cada vez que cambia el estado
   useEffect(() => {
@@ -197,19 +204,19 @@ function App() {
     setView('board')
   }
 
-  function exportGame() {
+  function exportSave() {
     // Se arma un archivo en memoria y se "clickea" un link de descarga
-    const blob = new Blob([serializeGame(state)], { type: 'application/json' })
+    const blob = new Blob([exportGame(state)], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `dev-clicker-${new Date().toISOString().slice(0, 10)}.json`
+    link.download = `dev-clicker-${new Date().toISOString().slice(0, 10)}.devclicker`
     link.click()
     URL.revokeObjectURL(url)
   }
 
-  function importGame(text: string) {
-    const imported = parseGame(text)
+  function importSave(text: string) {
+    const imported = importGame(text)
     if (!imported) {
       window.alert('Ese archivo no es una partida válida de Dev Clicker.')
       return
@@ -217,7 +224,16 @@ function App() {
     if (!window.confirm('¿Reemplazar tu partida actual por la importada? No se puede deshacer.')) return
     dispatch({
       type: 'reset',
-      state: { ...imported, log: [{ id: 1, kind: 'info', text: 'Partida importada. git pull exitoso.' }] },
+      state: {
+        ...imported.state,
+        notice: imported.tampered
+          ? {
+              kind: 'error',
+              text: 'git blame: detectamos cambios sin commitear en esta partida 👀 Te la cargamos igual.',
+            }
+          : null,
+        log: [{ id: 1, kind: 'info', text: 'Partida importada. git pull exitoso.' }],
+      },
     })
     setView('board')
   }
@@ -369,8 +385,8 @@ function App() {
               onDimChange={(dim) => dispatch({ type: 'setDim', dim })}
               stats={state.stats}
               onReset={resetGame}
-              onExport={exportGame}
-              onImport={importGame}
+              onExport={exportSave}
+              onImport={importSave}
             />
           )}
           {currentView === 'skills' && (

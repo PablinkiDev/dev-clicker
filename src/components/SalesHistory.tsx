@@ -1,4 +1,4 @@
-import { formatMoney } from '../game/format'
+import { formatDuration, formatMoney } from '../game/format'
 import type { SaleRecord } from '../game/prestige'
 
 /** Historial de empresas vendidas: la más reciente arriba */
@@ -22,6 +22,7 @@ function SalesHistory({ history }: { history: SaleRecord[] }) {
             <p className="text-muted">
               {sale.contractsDone} contratos ({sale.contractsFailed} vencidos) · {sale.teamSize} empleados ·{' '}
               {sale.endless} en modo infinito
+              {sale.playTime !== undefined && ` · ${formatDuration(sale.playTime)} jugados`}
             </p>
           </li>
         ))}

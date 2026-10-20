@@ -43,9 +43,11 @@ export type Stats = {
   moneyEarned: number
   contractsDone: number
   contractsFailed: number
+  /** Segundos jugados con la pestaña visible */
+  playTime: number
 }
 
-export const INITIAL_STATS: Stats = { moneyEarned: 0, contractsDone: 0, contractsFailed: 0 }
+export const INITIAL_STATS: Stats = { moneyEarned: 0, contractsDone: 0, contractsFailed: 0, playTime: 0 }
 
 /** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
 export const DARK_MODE_PRICE = 60
@@ -132,6 +134,8 @@ export type GameAction =
   | { type: 'sell'; fresh: GameState; now: number }
   | { type: 'invest'; investment: InvestmentId }
   | { type: 'dismissNotice' }
+  // Un segundo más de juego (lo manda un reloj en App mientras la pestaña está visible)
+  | { type: 'playTime'; seconds: number }
 
 export function createInitialState(): GameState {
   return {
@@ -359,6 +363,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
               contractsFailed: state.stats.contractsFailed,
               teamSize: state.team.length,
               endless: state.endless,
+              playTime: state.stats.playTime,
             },
             ...state.prestige.history,
           ],
@@ -397,6 +402,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ),
       }
     }
+
+    case 'playTime':
+      return { ...state, stats: { ...state.stats, playTime: state.stats.playTime + action.seconds } }
 
     case 'dismissNotice':
       return { ...state, notice: null }
