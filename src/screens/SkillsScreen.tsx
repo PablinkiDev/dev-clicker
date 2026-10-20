@@ -2,10 +2,8 @@ import { useState, type ReactNode } from 'react'
 import SkillTree, { type TreeEdge, type TreeNode } from '../components/SkillTree'
 import { TECH_ICON } from '../ui'
 import ScreenHeader from '../components/ScreenHeader'
-import SkillCard from '../components/SkillCard'
-import { STAGES } from '../data/stages'
-import { SKILLS, type SkillId, type SkillLevels } from '../data/skills'
-import { TECHS, missingRequirements, type Tech, type TechId, type TechLevels } from '../data/techs'
+import { SKILLS, missingSkillRequirements, type Skill, type SkillId, type SkillLevels } from '../data/skills'
+import { TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { skillCost } from '../game/formulas'
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
 import type { Prestige } from '../game/prestige'
@@ -23,8 +21,6 @@ type SkillsScreenProps = {
   prestige: Prestige
   onInvest: (investment: InvestmentId) => void
 }
-
-const GRID = 'mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]'
 
 /** Dónde va cada tecnología en el árbol: columna y fila (puede ser media fila, para centrar) */
 const TECH_LAYOUT: Record<TechId, { col: number; row: number }> = {
@@ -44,124 +40,202 @@ const TECH_LAYOUT: Record<TechId, { col: number; row: number }> = {
   mongo: { col: 3, row: 3.25 },
 }
 
-function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige, onInvest }: SkillsScreenProps) {
-  const lockedText = (t: Tech) => {
-    const missing = missingRequirements(t, tech, stage)
-    return missing && `Requiere ${missing}`
-  }
+/** Habilidades: las de base a la izquierda y las que dependen de ellas a la derecha */
+const SKILL_LAYOUT: Record<SkillId, { col: number; row: number }> = {
+  fastTyping: { col: 0, row: 0.5 },
+  logicalThinking: { col: 0, row: 2 },
+  criticalCode: { col: 1, row: 0 },
+  focus: { col: 1, row: 1 },
+  teamwork: { col: 0, row: 0 },
+  knowledge: { col: 0, row: 1 },
+  autoDeliver: { col: 1, row: 0 },
+  autoAccept: { col: 2, row: 0 },
+}
 
+/** Prestigio: una fila por rama (Productividad, Rentabilidad, Innovación) */
+const INVESTMENT_LAYOUT: Record<InvestmentId, { col: number; row: number }> = {
+  legacyCode: { col: 0, row: 0 },
+  seniorTeam: { col: 1, row: 0 },
+  premiumContracts: { col: 0, row: 1 },
+  fastLearning: { col: 1, row: 1 },
+  seedCapital: { col: 0, row: 2 },
+  firstContacts: { col: 1, row: 2 },
+}
+
+/** Pestañas de la pantalla: una por árbol */
+type Tab = 'tools' | 'tech' | 'personal' | 'company' | 'prestige'
+
+function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige, onInvest }: SkillsScreenProps) {
+  const [tab, setTab] = useState<Tab>('tech')
+  const xpCost = (cost: number) => `${cost.toLocaleString('es-AR')} XP`
+  const requires = (missing: string | null) => missing && `Requiere ${missing}`
+
+  // --- Tecnologías ---
   const techNodes: TreeNode[] = TECHS.map((t) => {
     const level = tech[t.id]
-    const locked = missingRequirements(t, tech, stage) !== null
+    const cost = skillCost(t.baseCost, level)
+    const missing = missingRequirements(t, tech, stage)
     return {
       id: t.id,
       ...TECH_LAYOUT[t.id],
       icon: TECH_ICON[t.id].icon,
       iconClass: TECH_ICON[t.id].className,
       name: t.name,
+      effect: t.effect,
       level,
       maxLevel: t.maxLevel,
-      locked,
-      affordable: !locked && level < t.maxLevel && xp >= skillCost(t.baseCost, level),
+      cost: xpCost(cost),
+      missing: requires(missing),
+      affordable: !missing && level < t.maxLevel && xp >= cost,
     }
   })
   const techEdges: TreeEdge[] = TECHS.flatMap((t) =>
     t.requires.map(([from, level]) => ({ from, to: t.id, active: tech[from] >= level })),
   )
 
-  // Nodo elegido: arranca en el primero que se puede comprar (o en JavaScript)
-  const [selected, setSelected] = useState<TechId>(
-    () => (techNodes.find((n) => n.affordable)?.id as TechId | undefined) ?? 'javascript',
-  )
-  const selectedTech = TECHS.find((t) => t.id === selected) ?? TECHS[0]
+  // --- Habilidades personales y de empresa ---
+  const skillNodes = (group: Skill['group']): TreeNode[] =>
+    SKILLS.filter((sk) => sk.group === group).map((sk) => {
+      const level = skills[sk.id]
+      const cost = skillCost(sk.baseCost, level)
+      const missing = missingSkillRequirements(sk, skills, stage)
+      return {
+        id: sk.id,
+        ...SKILL_LAYOUT[sk.id],
+        icon: sk.icon,
+        name: sk.name,
+        effect: sk.effect,
+        level,
+        maxLevel: sk.maxLevel,
+        cost: xpCost(cost),
+        missing: requires(missing),
+        affordable: !missing && level < sk.maxLevel && xp >= cost,
+      }
+    })
+  const skillEdges = (group: Skill['group']): TreeEdge[] =>
+    SKILLS.filter((sk) => sk.group === group).flatMap((sk) =>
+      (sk.requires ?? []).map(([from, level]) => ({ from, to: sk.id, active: skills[from] >= level })),
+    )
+  const personalNodes = skillNodes('personal')
+  const companyNodes = skillNodes('company')
+
+  // --- Prestigio ---
+  const investmentNodes: TreeNode[] = INVESTMENTS.map((inv) => {
+    const level = prestige.investments[inv.id]
+    const cost = investmentCost(level)
+    const required = inv.requires && INVESTMENTS.find((i) => i.id === inv.requires)
+    const missing = required && prestige.investments[required.id] === 0 ? `Requiere ${required.name}` : null
+    return {
+      id: inv.id,
+      ...INVESTMENT_LAYOUT[inv.id],
+      icon: inv.icon,
+      name: inv.name,
+      effect: `${inv.branch} · ${inv.effect}`,
+      level,
+      maxLevel: inv.maxLevel,
+      cost: `${cost} ${cost === 1 ? 'token' : 'tokens'}`,
+      missing,
+      affordable: !missing && level < inv.maxLevel && prestige.tokens >= cost,
+    }
+  })
+  const investmentEdges: TreeEdge[] = INVESTMENTS.filter((inv) => inv.requires).map((inv) => ({
+    from: inv.requires as InvestmentId,
+    to: inv.id,
+    active: prestige.investments[inv.requires as InvestmentId] > 0,
+  }))
+
+  const available = (nodes: TreeNode[]) => nodes.filter((n) => n.affordable).length
+  const prestigeOpen = prestige.sales > 0 || prestige.tokens > 0
+  const tabs: { id: Tab; label: string; badge: number; locked?: boolean }[] = [
+    { id: 'tools', label: '🧰 Herramientas', badge: 0 },
+    { id: 'tech', label: 'Tecnologías', badge: available(techNodes) },
+    { id: 'personal', label: 'Personal', badge: available(personalNodes) },
+    { id: 'company', label: 'Empresa', badge: available(companyNodes) },
+    {
+      id: 'prestige',
+      label: prestigeOpen ? '🪙 Prestigio' : '🔒 Prestigio',
+      badge: prestigeOpen ? available(investmentNodes) : 0,
+      locked: !prestigeOpen,
+    },
+  ]
 
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
       <ScreenHeader icon="⑂" title="Mejoras">
         Las <b className="text-yellow">herramientas</b> se pagan con dinero; las{' '}
-        <b className="text-purple">tecnologías</b> y <b className="text-purple">habilidades</b>, con XP.
+        <b className="text-purple">tecnologías</b> y <b className="text-purple">habilidades</b>, con XP; el{' '}
+        <b className="text-purple">prestigio</b>, con tokens. Tocá una mejora para comprarla.
       </ScreenHeader>
 
-      <p className="mb-2.5 font-mono text-xs text-muted">herramientas/</p>
-      <div className="mb-5 max-w-sm">{tools}</div>
+      <div className="mb-4 flex flex-wrap gap-2" role="tablist">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-bold transition-colors ${
+              tab === t.id ? 'border-text bg-text text-bg' : 'border-line bg-panel-2 text-muted hover:text-text'
+            } ${t.locked && tab !== t.id ? 'opacity-60' : ''}`}
+          >
+            {t.label}
+            {t.badge > 0 && <span className="rounded-lg bg-purple px-1.5 text-[10px] text-[#1b0f2b]">{t.badge}</span>}
+          </button>
+        ))}
+      </div>
 
-      <p className="mb-2.5 font-mono text-xs text-muted">tecnologías/</p>
-      <SkillTree
-        columns={['fundamentos/', 'base/', 'stack/', 'avanzado/']}
-        nodes={techNodes}
-        edges={techEdges}
-        selected={selectedTech.id}
-        onSelect={(id) => setSelected(id as TechId)}
-      >
-        <SkillCard
-          icon={TECH_ICON[selectedTech.id].icon}
-          iconClass={TECH_ICON[selectedTech.id].className}
-          name={selectedTech.name}
-          effect={selectedTech.effect}
-          level={tech[selectedTech.id]}
-          maxLevel={selectedTech.maxLevel}
-          cost={skillCost(selectedTech.baseCost, tech[selectedTech.id])}
-          xp={xp}
-          locked={lockedText(selectedTech)}
-          onBuy={() => onLearn(selectedTech.id)}
+      {tab === 'tools' && <div className="max-w-sm">{tools}</div>}
+
+      {tab === 'tech' && (
+        <SkillTree
+          columns={['fundamentos/', 'base/', 'stack/', 'avanzado/']}
+          nodes={techNodes}
+          edges={techEdges}
+          onBuy={(id) => onLearn(id as TechId)}
         />
-      </SkillTree>
-
-      {(['personal', 'company'] as const).map((group) => (
-        <div key={group}>
-          <p className="mb-2.5 font-mono text-xs text-muted">
-            mejoras/{group === 'personal' ? 'personal' : 'empresa'}/
-          </p>
-          <ul className={GRID}>
-            {SKILLS.filter((skill) => skill.group === group).map((skill) => {
-              const minStage = skill.minStage ?? 0
-              return (
-                <SkillCard
-                  key={skill.id}
-                  icon={skill.icon}
-                  name={skill.name}
-                  effect={skill.effect}
-                  level={skills[skill.id]}
-                  maxLevel={skill.maxLevel}
-                  cost={skillCost(skill.baseCost, skills[skill.id])}
-                  xp={xp}
-                  locked={stage < minStage ? `Requiere etapa ${STAGES[minStage].name}` : null}
-                  onBuy={() => onBuy(skill.id)}
-                />
-              )
-            })}
-          </ul>
-        </div>
-      ))}
-
-      {(prestige.sales > 0 || prestige.tokens > 0) && (
-        <>
-          <p className="mb-2.5 font-mono text-xs text-muted">
-            mejoras/prestigio/ · <span className="text-purple">{prestige.tokens} tokens</span> · permanentes
-          </p>
-          <ul className={GRID}>
-            {INVESTMENTS.map((inv) => {
-              const required = inv.requires && INVESTMENTS.find((i) => i.id === inv.requires)
-              const locked = required && prestige.investments[required.id] === 0 ? `Requiere ${required.name}` : null
-              return (
-                <SkillCard
-                  key={inv.id}
-                  icon={inv.icon}
-                  name={`${inv.name} · ${inv.branch}`}
-                  effect={inv.effect}
-                  level={prestige.investments[inv.id]}
-                  maxLevel={inv.maxLevel}
-                  cost={investmentCost(prestige.investments[inv.id])}
-                  xp={prestige.tokens}
-                  currency={investmentCost(prestige.investments[inv.id]) === 1 ? 'token' : 'tokens'}
-                  locked={locked}
-                  onBuy={() => onInvest(inv.id)}
-                />
-              )
-            })}
-          </ul>
-        </>
       )}
+
+      {tab === 'personal' && (
+        <SkillTree
+          columns={['base/', 'especialización/']}
+          nodes={personalNodes}
+          edges={skillEdges('personal')}
+          onBuy={(id) => onBuy(id as SkillId)}
+        />
+      )}
+
+      {tab === 'company' && (
+        <SkillTree
+          columns={['equipo/', 'automatización/', '']}
+          nodes={companyNodes}
+          edges={skillEdges('company')}
+          onBuy={(id) => onBuy(id as SkillId)}
+        />
+      )}
+
+      {tab === 'prestige' &&
+        (prestigeOpen ? (
+          <>
+            <p className="mb-3 font-mono text-xs text-muted">
+              <span className="text-purple">{prestige.tokens} tokens</span> · estas mejoras sobreviven a cada venta
+            </p>
+            <SkillTree
+              columns={['base/', 'avanzado/']}
+              nodes={investmentNodes}
+              edges={investmentEdges}
+              onBuy={(id) => onInvest(id as InvestmentId)}
+            />
+          </>
+        ) : (
+          <div className="max-w-md rounded-xl border border-dashed border-line-2 bg-panel-2 p-4 text-sm">
+            <p className="mb-1 font-extrabold">🪙 Mejoras permanentes</p>
+            <p className="text-muted">
+              Vendé tu empresa en la etapa <b className="text-text">Corporación</b> para ganar tokens de inversión.
+              Estas mejoras sobreviven a cada venta.
+            </p>
+          </div>
+        ))}
     </section>
   )
 }

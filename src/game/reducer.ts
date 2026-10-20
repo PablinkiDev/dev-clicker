@@ -2,7 +2,7 @@
 // El reducer es una función pura: (estado, acción) → estado nuevo. No usa React,
 // no lee la hora ni números al azar: eso llega desde afuera, dentro de las acciones.
 import { FAILURE_REP_LOSS, addCode, failureMoneyLoss, failureXp, skillCost, xpMultiplier } from './formulas'
-import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/skills'
+import { INITIAL_SKILLS, SKILLS, missingSkillRequirements, type SkillId, type SkillLevels } from '../data/skills'
 import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
@@ -321,7 +321,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!skill) return state
       const level = state.skills[skill.id]
       const cost = skillCost(skill.baseCost, level)
-      if (level >= skill.maxLevel || state.xp < cost || state.stage < (skill.minStage ?? 0)) return state
+      if (level >= skill.maxLevel || state.xp < cost || missingSkillRequirements(skill, state.skills, state.stage))
+        return state
       return {
         ...state,
         xp: state.xp - cost,

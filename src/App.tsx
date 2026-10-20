@@ -14,7 +14,7 @@ import Toast from './components/layout/Toast'
 import EditorShop from './components/EditorShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
-import { SKILLS } from './data/skills'
+import { SKILLS, missingSkillRequirements } from './data/skills'
 import { fileName } from './game/format'
 import { critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate } from './game/rates'
@@ -84,7 +84,10 @@ function App() {
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
   const currentView: View = view === 'work' && !contract ? 'board' : view
   const skillsAvailable = SKILLS.filter(
-    (s) => skills[s.id] < s.maxLevel && state.stage >= (s.minStage ?? 0) && xp >= skillCost(s.baseCost, skills[s.id]),
+    (s) =>
+      skills[s.id] < s.maxLevel &&
+      !missingSkillRequirements(s, skills, state.stage) &&
+      xp >= skillCost(s.baseCost, skills[s.id]),
   ).length
   const errors = log.filter((entry) => entry.kind === 'error').length
   const isUrgent = isRunning && timeLeft / (contract?.time ?? 1) < 0.3

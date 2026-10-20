@@ -1,4 +1,5 @@
 // Habilidades del árbol personal (GDD §8) y del empresarial (GDD §9). Valores experimentales.
+import { STAGES } from './stages'
 
 export type SkillId =
   'fastTyping' | 'criticalCode' | 'logicalThinking' | 'focus' | 'teamwork' | 'knowledge' | 'autoDeliver' | 'autoAccept'
@@ -15,6 +16,8 @@ export type Skill = {
   group: 'personal' | 'company'
   /** Etapa mínima para comprarla (índice en STAGES); si falta, desde el principio */
   minStage?: number
+  /** Otras habilidades que hacen falta y en qué nivel (forman el árbol) */
+  requires?: [SkillId, number][]
 }
 
 export const SKILLS: Skill[] = [
@@ -35,6 +38,7 @@ export const SKILLS: Skill[] = [
     baseCost: 75,
     maxLevel: 5,
     group: 'personal',
+    requires: [['fastTyping', 1]],
   },
   {
     id: 'logicalThinking',
@@ -53,6 +57,7 @@ export const SKILLS: Skill[] = [
     baseCost: 250,
     maxLevel: 5,
     group: 'personal',
+    requires: [['fastTyping', 2]],
   },
   // Árbol empresarial: mejoras generales de la plantilla, desde Estudio
   {
@@ -84,6 +89,7 @@ export const SKILLS: Skill[] = [
     baseCost: 500,
     maxLevel: 1,
     group: 'company',
+    requires: [['teamwork', 1]],
     minStage: 1,
   },
   {
@@ -94,6 +100,7 @@ export const SKILLS: Skill[] = [
     baseCost: 1500,
     maxLevel: 1,
     group: 'company',
+    requires: [['autoDeliver', 1]],
     minStage: 2,
   },
 ]
@@ -109,4 +116,14 @@ export const INITIAL_SKILLS: SkillLevels = {
   knowledge: 0,
   autoDeliver: 0,
   autoAccept: 0,
+}
+
+/** Lo que falta para comprar una habilidad, como texto ("Escritura veloz Nv.1 y etapa Estudio"), o null */
+export function missingSkillRequirements(skill: Skill, levels: SkillLevels, stage: number): string | null {
+  const missing = (skill.requires ?? [])
+    .filter(([id, level]) => levels[id] < level)
+    .map(([id, level]) => `${SKILLS.find((s) => s.id === id)?.name} Nv.${level}`)
+  const minStage = skill.minStage ?? 0
+  if (stage < minStage) missing.push(`etapa ${STAGES[minStage].name}`)
+  return missing.length ? missing.join(' y ') : null
 }
