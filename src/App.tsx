@@ -26,6 +26,8 @@ import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import TeamScreen from './screens/TeamScreen'
+import CompanyScreen from './screens/CompanyScreen'
+import { canAscend, nextStageRequirements } from './game/stages'
 import type { View } from './ui'
 
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
@@ -165,6 +167,7 @@ function App() {
     work: activeFile ?? 'ofertas/',
     board: 'ofertas/',
     team: 'equipo/',
+    company: 'empresa.json',
     skills: 'mejoras.tree',
     settings: 'settings.json',
   }
@@ -176,7 +179,12 @@ function App() {
       data-dark={(state.darkMode.owned && state.darkMode.on) || state.dim ? '' : undefined}
       className="flex h-dvh flex-col overflow-hidden bg-bg font-ui text-text"
     >
-      <TitleBar editor={look.id} title={titles[currentView]} modified={contract !== null && code > 0} />
+      <TitleBar
+        editor={look.id}
+        title={titles[currentView]}
+        modified={contract !== null && code > 0}
+        stage={state.stage}
+      />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {ideChrome && (
@@ -186,6 +194,7 @@ function App() {
               onChange={setView}
               offersCount={offers.length}
               skillsAvailable={skillsAvailable}
+              canAscend={canAscend(state)}
             />
             <Sidebar
               contract={contract}
@@ -259,6 +268,13 @@ function App() {
               onHire={hire}
               onReroll={() => dispatch({ type: 'rerollCandidates', candidates: rerollCandidates(team) })}
               onMove={() => dispatch({ type: 'moveOffice' })}
+            />
+          )}
+          {currentView === 'company' && (
+            <CompanyScreen
+              stage={state.stage}
+              requirements={nextStageRequirements(state)}
+              onAscend={() => dispatch({ type: 'ascend' })}
             />
           )}
           {currentView === 'settings' && (

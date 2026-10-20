@@ -14,6 +14,8 @@ import { INITIAL_SKILLS, SKILLS, type SkillId, type SkillLevels } from '../data/
 import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
+import { STAGES } from '../data/stages'
+import { canAscend } from './stages'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
   REROLL_PRICE,
@@ -75,6 +77,8 @@ export type GameState = {
   team: Employee[]
   /** Candidatos que se pueden contratar */
   candidates: Employee[]
+  /** Índice de la etapa actual en STAGES */
+  stage: number
   /** Índice de la oficina actual en OFFICES */
   office: number
   offers: Contract[]
@@ -107,6 +111,7 @@ export type GameAction =
   | { type: 'hire'; uid: string; replaceUid?: string; candidates: Employee[] }
   | { type: 'rerollCandidates'; candidates: Employee[] }
   | { type: 'moveOffice' }
+  | { type: 'ascend' }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
   | { type: 'toggleDarkMode' }
@@ -131,6 +136,7 @@ export function createInitialState(): GameState {
     dim: false,
     team: [],
     candidates: createInitialCandidates(),
+    stage: 0,
     office: 0,
     offers: createInitialOffers(INITIAL_TECH),
     cooldowns: {},
@@ -345,6 +351,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         money: state.money - next.price,
         office: state.office + 1,
         log: addLog(state.log, 'success', `📦 Mudanza a ${next.name} · ahora entran ${next.capacity} empleados`),
+      }
+    }
+
+    case 'ascend': {
+      if (!canAscend(state)) return state
+      const next = STAGES[state.stage + 1]
+      return {
+        ...state,
+        stage: state.stage + 1,
+        notice: {
+          kind: 'success',
+          text: `${next.icon} ¡Ahora sos ${next.name}! Se desbloquea: ${next.unlocks.toLowerCase()}`,
+        },
+        log: addLog(state.log, 'success', `git tag v${state.stage + 2}.0.0 · la empresa ascendió a ${next.name}`),
       }
     }
 

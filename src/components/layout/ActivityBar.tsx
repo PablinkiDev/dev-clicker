@@ -8,6 +8,8 @@ type ActivityBarProps = {
   offersCount: number
   /** Mejoras que se pueden comprar ahora, para el globito */
   skillsAvailable: number
+  /** Se puede ascender de etapa: muestra un globito con "!" */
+  canAscend: boolean
 }
 
 // Íconos en SVG con el estilo de VS Code (trazo, sin relleno)
@@ -27,6 +29,12 @@ const ICONS: Record<View, ReactNode> = {
       <path d="M17 14c2.3 0 4 1.5 4.5 4" />
     </>
   ),
+  company: (
+    <>
+      <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M2 21h20" />
+      <path d="M8 8h2M8 12h2M8 16h2M17 14h0M17 17h0" />
+    </>
+  ),
   skills: (
     <>
       <circle cx="6" cy="6" r="2.5" />
@@ -44,8 +52,12 @@ const ICONS: Record<View, ReactNode> = {
 }
 
 /** Barra de actividad: a la izquierda en escritorio, abajo en el celular */
-function ActivityBar({ view, onChange, offersCount, skillsAvailable }: ActivityBarProps) {
-  const badges: Partial<Record<View, number>> = { board: offersCount, skills: skillsAvailable }
+function ActivityBar({ view, onChange, offersCount, skillsAvailable, canAscend }: ActivityBarProps) {
+  const badges: Partial<Record<View, number | string>> = {
+    board: offersCount,
+    skills: skillsAvailable,
+    company: canAscend ? '!' : 0,
+  }
 
   return (
     <nav className="order-last flex shrink-0 border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:order-first md:w-13 md:flex-col md:border-t-0 md:border-r md:pt-1.5 md:pb-0">

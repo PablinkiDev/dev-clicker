@@ -9,7 +9,7 @@ import { INITIAL_STATS, type GameState } from './reducer'
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 9
+export const SAVE_VERSION: number = 10
 
 type SaveFile = {
   version: number
@@ -113,6 +113,12 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 9 }
   }
 
+  // v9 → v10: etapas; todos arrancan como Freelancer
+  if (file.version === 9) {
+    state = { ...state, stage: 0 }
+    file = { ...file, version: 10 }
+  }
+
   return { ...file, state }
 }
 
@@ -159,7 +165,7 @@ function isSaveFile(value: unknown): value is SaveFile {
   const s = value.state
   const skills = s.skills
   return (
-    ['code', 'money', 'xp', 'rep', 'office', 'timeLeft'].every((key) => isNumber(s[key])) &&
+    ['code', 'money', 'xp', 'rep', 'stage', 'office', 'timeLeft'].every((key) => isNumber(s[key])) &&
     isObject(skills) &&
     Object.keys(INITIAL_SKILLS).every((key) => isNumber(skills[key])) &&
     EDITORS.some((e) => e.id === s.editor) &&

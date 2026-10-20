@@ -18,6 +18,7 @@ function EditorTabs({ view, contract, onChange }: EditorTabsProps) {
       : []),
     { view: 'board', icon: '▤', iconClass: 'text-muted', name: 'ofertas/' },
     { view: 'team', icon: '●', iconClass: 'text-cyan', name: 'equipo/' },
+    { view: 'company', icon: '▲', iconClass: 'text-yellow', name: 'empresa.json' },
     { view: 'skills', icon: '⑂', iconClass: 'text-green', name: 'mejoras.tree' },
   ]
 

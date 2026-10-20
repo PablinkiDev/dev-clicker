@@ -7,7 +7,7 @@ type EditorNavProps = {
   onChange: (view: View) => void
 }
 
-const NANO_KEYS: Record<View, string> = { work: '^E', board: '^T', team: '^P', skills: '^W', settings: '^G' }
+const NANO_KEYS: Record<View, string> = { work: '^E', board: '^T', team: '^P', company: '^K', skills: '^W', settings: '^G' }
 
 /** Barra de atajos de Nano: va abajo de todo, como en la terminal */
 export function NanoBar({ view, onChange }: Omit<EditorNavProps, 'editor'>) {

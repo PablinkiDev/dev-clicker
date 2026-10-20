@@ -1,6 +1,9 @@
+import { STAGES } from '../../data/stages'
 import type { EditorId } from '../../data/editors'
 
 type TitleBarProps = {
+  /** Índice de la etapa actual, para la etiqueta de la derecha */
+  stage: number
   editor: EditorId
   title: string
   /** Hay un contrato con código sin entregar */
@@ -8,7 +11,7 @@ type TitleBarProps = {
 }
 
 /** Barra de título de la "ventana" (solo escritorio). Cada editor tiene la suya */
-function TitleBar({ editor, title, modified }: TitleBarProps) {
+function TitleBar({ editor, title, modified, stage }: TitleBarProps) {
   if (editor === 'nano') {
     return (
       <header className="hidden h-6.5 shrink-0 items-center justify-between bg-text px-3 font-mono text-xs text-bg md:flex">
@@ -50,7 +53,9 @@ function TitleBar({ editor, title, modified }: TitleBarProps) {
           <span
             key={symbol}
             className={`grid h-4.5 w-5 place-items-center rounded-[3px] border border-white text-[10px] ${
-              symbol === '✕' ? 'bg-linear-to-b from-[#f08a6a] to-[#d2401c]' : 'bg-linear-to-b from-[#5aa0ff] to-[#1a62d8]'
+              symbol === '✕'
+                ? 'bg-linear-to-b from-[#f08a6a] to-[#d2401c]'
+                : 'bg-linear-to-b from-[#5aa0ff] to-[#1a62d8]'
             }`}
           >
             {symbol}
@@ -67,7 +72,7 @@ function TitleBar({ editor, title, modified }: TitleBarProps) {
           <span className="text-orange">✻</span> cladex — ~/dev-clicker · {title}
         </span>
         <span className="rounded-full border border-orange/35 bg-orange/10 px-2.5 py-0.5 text-[11px] text-orange">
-          Etapa 1 · Freelancer
+          Etapa {stage + 1} · {STAGES[stage].name}
         </span>
       </header>
     )
@@ -86,7 +91,7 @@ function TitleBar({ editor, title, modified }: TitleBarProps) {
         {editor === 'sublime' && <span className="opacity-55"> (UNREGISTERED)</span>}
       </p>
       <span className="rounded-full border border-green/25 bg-green/10 px-2.5 py-0.5 font-mono text-[11px] text-green">
-        Etapa 1 · Freelancer
+        Etapa {stage + 1} · {STAGES[stage].name}
       </span>
     </header>
   )
