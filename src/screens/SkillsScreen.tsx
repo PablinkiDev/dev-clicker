@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { LANG_ICON, TECH_LANG } from '../ui'
 import ScreenHeader from '../components/ScreenHeader'
 import SkillCard from '../components/SkillCard'
+import { STAGES } from '../data/stages'
 import { SKILLS, type SkillId, type SkillLevels } from '../data/skills'
 import { TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { skillCost } from '../game/formulas'
@@ -54,22 +55,32 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
         ))}
       </ul>
 
-      <p className="mb-2.5 font-mono text-xs text-muted">mejoras/personal/</p>
-      <ul className={GRID}>
-        {SKILLS.map((skill) => (
-          <SkillCard
-            key={skill.id}
-            icon={skill.icon}
-            name={skill.name}
-            effect={skill.effect}
-            level={skills[skill.id]}
-            maxLevel={skill.maxLevel}
-            cost={skillCost(skill.baseCost, skills[skill.id])}
-            xp={xp}
-            onBuy={() => onBuy(skill.id)}
-          />
-        ))}
-      </ul>
+      {(['personal', 'company'] as const).map((group) => (
+        <div key={group}>
+          <p className="mb-2.5 font-mono text-xs text-muted">
+            mejoras/{group === 'personal' ? 'personal' : 'empresa'}/
+          </p>
+          <ul className={GRID}>
+            {SKILLS.filter((skill) => skill.group === group).map((skill) => {
+              const minStage = skill.minStage ?? 0
+              return (
+                <SkillCard
+                  key={skill.id}
+                  icon={skill.icon}
+                  name={skill.name}
+                  effect={skill.effect}
+                  level={skills[skill.id]}
+                  maxLevel={skill.maxLevel}
+                  cost={skillCost(skill.baseCost, skills[skill.id])}
+                  xp={xp}
+                  locked={stage < minStage ? `Requiere etapa ${STAGES[minStage].name}` : null}
+                  onBuy={() => onBuy(skill.id)}
+                />
+              )
+            })}
+          </ul>
+        </div>
+      ))}
 
       {(prestige.sales > 0 || prestige.tokens > 0) && (
         <>

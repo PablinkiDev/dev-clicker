@@ -195,6 +195,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const xp = Math.round(
         reward.xp *
           xpMultiplier(state.skills.logicalThinking) *
+          (1 + 0.05 * state.skills.knowledge) *
           qaMultiplier(state.team) *
           investmentBonus(investments.fastLearning),
       )
@@ -296,7 +297,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!skill) return state
       const level = state.skills[skill.id]
       const cost = skillCost(skill.baseCost, level)
-      if (level >= skill.maxLevel || state.xp < cost) return state
+      if (level >= skill.maxLevel || state.xp < cost || state.stage < (skill.minStage ?? 0)) return state
       return {
         ...state,
         xp: state.xp - cost,

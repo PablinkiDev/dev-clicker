@@ -12,9 +12,11 @@ export function clickRate(state: GameState): number {
   return base * investmentBonus(state.prestige.investments.legacyCode)
 }
 
-/** Líneas por segundo del equipo y el editor, × Equipo experimentado */
+/** Líneas por segundo del equipo y el editor, × Trabajo en equipo × Equipo experimentado */
 export function autoRateOf(state: GameState): number {
   return (
-    autoRate(state.team, getEditor(state.editor).autoBonus) * investmentBonus(state.prestige.investments.seniorTeam)
+    autoRate(state.team, getEditor(state.editor).autoBonus) *
+    (1 + 0.05 * state.skills.teamwork) *
+    investmentBonus(state.prestige.investments.seniorTeam)
   )
 }

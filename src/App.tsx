@@ -74,7 +74,7 @@ function App() {
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
   const currentView: View = view === 'work' && !contract ? 'board' : view
   const skillsAvailable = SKILLS.filter(
-    (s) => skills[s.id] < s.maxLevel && xp >= skillCost(s.baseCost, skills[s.id]),
+    (s) => skills[s.id] < s.maxLevel && state.stage >= (s.minStage ?? 0) && xp >= skillCost(s.baseCost, skills[s.id]),
   ).length
   const errors = log.filter((entry) => entry.kind === 'error').length
   const isUrgent = isRunning && timeLeft / (contract?.time ?? 1) < 0.3

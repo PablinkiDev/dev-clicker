@@ -154,6 +154,7 @@ function migrate(raw: unknown): unknown {
   // Siempre: completar claves nuevas que falten (por ejemplo, una partida guardada con la versión
   // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
   if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
+  if (isObject(state.skills)) state = { ...state, skills: { ...INITIAL_SKILLS, ...state.skills } }
   if (isObject(state.prestige) && isObject(state.prestige.investments)) {
     state = {
       ...state,
