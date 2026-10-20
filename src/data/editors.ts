@@ -46,7 +46,7 @@ export const EDITORS: Editor[] = [
   {
     id: 'bloc',
     name: 'Bloc de notas',
-    price: 250,
+    price: 1500,
     clickBonus: 1,
     critBonus: 0,
     critMultiplier: 2,
@@ -57,7 +57,7 @@ export const EDITORS: Editor[] = [
   {
     id: 'notepad',
     name: 'Notepad',
-    price: 800,
+    price: 6000,
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 2,
@@ -68,7 +68,7 @@ export const EDITORS: Editor[] = [
   {
     id: 'sublime',
     name: 'Sublimado Text',
-    price: 2000,
+    price: 20000,
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 3,
@@ -79,7 +79,7 @@ export const EDITORS: Editor[] = [
   {
     id: 'vscode',
     name: 'Visual Estudio Code',
-    price: 4500,
+    price: 60000,
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 3,
@@ -90,7 +90,7 @@ export const EDITORS: Editor[] = [
   {
     id: 'cladex',
     name: 'Cladex Code',
-    price: 12000,
+    price: 200000,
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 3,

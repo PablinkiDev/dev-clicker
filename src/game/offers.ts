@@ -2,6 +2,7 @@
 import { CONTRACT_TEMPLATES, GUIDED_CONTRACT } from '../data/contracts'
 import { LANG_TECH, type TechLevels } from '../data/techs'
 import { boardSize, repLevel, repScale } from './reputation'
+import { STAGES } from '../data/stages'
 import { contractScale } from './stages'
 import type { Contract, ContractTemplate, Difficulty } from './types'
 
@@ -39,7 +40,7 @@ function createOffer(template: ContractTemplate, { stage, endless, rep }: OfferC
     code: Math.round(template.code * factor * scale),
     time: Math.round(template.time * (1 + 0.2 * stage) * (1 + 0.05 * level)),
     reward: {
-      money: Math.round((template.reward.money * factor * scale) / 5) * 5,
+      money: Math.round((template.reward.money * factor * scale * (STAGES[stage].payScale ?? 1)) / 5) * 5,
       xp: Math.round(template.reward.xp * factor * Math.pow(scale, 0.75)),
       rep: template.reward.rep,
     },

@@ -17,7 +17,7 @@ export const ROLES: Record<RoleId, Role> = {
     id: 'dev',
     name: 'Desarrollador',
     icon: '{}',
-    basePrice: 2600,
+    basePrice: 7500,
     quirks: [
       'En mi máquina anda.',
       'Commitea a las 4 AM.',
@@ -30,7 +30,7 @@ export const ROLES: Record<RoleId, Role> = {
     id: 'qa',
     name: 'QA',
     icon: '✓',
-    basePrice: 3500,
+    basePrice: 10000,
     quirks: [
       'Encuentra bugs hasta en el café.',
       'Abre 47 tickets por día.',
@@ -42,7 +42,7 @@ export const ROLES: Record<RoleId, Role> = {
     id: 'ops',
     name: 'DevOps',
     icon: '⚙',
-    basePrice: 4500,
+    basePrice: 13000,
     quirks: [
       'Reinicia el servidor por las dudas.',
       'Tiene 12 terminales abiertas.',

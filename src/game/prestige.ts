@@ -35,7 +35,7 @@ export const INITIAL_PRESTIGE: Prestige = { tokens: 0, sales: 0, investments: IN
 export const BASE_TOKENS: number = 3
 
 /** Valor de empresa del primer hito extra; cada hito siguiente pide el doble */
-export const FIRST_MILESTONE: number = 2_500_000
+export const FIRST_MILESTONE: number = 40_000_000
 
 /** Valor necesario para el hito número n (0 = el primero) */
 export function milestoneValue(n: number): number {
@@ -54,7 +54,7 @@ export function nextMilestone(value: number): number {
   return milestoneValue(tokensForValue(value) - BASE_TOKENS)
 }
 
-/** Multiplicador de una mejora de prestigio de +10 % por nivel */
+/** Multiplicador de una mejora de prestigio de +20 % por nivel */
 export function investmentBonus(level: number): number {
-  return 1 + 0.1 * level
+  return 1 + 0.2 * level
 }

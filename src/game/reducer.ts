@@ -346,7 +346,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...action.fresh,
         // Ventajas iniciales de Innovación
-        money: action.fresh.money + 250 * investments.seedCapital,
+        money: action.fresh.money + 2000 * investments.seedCapital,
         rep: action.fresh.rep + 5 * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
         prestige: {

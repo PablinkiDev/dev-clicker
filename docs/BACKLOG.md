@@ -70,6 +70,16 @@ Tamaño: cantidad estimada de commits chicos.
 
 ---
 
+## 📊 Primera simulación (C3) · para la C4
+
+`npx tsx scripts/simulate.mts` (bot a 5 clics/s, vende con 4 tokens):
+
+- Primer prestigio: **16 min** (meta GDD: 1–2 días casuales) → todo ~50× demasiado rápido.
+- Segundo ciclo: 14 min (solo ~12 % más rápido; meta 25–40 %).
+- Editores: Cladex comprado a los **3 min** · primer empleado al minuto (meta 5–8 min).
+- Clics: solo **4 %** de las líneas (el GDD quiere que el clic siga importando).
+- Contratos vencidos: 0 (los plazos sobran).
+
 ## 📌 Decisiones
 
 1. **Requisitos de cada etapa:** etapa 2 = $12.000 acumulados + Oficina pequeña + 2 empleados (GDD); las siguientes escalan ×4–5 y se ajustan con la simulación.
