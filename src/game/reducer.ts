@@ -2,10 +2,8 @@
 // El reducer es una función pura: (estado, acción) → estado nuevo. No usa React,
 // no lee la hora ni números al azar: eso llega desde afuera, dentro de las acciones.
 import {
-  DEVELOPER_PRICE,
   FAILURE_REP_LOSS,
   addCode,
-  autoRate,
   failureMoneyLoss,
   failureXp,
   linesPerClick,
@@ -17,6 +15,7 @@ import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
 import { createInitialOffers, type Cooldowns } from './offers'
+import { autoRate, createInitialCandidates, employeeEffect, employeePrice, qaMultiplier, type Employee } from './team'
 import type { Contract } from './types'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
@@ -54,7 +53,10 @@ export type GameState = {
   darkMode: { owned: boolean; on: boolean }
   /** Accesibilidad: fuerza colores oscuros en los editores claros. Siempre gratis */
   dim: boolean
-  developers: number
+  /** Empleados contratados (sin contarte a vos) */
+  team: Employee[]
+  /** Candidatos que se pueden contratar */
+  candidates: Employee[]
   /** Índice de la oficina actual en OFFICES */
   office: number
   offers: Contract[]
@@ -81,7 +83,8 @@ export type GameAction =
   | { type: 'tick'; elapsed: number }
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
-  | { type: 'hireDeveloper' }
+  // Los candidatos nuevos se generan afuera (usan azar) y llegan ya calculados
+  | { type: 'hire'; uid: string; candidates: Employee[] }
   | { type: 'moveOffice' }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
@@ -105,7 +108,8 @@ export function createInitialState(): GameState {
     look: 'nano',
     darkMode: { owned: false, on: false },
     dim: false,
-    developers: 0,
+    team: [],
+    candidates: createInitialCandidates(),
     office: 0,
     offers: createInitialOffers(INITIAL_TECH),
     cooldowns: {},
@@ -148,7 +152,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { contract } = state
       if (!contract || state.code < contract.code) return state
       const { reward } = contract
-      const xp = Math.round(reward.xp * xpMultiplier(state.skills.logicalThinking))
+      const xp = Math.round(reward.xp * xpMultiplier(state.skills.logicalThinking) * qaMultiplier(state.team))
       // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
       const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
       const money = Math.round((reward.money * (1 + 0.1 * Math.max(0, techLevel - 1))) / 5) * 5
@@ -176,7 +180,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
 
       // 1. El equipo escribe código (GDD §5)
-      const code = addCode(state.code, autoRate(state.developers, getEditor(state.editor).autoBonus) * action.elapsed, contract.code)
+      const code = addCode(state.code, autoRate(state.team, getEditor(state.editor).autoBonus) * action.elapsed, contract.code)
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
         return { ...state, code, log: addLog(state.log, 'success', `✓ Build OK · el equipo terminó ${contract.code} líneas`) }
@@ -298,13 +302,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
     }
 
-    case 'hireDeveloper': {
-      if (state.developers >= OFFICES[state.office].capacity || state.money < DEVELOPER_PRICE) return state
+    case 'hire': {
+      const candidate = state.candidates.find((c) => c.uid === action.uid)
+      if (!candidate || state.team.length >= OFFICES[state.office].capacity) return state
+      const price = employeePrice(candidate.role, candidate.stars)
+      if (state.money < price) return state
       return {
         ...state,
-        money: state.money - DEVELOPER_PRICE,
-        developers: state.developers + 1,
-        log: addLog(state.log, 'info', `sudo useradd dev-${state.developers + 1} · +2 líneas/seg automáticas`),
+        money: state.money - price,
+        team: [...state.team, candidate],
+        candidates: action.candidates,
+        log: addLog(
+          state.log,
+          'success',
+          `sudo useradd ${candidate.role}-${candidate.name.toLowerCase()} · ${employeeEffect(candidate.role, candidate.stars)}`,
+        ),
       }
     }
   }

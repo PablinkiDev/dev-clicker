@@ -56,14 +56,3 @@ export const ASSUMED_CLICKS_PER_SECOND: number = 5
 export function estimateSeconds(code: number, perClick: number, auto: number): number {
   return code / (ASSUMED_CLICKS_PER_SECOND * perClick + auto)
 }
-
-/** Precio de un Desarrollador ★ (GDD §5, experimental) */
-export const DEVELOPER_PRICE: number = 2600
-
-/** Líneas por segundo que escribe cada Desarrollador ★ (GDD §5, experimental) */
-export const DEVELOPER_RATE: number = 2
-
-/** Producción automática total, en líneas por segundo: el equipo + el bonus del editor */
-export function autoRate(developers: number, editorBonus: number): number {
-  return developers * DEVELOPER_RATE + editorBonus
-}

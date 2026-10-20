@@ -1,5 +1,7 @@
 import { OFFICES } from '../../data/offices'
-import { DEVELOPER_PRICE } from '../../game/formulas'
+import { ROLES } from '../../data/roles'
+import { employeePrice, type Employee } from '../../game/team'
+import { ROLE_STYLE } from '../../ui'
 import { fileName, formatMoney } from '../../game/format'
 import type { Contract, Difficulty } from '../../game/types'
 import type { View } from '../../ui'
@@ -7,7 +9,7 @@ import type { View } from '../../ui'
 type SidebarProps = {
   contract: Contract | null
   offers: Contract[]
-  developers: number
+  team: Employee[]
   office: number
   money: number
   onNavigate: (view: View) => void
@@ -31,8 +33,9 @@ function Folder({ children, extra }: { children: string; extra?: string }) {
 const FILE_ROW = 'flex h-6.5 w-full cursor-pointer items-center gap-1.5 rounded-md pr-2 pl-5.5 text-left text-[13px]'
 
 /** Explorador de archivos: el estado del juego visto como un proyecto */
-function Sidebar({ contract, offers, developers, office, money, onNavigate }: SidebarProps) {
-  const goal = Math.min(100, (money / DEVELOPER_PRICE) * 100)
+function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarProps) {
+  const firstHire = employeePrice('dev', 1)
+  const goal = Math.min(100, (money / firstHire) * 100)
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-line bg-panel md:flex">
@@ -66,24 +69,29 @@ function Sidebar({ contract, offers, developers, office, money, onNavigate }: Si
           </button>
         ))}
 
-        <Folder extra={`${1 + developers}/${1 + OFFICES[office].capacity}`}>equipo</Folder>
+        <Folder extra={`${1 + team.length}/${1 + OFFICES[office].capacity}`}>equipo</Folder>
         <button type="button" onClick={() => onNavigate('team')} className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}>
           <span className="w-4 text-center text-green">●</span>vos.exe
         </button>
-        {Array.from({ length: developers }, (_, i) => (
+        {team.map((e) => (
           <button
-            key={i}
+            key={e.uid}
             type="button"
             onClick={() => onNavigate('team')}
             className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
           >
-            <span className="w-4 text-center text-green">●</span>dev-{i + 1}.exe
-            <span className="ml-auto font-mono text-[11px] text-faint">★</span>
+            <span className={`w-4 text-center ${ROLE_STYLE[e.role].text}`} title={ROLES[e.role].name}>
+              ●
+            </span>
+            <span className="truncate">
+              {e.role}-{e.name.toLowerCase()}.exe
+            </span>
+            <span className="ml-auto font-mono text-[11px] text-yellow">{'★'.repeat(e.stars)}</span>
           </button>
         ))}
       </div>
 
-      {developers === 0 && (
+      {team.length === 0 && (
         <>
           <p className="px-4 pt-1 pb-2 text-[11px] font-semibold tracking-widest text-muted uppercase">Objetivos</p>
           <div className="mx-3 mb-4 rounded-xl border border-yellow/20 bg-linear-to-b from-yellow/8 to-yellow/2 p-3">
@@ -93,7 +101,7 @@ function Sidebar({ contract, offers, developers, office, money, onNavigate }: Si
               <div className="h-full bg-yellow transition-[width] duration-500" style={{ width: `${goal}%` }} />
             </div>
             <p className="mt-1.5 font-mono text-[11px] text-muted">
-              {formatMoney(money)} / {formatMoney(DEVELOPER_PRICE)}
+              {formatMoney(money)} / {formatMoney(firstHire)}
             </p>
           </div>
         </>

@@ -16,10 +16,11 @@ import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { SKILLS } from './data/skills'
 import { fileName } from './game/format'
-import { autoRate, critChance, linesPerClick, skillCost } from './game/formulas'
+import { critChance, linesPerClick, skillCost } from './game/formulas'
 import { CLIENT_COOLDOWN_MS, refillOffers } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, loadGame, saveGame } from './game/save'
+import { autoRate, replaceCandidate, type Employee } from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
@@ -34,7 +35,7 @@ function App() {
   // Todo el estado de la partida vive en un solo objeto; las reglas están en game/reducer.ts.
   // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva.
   const [state, dispatch] = useReducer(gameReducer, undefined, () => loadGame() ?? createInitialState())
-  const { code, money, xp, rep, skills, editor: editorId, look: lookId, developers, offers, cooldowns, contract, timeLeft, notice, log } = state
+  const { code, money, xp, rep, skills, editor: editorId, look: lookId, team, offers, cooldowns, contract, timeLeft, notice, log } = state
 
   // Estado de la interfaz (no es parte de la partida)
   const [view, setView] = useState<View>(() => (state.contract ? 'work' : 'board'))
@@ -47,7 +48,7 @@ function App() {
   const look = getEditor(lookId)
   const { ideChrome } = look.features
   const perClick = linesPerClick(skills.fastTyping, editor.clickBonus)
-  const auto = autoRate(developers, editor.autoBonus)
+  const auto = autoRate(team, editor.autoBonus)
   const isComplete = contract !== null && code >= contract.code
   const isRunning = contract !== null && !isComplete && isVisible
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
@@ -116,6 +117,11 @@ function App() {
     setView('work')
   }
 
+  function hire(candidate: Employee) {
+    // Igual que con las ofertas: el candidato que lo reemplaza se genera acá (azar)
+    dispatch({ type: 'hire', uid: candidate.uid, candidates: replaceCandidate(state.candidates, candidate, team) })
+  }
+
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
@@ -164,7 +170,7 @@ function App() {
               offersCount={offers.length}
               skillsAvailable={skillsAvailable}
             />
-            <Sidebar contract={contract} offers={offers} developers={developers} office={state.office} money={money} onNavigate={setView} />
+            <Sidebar contract={contract} offers={offers} team={team} office={state.office} money={money} onNavigate={setView} />
           </>
         )}
 
@@ -220,11 +226,13 @@ function App() {
           )}
           {currentView === 'team' && (
             <TeamScreen
-              developers={developers}
+              team={team}
+              candidates={state.candidates}
               office={state.office}
               money={money}
+              autoRate={auto}
               isWorking={isRunning}
-              onHire={() => dispatch({ type: 'hireDeveloper' })}
+              onHire={hire}
               onMove={() => dispatch({ type: 'moveOffice' })}
             />
           )}

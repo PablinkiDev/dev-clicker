@@ -2,12 +2,14 @@
 import { EDITORS } from '../data/editors'
 import { INITIAL_SKILLS } from '../data/skills'
 import { INITIAL_TECH } from '../data/techs'
+import { ROLE_IDS } from '../data/roles'
+import { createCandidate, createInitialCandidates, type Employee } from './team'
 import type { GameState } from './reducer'
 
 const SAVE_KEY = 'dev-clicker:save'
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 7
+export const SAVE_VERSION: number = 8
 
 type SaveFile = {
   version: number
@@ -95,6 +97,16 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 7 }
   }
 
+  // v7 → v8: los desarrolladores pasan a ser personas con nombre y estrellas (todos 1★)
+  if (file.version === 7) {
+    const { developers, ...rest } = state
+    const team: Employee[] = []
+    const count = isNumber(developers) ? developers : 0
+    for (let i = 0; i < count; i++) team.push(createCandidate('dev', team, 1))
+    state = { ...rest, team, candidates: createInitialCandidates(team) }
+    file = { ...file, version: 8 }
+  }
+
   return { ...file, state }
 }
 
@@ -121,12 +133,23 @@ function isContract(value: unknown): boolean {
   )
 }
 
+function isEmployee(value: unknown): boolean {
+  return (
+    isObject(value) &&
+    typeof value.uid === 'string' &&
+    ROLE_IDS.some((r) => r === value.role) &&
+    isNumber(value.stars) &&
+    typeof value.name === 'string' &&
+    typeof value.quirk === 'string'
+  )
+}
+
 function isSaveFile(value: unknown): value is SaveFile {
   if (!isObject(value) || !isNumber(value.version) || !isObject(value.state)) return false
   const s = value.state
   const skills = s.skills
   return (
-    ['code', 'money', 'xp', 'rep', 'developers', 'office', 'timeLeft'].every((key) => isNumber(s[key])) &&
+    ['code', 'money', 'xp', 'rep', 'office', 'timeLeft'].every((key) => isNumber(s[key])) &&
     isObject(skills) &&
     Object.keys(INITIAL_SKILLS).every((key) => isNumber(skills[key])) &&
     EDITORS.some((e) => e.id === s.editor) &&
@@ -134,6 +157,10 @@ function isSaveFile(value: unknown): value is SaveFile {
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
     isObject(s.tech) &&
+    Array.isArray(s.team) &&
+    s.team.every(isEmployee) &&
+    Array.isArray(s.candidates) &&
+    s.candidates.every(isEmployee) &&
     Array.isArray(s.offers) &&
     s.offers.every(isContract) &&
     isObject(s.cooldowns) &&
