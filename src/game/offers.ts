@@ -1,7 +1,7 @@
 // Generador de ofertas: funciones que arman el tablón a partir de las plantillas.
 import { CONTRACT_TEMPLATES, GUIDED_CONTRACT } from '../data/contracts'
-import { STAGES } from '../data/stages'
 import { LANG_TECH, type TechLevels } from '../data/techs'
+import { contractScale } from './stages'
 import type { Contract, ContractTemplate, Difficulty } from './types'
 
 /** Cantidad de ofertas visibles (GDD §4: de 3 a 5 según reputación; por ahora fijo) */
@@ -20,9 +20,9 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'mid', 'hard']
  * El código y el dinero crecen con contractScale; la XP crece más despacio (para no inflarla)
  * y el plazo se estira un poco, porque el equipo también es más grande.
  */
-function createOffer(template: ContractTemplate, stage: number): Contract {
+function createOffer(template: ContractTemplate, stage: number, endless: number): Contract {
   const factor = template.once ? 1 : 0.85 + Math.random() * 0.3
-  const scale = STAGES[stage].contractScale
+  const scale = contractScale(stage, endless)
   return {
     ...template,
     uid: crypto.randomUUID(),
@@ -47,7 +47,7 @@ export function canTake(template: ContractTemplate, tech: TechLevels, stage: num
 
 /** Tablón inicial: el contrato guiado + ofertas para completar */
 export function createInitialOffers(tech: TechLevels): Contract[] {
-  return refillOffers([createOffer(GUIDED_CONTRACT, 0)], {}, null, Date.now(), tech, 0)
+  return refillOffers([createOffer(GUIDED_CONTRACT, 0, 0)], {}, null, Date.now(), tech, 0)
 }
 
 /**
@@ -62,6 +62,8 @@ export function refillOffers(
   now: number,
   tech: TechLevels,
   stage: number,
+  /** Contratos entregados en modo infinito (agrandan los nuevos) */
+  endless = 0,
 ): Contract[] {
   const result = [...offers]
 
@@ -79,14 +81,14 @@ export function refillOffers(
     if (result.some((o) => o.difficulty === difficulty)) continue
     let candidates = available(difficulty)
     if (candidates.length === 0) candidates = available(difficulty, true)
-    if (candidates.length > 0) result.push(createOffer(pickRandom(candidates), stage))
+    if (candidates.length > 0) result.push(createOffer(pickRandom(candidates), stage, endless))
   }
 
   while (result.length < BOARD_SIZE) {
     let candidates = available()
     if (candidates.length === 0) candidates = available(undefined, true)
     if (candidates.length === 0) break
-    result.push(createOffer(pickRandom(candidates), stage))
+    result.push(createOffer(pickRandom(candidates), stage, endless))
   }
 
   return result

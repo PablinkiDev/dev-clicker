@@ -61,6 +61,7 @@ Tamaño: cantidad estimada de commits chicos.
 | C6 | **Deploy público** (GitHub Pages o Vercel), con la versión visible en el juego | M | 1 |
 | C7 | **Forma de juntar feedback** (link a un form o a issues de GitHub, desde Ajustes) | S | 1 |
 | C8 | Bug bash final y README actualizado | M | 1 |
+| C9 | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
 
 **Total estimado para 1.0:** ~40 commits chicos.
 

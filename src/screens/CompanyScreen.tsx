@@ -1,16 +1,23 @@
 import ScreenHeader from '../components/ScreenHeader'
 import { STAGES } from '../data/stages'
-import type { Requirement } from '../game/stages'
+import { formatMoney } from '../game/format'
+import { ENDLESS_GROWTH, type Requirement } from '../game/stages'
 
 type CompanyScreenProps = {
   /** Índice de la etapa actual */
   stage: number
   /** Requisitos de la próxima etapa; null si ya estás en la última */
   requirements: Requirement[] | null
+  /** Multiplicador actual de los contratos (en modo infinito sigue creciendo) */
+  scale: number
+  /** Contratos entregados en modo infinito */
+  endless: number
+  /** Valor de la empresa: dinero ganado + equipo */
+  value: number
   onAscend: () => void
 }
 
-function CompanyScreen({ stage, requirements, onAscend }: CompanyScreenProps) {
+function CompanyScreen({ stage, requirements, scale, endless, value, onAscend }: CompanyScreenProps) {
   const current = STAGES[stage]
   const next = STAGES[stage + 1]
   const ready = requirements !== null && requirements.every((r) => r.done)
@@ -54,8 +61,9 @@ function CompanyScreen({ stage, requirements, onAscend }: CompanyScreenProps) {
         </p>
         <p className="text-xs text-muted">{current.description}</p>
         <p className="mt-2 font-mono text-xs">
-          Contratos de esta etapa: <b className="text-yellow">×{current.contractScale.toLocaleString('es-AR')}</b> de
-          código y de paga
+          Contratos de esta etapa:{' '}
+          <b className="text-yellow">×{scale.toLocaleString('es-AR', { maximumFractionDigits: 1 })}</b> de código y de
+          paga
         </p>
       </div>
 
@@ -98,9 +106,21 @@ function CompanyScreen({ stage, requirements, onAscend }: CompanyScreenProps) {
           </button>
         </div>
       ) : (
-        <p className="max-w-xl rounded-xl border border-yellow/40 bg-yellow/10 p-3.5 text-sm">
-          🏆 Llegaste a la cima. El modo infinito y la venta de la empresa llegan pronto.
-        </p>
+        <div className="max-w-xl rounded-xl border border-yellow/40 bg-yellow/10 p-3.5">
+          <p className="font-mono text-[10px] font-bold tracking-wider text-yellow uppercase">Modo infinito</p>
+          <p className="font-extrabold">♾️ Llegaste a la cima. Ahora, a crecer sin techo</p>
+          <p className="mb-3 text-xs text-muted">
+            Cada contrato entregado agranda los próximos un {Math.round((ENDLESS_GROWTH - 1) * 100)}%: más código, más
+            paga.
+          </p>
+          <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 font-mono text-xs">
+            <dt className="text-muted">Valor de la empresa</dt>
+            <dd className="text-right font-bold text-yellow">{formatMoney(value)}</dd>
+            <dt className="text-muted">Contratos en modo infinito</dt>
+            <dd className="text-right">{endless}</dd>
+          </dl>
+          <p className="mt-3 text-xs text-muted">La venta de la empresa llega pronto.</p>
+        </div>
       )}
     </section>
   )

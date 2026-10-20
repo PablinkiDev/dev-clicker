@@ -15,7 +15,7 @@ import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
 import { STAGES } from '../data/stages'
-import { canAscend } from './stages'
+import { canAscend, isEndless } from './stages'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
   REROLL_PRICE,
@@ -79,6 +79,8 @@ export type GameState = {
   candidates: Employee[]
   /** Índice de la etapa actual en STAGES */
   stage: number
+  /** Contratos entregados en modo infinito (después de Corporación) */
+  endless: number
   /** Índice de la oficina actual en OFFICES */
   office: number
   offers: Contract[]
@@ -138,6 +140,7 @@ export function createInitialState(): GameState {
     team: [],
     candidates: createInitialCandidates(),
     stage: 0,
+    endless: 0,
     office: 0,
     offers: createInitialOffers(INITIAL_TECH),
     cooldowns: {},
@@ -198,6 +201,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         rep: state.rep + reward.rep,
         code: 0, // el código no se acumula entre contratos (GDD §3)
         contract: null,
+        endless: isEndless(state.stage) ? state.endless + 1 : state.endless,
         stats: {
           ...state.stats,
           moneyEarned: state.stats.moneyEarned + money,

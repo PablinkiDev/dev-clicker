@@ -27,7 +27,7 @@ import SkillsScreen from './screens/SkillsScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import TeamScreen from './screens/TeamScreen'
 import CompanyScreen from './screens/CompanyScreen'
-import { canAscend, nextStageRequirements } from './game/stages'
+import { canAscend, companyValue, contractScale, nextStageRequirements } from './game/stages'
 import type { View } from './ui'
 
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
@@ -128,7 +128,7 @@ function App() {
     dispatch({
       type: 'accept',
       offer,
-      offers: refillOffers(remaining, nextCooldowns, offer.id, now, state.tech, state.stage),
+      offers: refillOffers(remaining, nextCooldowns, offer.id, now, state.tech, state.stage, state.endless),
       cooldowns: nextCooldowns,
     })
     setView('work')
@@ -279,7 +279,14 @@ function App() {
             />
           )}
           {currentView === 'company' && (
-            <CompanyScreen stage={state.stage} requirements={nextStageRequirements(state)} onAscend={ascend} />
+            <CompanyScreen
+              stage={state.stage}
+              requirements={nextStageRequirements(state)}
+              scale={contractScale(state.stage, state.endless)}
+              endless={state.endless}
+              value={companyValue(state.stats.moneyEarned, team)}
+              onAscend={ascend}
+            />
           )}
           {currentView === 'settings' && (
             <SettingsScreen
