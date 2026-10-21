@@ -35,7 +35,7 @@ export const INITIAL_PRESTIGE: Prestige = { tokens: 0, sales: 0, investments: IN
 export const BASE_TOKENS: number = 3
 
 /** Valor de empresa del primer hito extra; cada hito siguiente pide el doble */
-export const FIRST_MILESTONE: number = 110_000_000
+export const FIRST_MILESTONE: number = 6_000_000_000
 
 /** Valor necesario para el hito número n (0 = el primero) */
 export function milestoneValue(n: number): number {

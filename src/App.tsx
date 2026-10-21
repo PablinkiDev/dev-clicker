@@ -35,7 +35,7 @@ import { SKILLS, missingSkillRequirements } from './data/skills'
 import { TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
-import { ASSUMED_CLICKS_PER_SECOND, critChance, skillCost } from './game/formulas'
+import { critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate, critMultiplier } from './game/rates'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
@@ -99,15 +99,24 @@ function App() {
   const focusing = isFocused(state.focus, now)
   const focusInfo =
     skills.focus > 0
-      ? { active: focusing, mult: focusMultiplier(skills.flowState), seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000) }
+      ? {
+          active: focusing,
+          mult: focusMultiplier(skills.flowState),
+          seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000),
+        }
       : null
 
   // Ganancia por minuto: cada 5 s se anota lo ganado en la partida y se compara con hace ~5 minutos
-  const samples = useRef<{ t: number; money: number; xp: number }[]>([])
+  // También se mide tu ritmo de clics (últimos 30 s): las ofertas nuevas se dimensionan con él
+  const samples = useRef<{ t: number; money: number; xp: number; clicks: number }[]>([])
   const [perMinute, setPerMinute] = useState<{ money: number; xp: number } | null>(null)
+  const [clicksPerSecond, setClicksPerSecond] = useState(3)
   const sampleEarnings = useEffectEvent(() => {
     const t = Date.now()
-    const point = { t, money: state.stats.moneyEarned, xp: state.stats.xpEarned }
+    const point = { t, money: state.stats.moneyEarned, xp: state.stats.xpEarned, clicks: state.records.clicks }
+    const recent = samples.current.find((s) => t - s.t <= 30_000 && s.clicks <= point.clicks)
+    if (recent && t - recent.t >= 10_000)
+      setClicksPerSecond(Math.min(6, Math.max(1, (point.clicks - recent.clicks) / ((t - recent.t) / 1000))))
     // Si lo ganado bajó (se vendió la empresa o se importó una partida), se empieza de cero
     const previous = samples.current.filter((s) => t - s.t <= 5 * 60_000 && s.money <= point.money)
     samples.current = [...previous, point]
@@ -133,7 +142,7 @@ function App() {
     stage: state.stage,
     endless: state.endless,
     rep,
-    perSecond: ASSUMED_CLICKS_PER_SECOND * clickRate(state) + auto,
+    perSecond: clicksPerSecond * clickRate(state) + auto,
     timeBonus: 1 + 0.08 * skills.timeManagement,
   }
   const isComplete = contract !== null && code >= contract.code

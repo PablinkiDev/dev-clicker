@@ -32,16 +32,29 @@ export type Cooldowns = Record<string, number>
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'mid', 'hard']
 
+/** Qué parte del plazo debería ocupar cada dificultad, con tu producción actual (D11) */
+const TARGET_SHARE: Record<Difficulty, number> = { easy: 0.3, mid: 0.45, hard: 0.6 }
+
 /**
  * Crea una oferta concreta: misma plantilla, con ±15 % de variación y escalada según la etapa.
  * El código y el dinero crecen con contractScale; la XP crece más despacio (para no inflarla)
- * y el plazo se estira un poco, porque el equipo también es más grande.
+ * y, si tu producción ya supera al contrato, este se agranda para ocupar parte del plazo.
  */
-function createOffer(template: ContractTemplate, { stage, endless, rep, timeBonus = 1 }: OfferContext): Contract {
-  const factor = template.once ? 1 : 0.85 + Math.random() * 0.3
+function createOffer(
+  template: ContractTemplate,
+  { stage, endless, rep, perSecond, timeBonus = 1 }: OfferContext,
+): Contract {
   const level = repLevel(rep)
+  const time = Math.round(template.time * timeBonus)
   // Etapa y reputación son grupos distintos: se multiplican
-  const scale = contractScale(stage, endless) * repScale(level)
+  const base = contractScale(stage, endless) * repScale(level)
+  // Si ya sos mucho más rápido que el contrato, el cliente pide más (y paga en proporción):
+  // así un contrato nunca dura un suspiro, aunque tu producción crezca más que la etapa
+  const fit = template.once
+    ? 1
+    : Math.max(1, (perSecond * time * TARGET_SHARE[template.difficulty]) / (template.code * base))
+  const factor = template.once ? 1 : 0.85 + Math.random() * 0.3
+  const scale = base * fit
   // Las tecnologías avanzadas (y los fullstack) pagan más (D3)
   const tier = payTier(template.lang, template.stack)
   return {
@@ -49,7 +62,7 @@ function createOffer(template: ContractTemplate, { stage, endless, rep, timeBonu
     uid: crypto.randomUUID(),
     code: Math.round(template.code * factor * scale),
     // El plazo es FIJO (D2): lo que crece es el código. El jugador tiene que mejorar su producción
-    time: Math.round(template.time * timeBonus),
+    time,
     reward: {
       money: Math.round((template.reward.money * factor * scale * tier * (STAGES[stage].payScale ?? 1)) / 5) * 5,
       xp: Math.round(template.reward.xp * factor * tier * Math.pow(scale, 0.75)),

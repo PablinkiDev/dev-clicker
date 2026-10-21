@@ -19,6 +19,8 @@ import { createInitialState, gameReducer, type GameAction, type GameState } from
 import { canAscend, companyValue, isEndless } from '../src/game/stages'
 import { employeePrice, replaceCandidate, rerollCandidates } from '../src/game/team'
 import { getEditor } from '../src/data/editors'
+import { nextBugDelay } from '../src/game/bug'
+import { nextMinigameDelay } from '../src/data/minigames'
 
 // --- Parámetros -------------------------------------------------------------------
 const arg = (name: string, fallback: number) => {
@@ -31,6 +33,11 @@ const STEP = 0.2 // segundos simulados por paso (como un tick de 200 ms)
 const MAX_HOURS = 120 // corte de seguridad
 /** Vende cuando la venta da al menos estos tokens (o tras 30 min en modo infinito) */
 const SELL_AT_TOKENS = 4
+/** Un jugador real no atrapa todos los bugs ni juega todos los minijuegos */
+const BUG_CATCH_RATE = 0.6
+const MINIGAME_PLAY_RATE = 0.6
+/** Puntaje promedio en los minijuegos (2 de 3) */
+const MINIGAME_SCORE = 2 / 3
 
 // --- Estado de la simulación ----------------------------------------------------------
 let state: GameState = createInitialState()
@@ -38,6 +45,9 @@ let clock = 0 // segundos simulados desde el inicio
 let cycleStart = 0
 let clickDebt = 0
 let endlessSince: number | null = null
+let allBought = false
+let nextBug = nextBugDelay() / 1000
+let nextMinigame = 300 + nextMinigameDelay() / 1000
 const events: string[] = []
 const counters = { fails: 0, clicksLines: 0, autoLines: 0, focus: 0 }
 
@@ -73,7 +83,9 @@ function shop() {
       stage: state.stage + 1,
     })
     dispatch({ type: 'ascend', offers, candidates: rerollCandidates(state.team, state.stage + 1) })
-    log(`▲ Etapa ${state.stage + 1}: ${STAGES[state.stage].name}`)
+    log(
+      `▲ Etapa ${state.stage + 1}: ${STAGES[state.stage].name} · ganado ${formatMoney(state.stats.moneyEarned)} · ${state.stats.contractsDone} contratos`,
+    )
   }
 
   // XP: siempre lo más barato que se pueda comprar (tecnologías y habilidades)
@@ -92,6 +104,12 @@ function shop() {
         action: { type: 'buySkill', skill: sk.id } as GameAction,
       })),
     ].sort((a, b) => a.cost - b.cost)
+    const maxed =
+      TECHS.every((t) => state.tech[t.id] >= t.maxLevel) && SKILLS.every((sk) => state.skills[sk.id] >= sk.maxLevel)
+    if (maxed && !allBought) {
+      allBought = true
+      log('🎓 Todas las mejoras de XP compradas')
+    }
     if (!options.length || options[0].cost > state.xp) break
     dispatch(options[0].action)
   }
@@ -158,6 +176,7 @@ function sellIfReady(): boolean {
     dispatch({ type: 'invest', investment: options[0].id })
   }
   endlessSince = null
+  allBought = false
   return true
 }
 
@@ -183,7 +202,7 @@ while (clock < MAX_HOURS * 3600 && sales < CYCLES) {
   // El tiempo corre
   const before = state.code
   const failsBefore = state.stats.contractsFailed
-  dispatch({ type: 'tick', elapsed: STEP })
+  dispatch({ type: 'tick', elapsed: STEP, now: nowMs() })
   if (state.contract) counters.autoLines += Math.max(0, state.code - before)
   if (state.stats.contractsFailed > failsBefore) counters.fails++
   if (state.contract && state.code >= state.contract.code) dispatch({ type: 'deliver' })
@@ -191,6 +210,15 @@ while (clock < MAX_HOURS * 3600 && sales < CYCLES) {
 
   if (process.argv.includes('--debug') && Math.abs(clock - 60) < STEP / 2)
     console.log('t=60s', Math.round(state.money), state.stats.moneyEarned, state.stats.contractsDone)
+  // Bug dorado y minijuegos (como en App): cuentan sus multiplicadores
+  if (clock >= nextBug) {
+    if (Math.random() < BUG_CATCH_RATE) dispatch({ type: 'catchBug', now: nowMs() })
+    nextBug = clock + nextBugDelay(state.skills.hawkEye) / 1000
+  }
+  if (clock >= nextMinigame) {
+    if (Math.random() < MINIGAME_PLAY_RATE) dispatch({ type: 'minigame', score: MINIGAME_SCORE, now: nowMs() })
+    nextMinigame = clock + nextMinigameDelay() / 1000
+  }
   if (clock >= nextShop) {
     nextShop = clock + 1
     shop()

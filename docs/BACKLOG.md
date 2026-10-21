@@ -68,7 +68,7 @@ La 1.0 se atrasa a propósito: primero que enganche.
 | D9 ✅ | **Minijuegos** (3, opcionales, cada 6–10 min): code review, merge conflict y typing race. Premio: equipo ×1,5–×3 por 60 s + XP; sin castigo. Logros LGTM y Senior reviewer (43 en total) | S | 2–3 |
 | D10 ✅ | **Música y efectos de sonido** generados con Web Audio (loop lo-fi + 11 efectos), con volumen de música, de efectos y silencio en Ajustes | M | 2 |
 | D12 ✅ | **Más mejoras personales:** 8 nodos por etapa (Atajos, Gestión del tiempo, Ojo de halcón, Negociador, Crítico devastador, Memoria muscular, Flow state, Suerte de programador) | M | 1–2 |
-| D11 | **Rebalancear** con la simulación actualizada a todo lo nuevo | M | 1–2 |
+| D11 ✅ | **Rebalanceo:** equipo con experiencia por etapa, ofertas dimensionadas a tu producción, requisitos y tokens nuevos | M | 1–2 |
 
 ## Hito C — Listo para amigos (1.0)
 
@@ -89,16 +89,27 @@ La 1.0 se atrasa a propósito: primero que enganche.
 
 ---
 
-## 📊 Primera simulación (C3) · para la C4
+## 📊 Simulación después del rebalanceo (D11)
 
-`npx tsx scripts/simulate.mts` (bot a 5 clics/s, vende con 4 tokens):
+`npx tsx scripts/simulate.mts --cps N --cycles 2`. El bot incluye el bug dorado (atrapa el 60 %) y los minijuegos (juega el 60 %, 2 de 3 aciertos).
 
-- Primer prestigio: **16 min**. **Nueva meta (decidida): 2–4 h de juego activo** → hay que estirar ~10×.
-  Reparto sugerido: Freelancer 15–20 min · Estudio 25–35 · Startup 35–50 · Empresa tecnológica 45–60 · Corporación/infinito hasta vender 20–40.
-- Segundo ciclo: 14 min (solo ~12 % más rápido; meta 25–40 %).
-- Editores: Cladex comprado a los **3 min** · primer empleado al minuto (meta 5–8 min).
-- Clics: solo **4 %** de las líneas (el GDD quiere que el clic siga importando).
-- Contratos vencidos: 0 (los plazos sobran).
+| Ritmo | 1.er prestigio | 2.º ciclo |
+|---|---|---|
+| 5 clics/s | 2 h 15 – 3 h 05 | 45–60 % más rápido |
+| 3 clics/s | 2 h 40 – 4 h 15 | 45 % más rápido (con variación) |
+| 1,5 clics/s | 3 h 15 – 3 h 45 | similar o algo más rápido |
+
+- Reparto a 5 clics/s: Freelancer ~16 min · Estudio ~30 · Startup ~30–50 · Empresa tec. ~30–70 · Corporación hasta vender ~25.
+- Hay bastante azar entre corridas (sobre todo por las estrellas de los candidatos).
+- Clics vs. equipo: 41/59 a 5 clics/s y 19/81 a 1,5 clics/s. El jugador tranquilo ya no queda atrás.
+- Todas las mejoras de XP quedan compradas al llegar a Corporación (las últimas se desbloquean recién ahí).
+
+**Cambios del D11**
+1. El **equipo gana experiencia por etapa** (contractScale^0,7; el clic usa ^0,5): antes los devs escribían lo mismo en Corporación que en Freelancer.
+2. **Ofertas dimensionadas a tu producción:** si sos mucho más rápido que la oferta, el contrato crece (y paga y da XP en proporción) hasta ocupar un 30/45/60 % del plazo (fácil/media/difícil). Antes, al final, cada contrato duraba menos de 1 s (~7.000 por partida).
+3. Las ofertas usan **tu ritmo real de clics** (medido en los últimos 30 s, entre 1 y 6) en vez de suponer 5.
+4. Requisitos: Estudio $400 K / 30 contratos · Startup $8 M / 70 · Empresa tec. $100 M / 120 · Corporación $500 M / 180.
+5. Primer hito de tokens: **$6 B** de valor (antes $110 M).
 
 ## 📌 Decisiones
 

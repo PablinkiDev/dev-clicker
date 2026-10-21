@@ -38,6 +38,9 @@ export function clickRate(state: GameState, now?: number): number {
   )
 }
 
+/** Cuánto crece el equipo con la etapa: contractScale ^ esto (el clic usa 0,5) */
+export const TEAM_SENIORITY = 0.7
+
 /** Multiplicador de los críticos: el del editor + 0,5 por nivel de Crítico devastador */
 export function critMultiplier(state: GameState): number {
   return getEditor(state.editor).critMultiplier + 0.5 * state.skills.devastatingCrit
@@ -50,7 +53,11 @@ export function critMultiplier(state: GameState): number {
 export function autoRateOf(state: GameState, now?: number): number {
   // Contrato especial "Solo a mano": el equipo no puede tocarlo
   if (state.contract?.special === 'clicksOnly') return 0
+  // El equipo también gana experiencia con proyectos más grandes (un poco más rápido que el clic):
+  // así en las etapas altas la automatización pesa más y el jugador tranquilo no se queda atrás
+  const seniority = Math.pow(contractScale(state.stage, state.endless), TEAM_SENIORITY)
   return (
+    seniority *
     modifierMultiplier(state.modifiers, 'auto', now) *
     autoRate(state.team, getEditor(state.editor).autoBonus) *
     contractSpecialty(state) *
