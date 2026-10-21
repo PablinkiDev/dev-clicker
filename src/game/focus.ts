@@ -3,6 +3,11 @@
 /** Multiplicador de líneas por clic mientras dura */
 export const FOCUS_MULTIPLIER: number = 2
 
+/** Con Flow state, la Concentración multiplica ×3 */
+export function focusMultiplier(flowState: number): number {
+  return flowState > 0 ? 3 : FOCUS_MULTIPLIER
+}
+
 /** Segundos de recarga desde que termina */
 export const FOCUS_COOLDOWN: number = 120
 

@@ -3,7 +3,7 @@
 // no lee la hora ni números al azar: eso llega desde afuera, dentro de las acciones.
 import { FAILURE_REP_LOSS, addCode, failureMoneyLoss, failureXp, skillCost, xpMultiplier } from './formulas'
 import { INITIAL_SKILLS, SKILLS, missingSkillRequirements, type SkillId, type SkillLevels } from '../data/skills'
-import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
+import { EDITORS, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
 import { formatMoney, formatNumber, formatRate } from './format'
@@ -11,11 +11,11 @@ import { STAGES } from '../data/stages'
 import { canAscend, companyValue, isEndless } from './stages'
 import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
-import { autoRateOf, clickRate } from './rates'
+import { autoRateOf, clickRate, critMultiplier } from './rates'
 import { BUG_DURATION, BUG_MULTIPLIER } from './bug'
 import { activeModifiers, type Modifier } from './modifiers'
 import type { Effect } from '../data/events'
-import { FOCUS_COOLDOWN, FOCUS_MULTIPLIER, INITIAL_FOCUS, focusDuration, isFocused, type Focus } from './focus'
+import { FOCUS_COOLDOWN, INITIAL_FOCUS, focusDuration, focusMultiplier, isFocused, type Focus } from './focus'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
   REROLL_PRICE,
@@ -303,7 +303,10 @@ function deliverContract(state: GameState): GameState {
   const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
   // Grupos distintos se multiplican: tecnología × Contratos premium (GDD §10)
   const techBonus = 1 + 0.1 * Math.max(0, techLevel - 1)
-  const money = Math.round((reward.money * techBonus * investmentBonus(investments.premiumContracts)) / 5) * 5
+  // Negociador: +5 % por nivel
+  const negotiation = 1 + 0.05 * state.skills.negotiator
+  const money =
+    Math.round((reward.money * techBonus * negotiation * investmentBonus(investments.premiumContracts)) / 5) * 5
   return {
     ...state,
     money: state.money + money,
@@ -360,9 +363,8 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'program': {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
-      const editor = getEditor(state.editor)
-      const focus = isFocused(state.focus, action.now) ? FOCUS_MULTIPLIER : 1
-      const lines = clickRate(state, action.now) * focus * (action.crit ? editor.critMultiplier : 1)
+      const focus = isFocused(state.focus, action.now) ? focusMultiplier(state.skills.flowState) : 1
+      const lines = clickRate(state, action.now) * focus * (action.crit ? critMultiplier(state) : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (action.crit)
@@ -581,7 +583,7 @@ function reduce(state: GameState, action: GameAction): GameState {
         log: addLog(
           state.log,
           'crit',
-          `🎯 Concentración: auriculares puestos, Slack cerrado. ×${FOCUS_MULTIPLIER} por ${focusDuration(level)} s`,
+          `🎯 Concentración: auriculares puestos, Slack cerrado. ×${focusMultiplier(state.skills.flowState)} por ${focusDuration(level)} s`,
         ),
       }
     }

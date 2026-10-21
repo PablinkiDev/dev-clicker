@@ -49,6 +49,7 @@ const ctx = (s: GameState = state): OfferContext => ({
   endless: s.endless,
   rep: s.rep,
   perSecond: CLICKS_PER_SECOND * clickRate(s) + autoRateOf(s),
+  timeBonus: 1 + 0.08 * s.skills.timeManagement,
 })
 const log = (text: string) =>
   events.push(`${formatDuration(clock).padStart(11)}  (+${formatDuration(clock - cycleStart).padStart(10)})  ${text}`)

@@ -2,7 +2,22 @@
 import { STAGES } from './stages'
 
 export type SkillId =
-  'fastTyping' | 'criticalCode' | 'logicalThinking' | 'focus' | 'teamwork' | 'knowledge' | 'autoDeliver' | 'autoAccept'
+  | 'fastTyping'
+  | 'criticalCode'
+  | 'logicalThinking'
+  | 'focus'
+  | 'shortcuts'
+  | 'timeManagement'
+  | 'hawkEye'
+  | 'negotiator'
+  | 'devastatingCrit'
+  | 'muscleMemory'
+  | 'flowState'
+  | 'lucky'
+  | 'teamwork'
+  | 'knowledge'
+  | 'autoDeliver'
+  | 'autoAccept'
 
 export type Skill = {
   id: SkillId
@@ -60,6 +75,95 @@ export const SKILLS: Skill[] = [
     requires: [['fastTyping', 2]],
   },
   // Árbol empresarial: mejoras generales de la plantilla, desde Estudio
+  // --- Mejoras personales por etapa (D12): siempre hay algo tuyo para comprar ---
+  {
+    id: 'shortcuts',
+    name: 'Atajos de teclado',
+    icon: '⌘',
+    effect: '+10 % de líneas por clic por nivel (Ctrl+C, Ctrl+V, Ctrl+Z, repetir)',
+    baseCost: 1500,
+    maxLevel: 5,
+    group: 'personal',
+    requires: [['fastTyping', 5]],
+    minStage: 1,
+  },
+  {
+    id: 'timeManagement',
+    name: 'Gestión del tiempo',
+    icon: '⏱',
+    effect: '+8 % de plazo en los contratos nuevos por nivel',
+    baseCost: 1200,
+    maxLevel: 5,
+    group: 'personal',
+    requires: [['logicalThinking', 2]],
+    minStage: 1,
+  },
+  {
+    id: 'hawkEye',
+    name: 'Ojo de halcón',
+    icon: '🦅',
+    effect: 'El bug dorado aparece 15 % más seguido y se queda 2 s más por nivel',
+    baseCost: 6000,
+    maxLevel: 3,
+    group: 'personal',
+    requires: [['focus', 1]],
+    minStage: 2,
+  },
+  {
+    id: 'negotiator',
+    name: 'Negociador',
+    icon: '💬',
+    effect: '+5 % de paga en los contratos por nivel ("eso lleva más horas de lo que parece")',
+    baseCost: 8000,
+    maxLevel: 5,
+    group: 'personal',
+    requires: [['timeManagement', 1]],
+    minStage: 2,
+  },
+  {
+    id: 'devastatingCrit',
+    name: 'Crítico devastador',
+    icon: '💥',
+    effect: 'Los críticos multiplican +0,5 más por nivel (×2 → ×2,5 → ×3)',
+    baseCost: 30000,
+    maxLevel: 2,
+    group: 'personal',
+    requires: [['criticalCode', 5]],
+    minStage: 3,
+  },
+  {
+    id: 'muscleMemory',
+    name: 'Memoria muscular',
+    icon: '🦾',
+    effect: 'Cada clic suma además el 1 % de lo que produce tu equipo por segundo, por nivel',
+    baseCost: 40000,
+    maxLevel: 5,
+    group: 'personal',
+    requires: [['shortcuts', 3]],
+    minStage: 3,
+  },
+  {
+    id: 'flowState',
+    name: 'Flow state',
+    icon: '🧘',
+    effect: 'La Concentración pasa de ×2 a ×3',
+    baseCost: 120000,
+    maxLevel: 1,
+    group: 'personal',
+    requires: [['hawkEye', 1]],
+    minStage: 4,
+  },
+  {
+    id: 'lucky',
+    name: 'Suerte de programador',
+    icon: '🍀',
+    effect: '+10 % de chance de ganar las apuestas de los eventos y más eventos buenos, por nivel',
+    baseCost: 100000,
+    maxLevel: 3,
+    group: 'personal',
+    requires: [['negotiator', 1]],
+    minStage: 4,
+  },
   {
     id: 'teamwork',
     name: 'Trabajo en equipo',
@@ -116,6 +220,14 @@ export const INITIAL_SKILLS: SkillLevels = {
   knowledge: 0,
   autoDeliver: 0,
   autoAccept: 0,
+  shortcuts: 0,
+  timeManagement: 0,
+  hawkEye: 0,
+  negotiator: 0,
+  devastatingCrit: 0,
+  muscleMemory: 0,
+  flowState: 0,
+  lucky: 0,
 }
 
 /** Lo que falta para comprar una habilidad, como texto ("Escritura veloz Nv.1 y etapa Estudio"), o null */

@@ -43,10 +43,20 @@ const TECH_LAYOUT: Record<TechId, { col: number; row: number }> = {
 
 /** Habilidades: las de base a la izquierda y las que dependen de ellas a la derecha */
 const SKILL_LAYOUT: Record<SkillId, { col: number; row: number }> = {
+  // Cada rama en su fila: escritura → atajos → memoria · crítico → devastador ·
+  // concentración → halcón → flow · lógica → tiempo → negociador → suerte
   fastTyping: { col: 0, row: 0.5 },
-  logicalThinking: { col: 0, row: 2 },
+  logicalThinking: { col: 0, row: 3 },
   criticalCode: { col: 1, row: 0 },
-  focus: { col: 1, row: 1 },
+  shortcuts: { col: 1, row: 1 },
+  focus: { col: 1, row: 2 },
+  timeManagement: { col: 1, row: 3 },
+  devastatingCrit: { col: 2, row: 0 },
+  muscleMemory: { col: 2, row: 1 },
+  hawkEye: { col: 2, row: 2 },
+  negotiator: { col: 2, row: 3 },
+  flowState: { col: 3, row: 2 },
+  lucky: { col: 3, row: 3 },
   teamwork: { col: 0, row: 0 },
   knowledge: { col: 0, row: 1 },
   autoDeliver: { col: 1, row: 0 },
@@ -199,7 +209,7 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
 
       {tab === 'personal' && (
         <SkillTree
-          columns={['base/', 'especialización/']}
+          columns={['base/', 'especialización/', 'profesional/', 'experto/']}
           nodes={personalNodes}
           edges={skillEdges('personal')}
           onBuy={(id) => onBuy(id as SkillId)}

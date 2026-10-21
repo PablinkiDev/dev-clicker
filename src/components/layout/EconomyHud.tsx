@@ -20,7 +20,7 @@ type EconomyHudProps = {
   /** Mejoras que se pueden comprar ahora con XP */
   upgradesAvailable: number
   /** Concentración: null si no se aprendió */
-  focus: { active: boolean; seconds: number } | null
+  focus: { active: boolean; mult: number; seconds: number } | null
   /** Modificadores activos (bug dorado, eventos) con los segundos que les quedan */
   modifiers: { id: string; icon: string; target: 'auto' | 'click'; mult: number; seconds: number }[]
   goal: Goal
@@ -169,7 +169,7 @@ function EconomyHud(props: EconomyHudProps) {
             <>
               {' · 🎯 '}
               {focus.active ? (
-                <span className="text-purple">×2 {focus.seconds}s</span>
+                <span className="text-purple">×{focus.mult} {focus.seconds}s</span>
               ) : focus.seconds > 0 ? (
                 `${focus.seconds}s`
               ) : (

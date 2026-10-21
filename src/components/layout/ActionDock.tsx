@@ -9,7 +9,7 @@ type ActionDockProps = {
   /** Último crítico, para el "+N" flotante: el id cambia en cada crítico y reinicia la animación */
   critPop: { id: number; lines: number } | null
   /** Concentración: null si no se aprendió; si no, si está activa y los segundos que le quedan (o de recarga) */
-  focus: { active: boolean; seconds: number } | null
+  focus: { active: boolean; mult: number; seconds: number } | null
   onFocus: () => void
 }
 
@@ -65,7 +65,7 @@ function ActionDock({
           type="button"
           onClick={onFocus}
           disabled={focus.seconds > 0}
-          title="Concentración: ×2 líneas por clic"
+          title={`Concentración: ×${focus.mult} líneas por clic`}
           className={`flex h-16 cursor-pointer flex-col items-center justify-center rounded-2xl px-3 font-mono text-[11px] font-bold md:h-18 md:px-4 ${
             focus.active
               ? 'border border-purple/60 bg-purple/20 text-purple'
@@ -75,7 +75,7 @@ function ActionDock({
           }`}
         >
           <span className="text-xl">🎯</span>
-          {focus.active ? `×2 · ${focus.seconds}s` : focus.seconds > 0 ? `${focus.seconds}s` : 'Foco'}
+          {focus.active ? `×${focus.mult} · ${focus.seconds}s` : focus.seconds > 0 ? `${focus.seconds}s` : 'Foco'}
         </button>
       )}
 

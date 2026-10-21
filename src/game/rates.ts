@@ -23,15 +23,24 @@ function contractSpecialty(state: GameState): number {
 export function clickRate(state: GameState, now?: number): number {
   const base = linesPerClick(state.skills.fastTyping, getEditor(state.editor).clickBonus)
   const seniority = Math.pow(contractScale(state.stage, state.endless), 0.5)
+  // Memoria muscular: cada clic suma una parte de lo que produce el equipo por segundo
+  const muscle = 0.01 * state.skills.muscleMemory * autoRateOf(state, now)
   return (
+    muscle +
     base *
-    seniority *
-    contractSpecialty(state) *
-    modifierMultiplier(state.modifiers, 'click', now) *
-    (1 + 0.1 * state.tech.ai) *
-    investmentBonus(state.prestige.investments.legacyCode) *
-    achievementMultiplier(state.records)
+      (1 + 0.1 * state.skills.shortcuts) *
+      seniority *
+      contractSpecialty(state) *
+      modifierMultiplier(state.modifiers, 'click', now) *
+      (1 + 0.1 * state.tech.ai) *
+      investmentBonus(state.prestige.investments.legacyCode) *
+      achievementMultiplier(state.records)
   )
+}
+
+/** Multiplicador de los críticos: el del editor + 0,5 por nivel de Crítico devastador */
+export function critMultiplier(state: GameState): number {
+  return getEditor(state.editor).critMultiplier + 0.5 * state.skills.devastatingCrit
 }
 
 /**

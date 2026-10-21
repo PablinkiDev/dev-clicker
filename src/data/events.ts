@@ -458,12 +458,15 @@ export const EVENTS: GameEvent[] = [
 const TONE_WEIGHT: Record<GameEvent['tone'], number> = { good: 0.6, bad: 0.25, choice: 0.15 }
 
 /** Elige un evento al azar entre los que pueden salir ahora */
-export function pickEvent(hasContract: boolean, lastId: string | null): GameEvent {
+/** luck: nivel de Suerte de programador (más peso a los eventos buenos) */
+export function pickEvent(hasContract: boolean, lastId: string | null, luck = 0): GameEvent {
   const pool = EVENTS.filter((e) => (hasContract || !e.needsContract) && e.id !== lastId)
-  const total = pool.reduce((sum, e) => sum + TONE_WEIGHT[e.tone] / EVENTS.filter((x) => x.tone === e.tone).length, 0)
+  const weight = (e: GameEvent) =>
+    (TONE_WEIGHT[e.tone] + (e.tone === 'good' ? 0.1 * luck : 0)) / EVENTS.filter((x) => x.tone === e.tone).length
+  const total = pool.reduce((sum, e) => sum + weight(e), 0)
   let r = Math.random() * total
   for (const e of pool) {
-    r -= TONE_WEIGHT[e.tone] / EVENTS.filter((x) => x.tone === e.tone).length
+    r -= weight(e)
     if (r <= 0) return e
   }
   return pool[pool.length - 1]
@@ -474,12 +477,13 @@ export function nextEventDelay(): number {
   return (180 + Math.random() * 180) * 1000
 }
 
-/** Elige el resultado de una opción con azar */
-export function rollOutcome(outcomes: Outcome[]): Outcome {
-  let r = Math.random()
-  for (const o of outcomes) {
+/** Elige el resultado de una opción con azar. luck: +10 % por nivel al primero (siempre el bueno) */
+export function rollOutcome(outcomes: Outcome[], luck = 0): Outcome {
+  let r = Math.random() + 0.1 * luck
+  // Al restar desde el final, la suerte "empuja" hacia el primer resultado
+  for (const o of [...outcomes].reverse()) {
     r -= o.chance
     if (r <= 0) return o
   }
-  return outcomes[outcomes.length - 1]
+  return outcomes[0]
 }

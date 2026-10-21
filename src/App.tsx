@@ -12,7 +12,7 @@ import Terminal from './components/layout/Terminal'
 import TitleBar from './components/layout/TitleBar'
 import Toast from './components/layout/Toast'
 import GoldenBug from './components/GoldenBug'
-import { BUG_VISIBLE, nextBugDelay } from './game/bug'
+import { bugVisible, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
 import {
@@ -36,8 +36,8 @@ import { TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
 import { ASSUMED_CLICKS_PER_SECOND, critChance, skillCost } from './game/formulas'
-import { autoRateOf, clickRate } from './game/rates'
-import { FOCUS_MULTIPLIER, isFocused } from './game/focus'
+import { autoRateOf, clickRate, critMultiplier } from './game/rates'
+import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
@@ -99,7 +99,7 @@ function App() {
   const focusing = isFocused(state.focus, now)
   const focusInfo =
     skills.focus > 0
-      ? { active: focusing, seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000) }
+      ? { active: focusing, mult: focusMultiplier(skills.flowState), seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000) }
       : null
 
   // Ganancia por minuto: cada 5 s se anota lo ganado en la partida y se compara con hace ~5 minutos
@@ -122,7 +122,7 @@ function App() {
     const id = setInterval(sampleEarnings, 5000)
     return () => clearInterval(id)
   }, [])
-  const perClick = clickRate(state, now) * (focusing ? FOCUS_MULTIPLIER : 1)
+  const perClick = clickRate(state, now) * (focusing ? focusMultiplier(skills.flowState) : 1)
   const auto = autoRateOf(state, now)
   const activeMods = state.modifiers
     .filter((m) => now < m.endsAt)
@@ -134,6 +134,7 @@ function App() {
     endless: state.endless,
     rep,
     perSecond: ASSUMED_CLICKS_PER_SECOND * clickRate(state) + auto,
+    timeBonus: 1 + 0.08 * skills.timeManagement,
   }
   const isComplete = contract !== null && code >= contract.code
   // El juego sigue aunque la pestaña esté oculta (D4); con el juego cerrado, no avanza
@@ -301,18 +302,20 @@ function App() {
     setView('board')
   }
 
-  // 🐛 Bug dorado: aparece cada 2–4 min en un lugar al azar y se escapa a los BUG_VISIBLE segundos
+  // 🐛 Bug dorado: aparece cada 2–4 min en un lugar al azar y se escapa a los pocos segundos
+  // (Ojo de halcón: aparece más seguido y se queda más)
   const [bug, setBug] = useState<{ id: number; x: number; y: number } | null>(null)
+  const hawkEye = skills.hawkEye
   useEffect(() => {
     const id = setTimeout(
       () => {
         if (bug) setBug(null)
         else setBug({ id: Date.now(), x: 10 + Math.random() * 70, y: 15 + Math.random() * 55 })
       },
-      bug ? BUG_VISIBLE * 1000 : nextBugDelay(),
+      bug ? bugVisible(hawkEye) * 1000 : nextBugDelay(hawkEye),
     )
     return () => clearTimeout(id)
-  }, [bug])
+  }, [bug, hawkEye])
 
   function catchBug() {
     const t = Date.now()
@@ -341,7 +344,7 @@ function App() {
     if (!event?.options) return
     const option = event.options[index]
     if (option.outcomes) {
-      const outcome = rollOutcome(option.outcomes)
+      const outcome = rollOutcome(option.outcomes, skills.lucky)
       // El primer resultado es siempre el bueno: si salió ese, la apuesta se ganó
       const bet = outcome === option.outcomes[0] ? 'won' : 'lost'
       applyEvent(event, outcome.effects, `${event.title}: ${outcome.text}`, bet)
@@ -357,7 +360,7 @@ function App() {
       setEventRetry((n) => n + 1) // todavía no: se vuelve a programar
       return
     }
-    const e = pickEvent(contract !== null, lastEventId.current)
+    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky)
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)
@@ -410,7 +413,7 @@ function App() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
     dispatch({ type: 'program', crit, now: Date.now() })
-    if (crit) setCritPop({ id: Date.now(), lines: perClick * editor.critMultiplier })
+    if (crit) setCritPop({ id: Date.now(), lines: perClick * critMultiplier(state) })
   }
 
   function deliver() {

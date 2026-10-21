@@ -20,6 +20,8 @@ export type OfferContext = {
    * Sirve para garantizar que siempre haya al menos una oferta posible.
    */
   perSecond: number
+  /** Gestión del tiempo: multiplicador del plazo (1 si no se tiene) */
+  timeBonus?: number
 }
 
 /** Un mismo cliente no vuelve a ofrecer trabajo hasta pasado este tiempo (GDD §4: 3–5 min) */
@@ -35,7 +37,7 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'mid', 'hard']
  * El código y el dinero crecen con contractScale; la XP crece más despacio (para no inflarla)
  * y el plazo se estira un poco, porque el equipo también es más grande.
  */
-function createOffer(template: ContractTemplate, { stage, endless, rep }: OfferContext): Contract {
+function createOffer(template: ContractTemplate, { stage, endless, rep, timeBonus = 1 }: OfferContext): Contract {
   const factor = template.once ? 1 : 0.85 + Math.random() * 0.3
   const level = repLevel(rep)
   // Etapa y reputación son grupos distintos: se multiplican
@@ -47,7 +49,7 @@ function createOffer(template: ContractTemplate, { stage, endless, rep }: OfferC
     uid: crypto.randomUUID(),
     code: Math.round(template.code * factor * scale),
     // El plazo es FIJO (D2): lo que crece es el código. El jugador tiene que mejorar su producción
-    time: template.time,
+    time: Math.round(template.time * timeBonus),
     reward: {
       money: Math.round((template.reward.money * factor * scale * tier * (STAGES[stage].payScale ?? 1)) / 5) * 5,
       xp: Math.round(template.reward.xp * factor * tier * Math.pow(scale, 0.75)),
