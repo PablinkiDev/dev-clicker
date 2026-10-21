@@ -15,6 +15,14 @@ import GoldenBug from './components/GoldenBug'
 import { BUG_VISIBLE, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
+import {
+  applyAudioSettings,
+  loadAudioSettings,
+  playSfx,
+  saveAudioSettings,
+  unlockAudio,
+  type AudioSettings,
+} from './audio/audio'
 import { MinigameInvite, MinigameModal } from './components/Minigame'
 import { MINIGAMES, MINIGAME_FIRST_AT, nextMinigameDelay, type MinigameId } from './data/minigames'
 import AchievementList from './components/AchievementList'
@@ -161,6 +169,50 @@ function App() {
     }, 1000)
     return () => clearInterval(id)
   }, [])
+
+  // 🔊 Audio (D10): arranca con el primer clic o tecla (los navegadores no dejan sonar antes)
+  const [audio, setAudio] = useState<AudioSettings>(loadAudioSettings)
+  function changeAudio(next: AudioSettings) {
+    setAudio(next)
+    saveAudioSettings(next)
+    applyAudioSettings(next)
+  }
+  useEffect(() => {
+    const unlock = () => unlockAudio()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    window.addEventListener('keydown', unlock, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
+  }, [])
+
+  // Efectos de sonido: se comparan el estado anterior y el nuevo, así no hay que tocar cada acción
+  const previous = useRef(state)
+  useEffect(() => {
+    const before = previous.current
+    previous.current = state
+    if (before === state) return
+    const { records: r0, stats: s0 } = before
+    const { records: r1, stats: s1 } = state
+    // Importar o empezar de cero: silencio
+    if (r1.clicks < r0.clicks) return
+    const owned = (s: typeof state) =>
+      Object.values(s.skills).reduce((a, b) => a + b, 0) +
+      Object.values(s.tech).reduce((a, b) => a + b, 0) +
+      Object.values(s.prestige.investments).reduce((a, b) => a + b, 0) +
+      s.team.length +
+      s.office +
+      s.records.replacements +
+      (s.darkMode.owned ? 1 : 0)
+    if (r1.unlocked.length > r0.unlocked.length) playSfx('achievement')
+    else if (state.stage > before.stage || state.prestige.sales > before.prestige.sales) playSfx('levelUp')
+    else if (r1.contracts > r0.contracts) playSfx('deliver')
+    else if (s1.contractsFailed > s0.contractsFailed) playSfx('fail')
+    else if (r1.bugs > r0.bugs) playSfx('bug')
+    else if (owned(state) > owned(before) || state.editor !== before.editor) playSfx('buy')
+    else if (r1.clicks > r0.clicks) playSfx('click')
+  }, [state])
 
   // Efecto 2: guardar la partida cada vez que cambia el estado
   useEffect(() => {
@@ -309,6 +361,7 @@ function App() {
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)
+    playSfx('notify')
   })
   // Sin evento en pantalla: programa el próximo. Con evento: lo cierra (o elige la opción segura) a su tiempo
   const expireEvent = useEffectEvent(() => {
@@ -338,6 +391,7 @@ function App() {
     const game = options[Math.floor(Math.random() * options.length)].id
     lastMinigame.current = game
     setMinigame({ game, playing: false })
+    playSfx('notify')
   })
   useEffect(() => {
     if (minigame) return
@@ -349,6 +403,7 @@ function App() {
     const t = Date.now()
     setNow(t)
     dispatch({ type: 'minigame', score, now: t })
+    playSfx(score > 0 ? 'win' : 'lose')
   }
 
   function program() {
@@ -570,6 +625,8 @@ function App() {
               onReset={resetGame}
               onExport={exportSave}
               onImport={importSave}
+              audio={audio}
+              onAudioChange={changeAudio}
             />
           )}
           {currentView === 'skills' && (

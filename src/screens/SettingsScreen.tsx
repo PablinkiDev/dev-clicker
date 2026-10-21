@@ -2,6 +2,7 @@ import ScreenHeader from '../components/ScreenHeader'
 import { EDITORS, type EditorId } from '../data/editors'
 import { formatDuration, formatMoney } from '../game/format'
 import type { Stats } from '../game/reducer'
+import type { AudioSettings } from '../audio/audio'
 
 type SettingsScreenProps = {
   /** Mejor editor comprado */
@@ -16,6 +17,8 @@ type SettingsScreenProps = {
   onExport: () => void
   /** Recibe el texto del archivo elegido */
   onImport: (text: string) => void
+  audio: AudioSettings
+  onAudioChange: (audio: AudioSettings) => void
 }
 
 function SettingsScreen({
@@ -28,6 +31,8 @@ function SettingsScreen({
   onReset,
   onExport,
   onImport,
+  audio,
+  onAudioChange,
 }: SettingsScreenProps) {
   const ownedIndex = EDITORS.findIndex((e) => e.id === editor)
 
@@ -61,6 +66,44 @@ function SettingsScreen({
           )
         })}
       </ul>
+
+      <p className="mb-2.5 font-mono text-xs text-muted">sonido/</p>
+      <div className="mb-6 flex max-w-xl flex-col gap-3 rounded-xl border border-line bg-panel-2 px-4 py-3">
+        {(
+          [
+            ['music', '🎵 Música'],
+            ['sfx', '🔔 Efectos'],
+          ] as const
+        ).map(([key, label]) => (
+          <label key={key} className="flex items-center gap-3">
+            <span className="w-24 shrink-0 text-sm font-bold">{label}</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(audio[key] * 100)}
+              disabled={audio.muted}
+              onChange={(event) => onAudioChange({ ...audio, [key]: Number(event.target.value) / 100 })}
+              className="flex-1 cursor-pointer accent-green disabled:opacity-40"
+            />
+            <span className="w-10 text-right font-mono text-xs text-muted">{Math.round(audio[key] * 100)}%</span>
+          </label>
+        ))}
+        <label className="flex cursor-pointer items-center justify-between gap-4 border-t border-line pt-3">
+          <span>
+            <b className="block">🔇 Silenciar todo</b>
+            <span className="text-xs text-muted">
+              La música y los efectos se generan en el navegador: no se descarga nada.
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={audio.muted}
+            onChange={(event) => onAudioChange({ ...audio, muted: event.target.checked })}
+            className="size-5 shrink-0 cursor-pointer accent-green"
+          />
+        </label>
+      </div>
 
       <p className="mb-2.5 font-mono text-xs text-muted">accesibilidad/</p>
       <label className="mb-6 flex max-w-xl cursor-pointer items-center justify-between gap-4 rounded-xl border border-line bg-panel-2 px-4 py-3">

@@ -66,7 +66,7 @@ La 1.0 se atrasa a propósito: primero que enganche.
 | D7 ✅ | **Contratos especiales:** oferta dorada ×5 con condición rara (solo clics, sin automatización, plazo corto) | S | 1–2 |
 | D8 ✅ | **Logros** (41 en 7 categorías, 3 secretos), cada uno +1 % de producción, permanentes | S | 2 |
 | D9 ✅ | **Minijuegos** (3, opcionales, cada 6–10 min): code review, merge conflict y typing race. Premio: equipo ×1,5–×3 por 60 s + XP; sin castigo. Logros LGTM y Senior reviewer (43 en total) | S | 2–3 |
-| D10 | **Música y efectos de sonido** (con volumen y mute en Ajustes) | M | 2 |
+| D10 ✅ | **Música y efectos de sonido** generados con Web Audio (loop lo-fi + 11 efectos), con volumen de música, de efectos y silencio en Ajustes | M | 2 |
 | D12 | **Más mejoras personales:** el árbol personal se completa todavía en Freelancer; sumar nodos para todas las etapas | M | 1–2 |
 | D11 | **Rebalancear** con la simulación actualizada a todo lo nuevo | M | 1–2 |
 
