@@ -1,4 +1,4 @@
-import { formatTime } from '../game/format'
+import { formatMoney, formatNumber, formatTime } from '../game/format'
 import type { Contract } from '../game/types'
 
 type ContractCardProps = {
@@ -35,11 +35,13 @@ function ContractCard({ contract, code, timeLeft }: ContractCardProps) {
       </p>
 
       <div className="flex flex-wrap gap-1.5 px-4 pt-2 pb-3 font-mono text-[11px]">
-        <span className="rounded border border-line px-2 py-0.5 text-muted">{contract.code} líneas</span>
+        <span className="rounded border border-line px-2 py-0.5 text-muted">{formatNumber(contract.code)} líneas</span>
         <span className="rounded border border-yellow/30 px-2 py-0.5 text-yellow">
-          ${contract.reward.money.toLocaleString('es-AR')}
+          {formatMoney(contract.reward.money)}
         </span>
-        <span className="rounded border border-purple/30 px-2 py-0.5 text-purple">+{contract.reward.xp} XP</span>
+        <span className="rounded border border-purple/30 px-2 py-0.5 text-purple">
+          +{formatNumber(contract.reward.xp)} XP
+        </span>
         <span className="rounded border border-cyan/30 px-2 py-0.5 text-cyan">+{contract.reward.rep} ★</span>
       </div>
 

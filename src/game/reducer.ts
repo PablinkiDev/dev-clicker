@@ -6,7 +6,7 @@ import { INITIAL_SKILLS, SKILLS, missingSkillRequirements, type SkillId, type Sk
 import { EDITORS, getEditor, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { OFFICES } from '../data/offices'
-import { formatRate } from './format'
+import { formatMoney, formatNumber, formatRate } from './format'
 import { STAGES } from '../data/stages'
 import { canAscend, companyValue, isEndless } from './stages'
 import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
@@ -45,9 +45,11 @@ export type Stats = {
   contractsFailed: number
   /** Segundos jugados con la pestaña visible */
   playTime: number
+  /** XP ganada con contratos (no baja al gastar): para medir cuánto ganás por minuto */
+  xpEarned: number
 }
 
-export const INITIAL_STATS: Stats = { moneyEarned: 0, contractsDone: 0, contractsFailed: 0, playTime: 0 }
+export const INITIAL_STATS: Stats = { moneyEarned: 0, contractsDone: 0, contractsFailed: 0, playTime: 0, xpEarned: 0 }
 
 /** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
 export const DARK_MODE_PRICE = 60
@@ -205,16 +207,17 @@ function deliverContract(state: GameState): GameState {
     stats: {
       ...state.stats,
       moneyEarned: state.stats.moneyEarned + money,
+      xpEarned: state.stats.xpEarned + xp,
       contractsDone: state.stats.contractsDone + 1,
     },
     notice: {
       kind: 'success',
-      text: `${contract.client} pagó: +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
+      text: `${contract.client} pagó: +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep} ★`,
     },
     log: addLog(
       state.log,
       'success',
-      `git push origin main → deploy exitoso 🚀 +$${money.toLocaleString('es-AR')} · +${xp} XP · +${reward.rep} ★`,
+      `git push origin main → deploy exitoso 🚀 +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep} ★`,
     ),
   }
 }
@@ -287,10 +290,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         code: 0,
         contract: null,
         timeLeft: 0,
-        stats: { ...state.stats, contractsFailed: state.stats.contractsFailed + 1 },
+        stats: {
+          ...state.stats,
+          contractsFailed: state.stats.contractsFailed + 1,
+          xpEarned: state.stats.xpEarned + gainedXp,
+        },
         notice: {
           kind: 'error',
-          text: `Se venció el plazo: ${contract.client} contrató a un primo. −$${lostMoney.toLocaleString('es-AR')} · −${FAILURE_REP_LOSS} ★ · +${gainedXp} XP por la experiencia`,
+          text: `Se venció el plazo: ${contract.client} contrató a un primo. −${formatMoney(lostMoney)} · −${FAILURE_REP_LOSS} ★ · +${gainedXp} XP por la experiencia`,
         },
         log: addLog(
           state.log,
@@ -370,7 +377,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         },
         notice: {
           kind: 'success',
-          text: `💼 Vendiste la empresa por $${value.toLocaleString('es-AR')}. +${tokens} tokens de inversión. A empezar de nuevo.`,
+          text: `💼 Vendiste la empresa por ${formatMoney(value)}. +${tokens} tokens de inversión. A empezar de nuevo.`,
         },
         log: addLog(
           action.fresh.log,

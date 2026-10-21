@@ -45,6 +45,7 @@ export function sanitize(state: GameState): GameState {
       contractsDone: Math.round(clamp(state.stats.contractsDone, 0)),
       contractsFailed: Math.round(clamp(state.stats.contractsFailed, 0)),
       playTime: clamp(state.stats.playTime, 0),
+      xpEarned: clamp(state.stats.xpEarned, 0),
     },
     prestige: {
       ...state.prestige,

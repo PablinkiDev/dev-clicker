@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useEffectEvent, useReducer, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useReducer, useRef, useState } from 'react'
 import ContractCard from './components/ContractCard'
 import CodeView from './components/editor/CodeView'
 import Minimap from './components/editor/Minimap'
@@ -15,6 +15,8 @@ import EditorShop from './components/EditorShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { SKILLS, missingSkillRequirements } from './data/skills'
+import { TECHS, missingRequirements } from './data/techs'
+import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
 import { critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate } from './game/rates'
@@ -75,6 +77,32 @@ function App() {
     return () => clearInterval(id)
   }, [focusBusy])
   const focusing = isFocused(state.focus, now)
+  const focusInfo =
+    skills.focus > 0
+      ? { active: focusing, seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000) }
+      : null
+
+  // Ganancia por minuto: cada 5 s se anota lo ganado en la partida y se compara con hace ~5 minutos
+  const samples = useRef<{ t: number; money: number; xp: number }[]>([])
+  const [perMinute, setPerMinute] = useState<{ money: number; xp: number } | null>(null)
+  const sampleEarnings = useEffectEvent(() => {
+    const t = Date.now()
+    const point = { t, money: state.stats.moneyEarned, xp: state.stats.xpEarned }
+    // Si lo ganado bajó (se vendió la empresa o se importó una partida), se empieza de cero
+    const previous = samples.current.filter((s) => t - s.t <= 5 * 60_000 && s.money <= point.money)
+    samples.current = [...previous, point]
+    const first = samples.current[0]
+    const minutes = (t - first.t) / 60_000
+    setPerMinute(
+      minutes >= 0.25 ? { money: (point.money - first.money) / minutes, xp: (point.xp - first.xp) / minutes } : null,
+    )
+  })
+  useEffect(() => {
+    if (!isVisible) return
+    sampleEarnings()
+    const id = setInterval(sampleEarnings, 5000)
+    return () => clearInterval(id)
+  }, [isVisible])
   const perClick = clickRate(state) * (focusing ? FOCUS_MULTIPLIER : 1)
   const auto = autoRateOf(state)
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
@@ -88,6 +116,12 @@ function App() {
       skills[s.id] < s.maxLevel &&
       !missingSkillRequirements(s, skills, state.stage) &&
       xp >= skillCost(s.baseCost, skills[s.id]),
+  ).length
+  const techsAvailable = TECHS.filter(
+    (t) =>
+      state.tech[t.id] < t.maxLevel &&
+      !missingRequirements(t, state.tech, state.stage) &&
+      xp >= skillCost(t.baseCost, state.tech[t.id]),
   ).length
   const errors = log.filter((entry) => entry.kind === 'error').length
   const isUrgent = isRunning && timeLeft / (contract?.time ?? 1) < 0.3
@@ -312,6 +346,14 @@ function App() {
             perClick={perClick}
             auto={auto}
             critPercent={Math.round(critChance(skills.criticalCode, editor.critBonus) * 100)}
+            moneyPerMinute={perMinute?.money ?? null}
+            xpPerMinute={perMinute?.xp ?? null}
+            moneyEarned={state.stats.moneyEarned}
+            nextPurchase={nextPurchase(state)}
+            upgradesAvailable={skillsAvailable + techsAvailable}
+            focus={focusInfo}
+            goal={currentGoal(state)}
+            onNavigate={setView}
           />
           {ideChrome && <EditorTabs view={currentView} contract={contract} onChange={setView} />}
 
@@ -411,14 +453,7 @@ function App() {
             onProgram={program}
             onDeliver={deliver}
             critPop={critPop}
-            focus={
-              skills.focus > 0
-                ? {
-                    active: focusing,
-                    seconds: Math.ceil(((focusing ? state.focus.endsAt : state.focus.readyAt) - now) / 1000),
-                  }
-                : null
-            }
+            focus={focusInfo}
             onFocus={() => {
               const t = Date.now()
               setNow(t)

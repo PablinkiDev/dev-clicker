@@ -1,3 +1,4 @@
+import { formatNumber } from '../game/format'
 import { useState, type ReactNode } from 'react'
 import SkillTree, { type TreeEdge, type TreeNode } from '../components/SkillTree'
 import { TECH_ICON } from '../ui'
@@ -67,7 +68,7 @@ type Tab = 'tools' | 'tech' | 'personal' | 'company' | 'prestige'
 
 function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige, onInvest }: SkillsScreenProps) {
   const [tab, setTab] = useState<Tab>('tech')
-  const xpCost = (cost: number) => `${cost.toLocaleString('es-AR')} XP`
+  const xpCost = (cost: number) => `${formatNumber(cost)} XP`
   const requires = (missing: string | null) => missing && `Requiere ${missing}`
 
   // --- Tecnologías ---

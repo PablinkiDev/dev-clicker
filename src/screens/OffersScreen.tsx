@@ -2,7 +2,7 @@ import { LANG_ICON, TECH_ICON } from '../ui'
 import { TECHS } from '../data/techs'
 import ScreenHeader from '../components/ScreenHeader'
 import { estimateSeconds } from '../game/formulas'
-import { fileName } from '../game/format'
+import { fileName, formatMoney, formatNumber } from '../game/format'
 import type { Contract, Difficulty } from '../game/types'
 
 type OffersScreenProps = {
@@ -122,10 +122,10 @@ function OffersScreen({
                 </div>
                 <p className="font-bold">{offer.title}</p>
                 <p className="mt-2 flex flex-wrap gap-x-3 font-mono text-xs text-muted">
-                  <span>{offer.code} líneas</span>
+                  <span>{formatNumber(offer.code)} líneas</span>
                   <span>⏱ {offer.time} s</span>
-                  <span className="text-yellow">${offer.reward.money.toLocaleString('es-AR')}</span>
-                  <span className="text-purple">+{offer.reward.xp} XP</span>
+                  <span className="text-yellow">{formatMoney(offer.reward.money)}</span>
+                  <span className="text-purple">+{formatNumber(offer.reward.xp)} XP</span>
                 </p>
                 <p className="mt-2 border-t border-dashed border-line pt-2 font-mono text-xs text-muted">
                   <span className={verdict.className}>● {verdict.text}</span> · ~{Math.ceil(estimate)} s de {offer.time}{' '}

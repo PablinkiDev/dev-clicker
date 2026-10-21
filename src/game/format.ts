@@ -8,9 +8,31 @@ export function formatTime(seconds: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-/** 2600 → "$2.600" */
+/** Sufijos para números grandes: millón, billón (mil millones, como en los juegos), trillón… */
+const SUFFIXES: [number, string][] = [
+  [1e18, 'Qi'],
+  [1e15, 'Qa'],
+  [1e12, 'T'],
+  [1e9, 'B'],
+  [1e6, 'M'],
+]
+
+/**
+ * Números enteros legibles: hasta 999.999 completos; después abreviados con un decimal.
+ * 2600 → "2.600" · 40882080 → "40,9 M" · 4.1e13 → "41 T". Más allá de los Qi, notación científica.
+ */
+export function formatNumber(amount: number): string {
+  const n = Math.round(amount)
+  if (Math.abs(n) < 1e6) return n.toLocaleString('es-AR')
+  if (Math.abs(n) >= 1e21) return n.toExponential(2).replace('.', ',')
+  const [base, suffix] = SUFFIXES.find(([b]) => Math.abs(n) >= b)!
+  const value = n / base
+  return `${value.toLocaleString('es-AR', { maximumFractionDigits: value < 100 ? 1 : 0 })} ${suffix}`
+}
+
+/** 2600 → "$2.600" · 40882080 → "$40,9 M" */
 export function formatMoney(amount: number): string {
-  return `$${Math.round(amount).toLocaleString('es-AR')}`
+  return `$${formatNumber(amount)}`
 }
 
 /** "boton-mas-grande" + css → "boton-mas-grande.css" */
@@ -20,7 +42,7 @@ export function fileName(id: string, lang: Lang = 'html'): string {
 
 /** 7.7 → "7,7" · 7 → "7" (como mucho un decimal) */
 export function formatRate(amount: number): string {
-  return amount.toLocaleString('es-AR', { maximumFractionDigits: 1 })
+  return amount < 1e6 ? amount.toLocaleString('es-AR', { maximumFractionDigits: 1 }) : formatNumber(amount)
 }
 
 /** 45 → "45 s" · 754 → "12 min" · 8100 → "2 h 15 min" */

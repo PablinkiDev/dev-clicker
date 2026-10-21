@@ -51,20 +51,38 @@ Tamaño: cantidad estimada de commits chicos.
 | B9 | **Concentración:** potenciador temporal de clics (hasta 60 s) con cooldown | S | 1–2 |
 | B10 | Angular, NestJS, Java/Python, MongoDB, Git e IA como tecnologías | W | — |
 
+## Hito D — Diversión (antes de la 1.0)
+
+La 1.0 se atrasa a propósito: primero que enganche.
+
+| # | Historia | Prioridad | Tamaño |
+|---|----------|-----------|--------|
+| D1 | **Números grandes:** abreviar ($40,9 B) para que el panel no se rompa | M | 1 |
+| D2 | **Plazo fijo:** el plazo no crece con la etapa ni la reputación; crece el código. El tablón siempre ofrece al menos una oferta posible (anti-traba) | M | 1–2 |
+| D3 | **Peso real de cada tecnología:** tiers de paga por tecnología + especialización (+líneas en sus contratos por nivel) | M | 1–2 |
+| D4 | **Pestaña oculta = se sigue jugando.** Juego cerrado = no avanza (sin progreso offline, a propósito) | M | 1 |
+| D5 | **☕ Café / 🐛 bug dorado:** aparece cada 2–4 min; al tocarlo, producción ×2 por 30 s | M | 1 |
+| D6 | **Eventos al azar** (buenos, malos y con elección), cada 3–6 min | M | 2 |
+| D7 | **Contratos especiales:** oferta dorada ×5 con condición rara (solo clics, sin automatización, plazo corto) | S | 1–2 |
+| D8 | **Logros** (~25), cada uno +1 % de producción | S | 2 |
+| D9 | **Minijuegos simples** (2–3): code review, merge conflict, typing race | S | 2–3 |
+| D10 | **Música y efectos de sonido** (con volumen y mute en Ajustes) | M | 2 |
+| D11 | **Rebalancear** con la simulación actualizada a todo lo nuevo | M | 1–2 |
+
 ## Hito C — Listo para amigos (1.0)
 
 | # | Historia | Prioridad | Tamaño |
 |---|----------|-----------|--------|
-| C1 | **Exportar e importar la partida en JSON**: sirve de backup y para que te pasen partidas con bugs | M | 1 |
+| C1 ✅ | **Exportar e importar la partida en JSON**: sirve de backup y para que te pasen partidas con bugs | M | 1 |
 | C2 | **Tutorial liviano:** pistas para la primera oferta, la primera entrega y la primera mejora | M | 1–2 |
-| C3 | **Simulación de balance:** un script que juega solo con `gameReducer` y mide tiempos por etapa. Objetivo: el primer prestigio en 1–2 días casuales y un 2.º ciclo entre 25 y 40 % más rápido. | M | 2 |
-| C4 | **Ajuste de números** según lo que muestre la simulación | M | 1–3 |
+| C3 ✅ | **Simulación de balance:** un script que juega solo con `gameReducer` y mide tiempos por etapa. Objetivo: el primer prestigio en 1–2 días casuales y un 2.º ciclo entre 25 y 40 % más rápido. | M | 2 |
+| C4 ✅ | **Ajuste de números** según lo que muestre la simulación | M | 1–3 |
 | C5 | **Pasada responsive / mobile** en todas las pantallas | S | 1–2 |
 | C6 | **Deploy público** (GitHub Pages o Vercel), con la versión visible en el juego | M | 1 |
 | C7 | **Forma de juntar feedback** (link a un form o a issues de GitHub, desde Ajustes) | S | 1 |
 | C8 | Bug bash final y README actualizado | M | 1 |
 | C10 | **Repensar el diseño de los árboles de Mejoras** (los nodos andan, pero el look no termina de convencer) | S | 1–2 |
-| C9 | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
+| C9 ✅ | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
 
 **Total estimado para 1.0:** ~40 commits chicos.
 
@@ -74,7 +92,8 @@ Tamaño: cantidad estimada de commits chicos.
 
 `npx tsx scripts/simulate.mts` (bot a 5 clics/s, vende con 4 tokens):
 
-- Primer prestigio: **16 min** (meta GDD: 1–2 días casuales) → todo ~50× demasiado rápido.
+- Primer prestigio: **16 min**. **Nueva meta (decidida): 2–4 h de juego activo** → hay que estirar ~10×.
+  Reparto sugerido: Freelancer 15–20 min · Estudio 25–35 · Startup 35–50 · Empresa tecnológica 45–60 · Corporación/infinito hasta vender 20–40.
 - Segundo ciclo: 14 min (solo ~12 % más rápido; meta 25–40 %).
 - Editores: Cladex comprado a los **3 min** · primer empleado al minuto (meta 5–8 min).
 - Clics: solo **4 %** de las líneas (el GDD quiere que el clic siga importando).
