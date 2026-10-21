@@ -9,6 +9,8 @@ import { sanitize } from './sanitize'
 import { INITIAL_PRESTIGE } from './prestige'
 import { INITIAL_FOCUS } from './focus'
 import { INITIAL_INVESTMENTS } from '../data/investments'
+import { INITIAL_RECORDS } from './records'
+import { ACHIEVEMENTS } from '../data/achievements'
 
 const SAVE_KEY = 'dev-clicker:save'
 
@@ -31,10 +33,12 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   focus: INITIAL_FOCUS,
   stats: INITIAL_STATS,
   prestige: INITIAL_PRESTIGE,
+  records: INITIAL_RECORDS,
+  contractClicks: 0,
 }
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 17
+export const SAVE_VERSION: number = 18
 
 type SaveFile = {
   version: number
@@ -278,6 +282,11 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 17 }
   }
 
+  // v17 → v18: logros y récords (arrancan en cero; los defaults los completan abajo)
+  if (file.version === 17) {
+    file = { ...file, version: 18 }
+  }
+
   // Siempre: completar claves nuevas que falten o que vengan rotas (por ejemplo, una partida guardada
   // con la versión nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite:
   // un campo que no existía termina como NaN, y JSON lo guarda como null)
@@ -286,6 +295,21 @@ function migrate(raw: unknown): unknown {
   if (isObject(state.stats)) state = { ...state, stats: fixNumbers(INITIAL_STATS, state.stats) }
   if (isObject(state.skills)) state = { ...state, skills: fixNumbers(INITIAL_SKILLS, state.skills) }
   if (isObject(state.focus)) state = { ...state, focus: fixNumbers(INITIAL_FOCUS, state.focus) }
+  if (isObject(state.records)) {
+    const records = state.records
+    const known = new Set(ACHIEVEMENTS.map((a) => a.id))
+    state = {
+      ...state,
+      records: {
+        ...fixNumbers(INITIAL_RECORDS, records),
+        // Solo logros que existen, sin repetir
+        unlocked: Array.isArray(records.unlocked)
+          ? [...new Set(records.unlocked.filter((id): id is string => typeof id === 'string' && known.has(id)))]
+          : [],
+        recentCrits: Array.isArray(records.recentCrits) ? records.recentCrits.filter(isNumber).slice(-20) : [],
+      },
+    }
+  }
   if (isObject(state.prestige) && isObject(state.prestige.investments)) {
     state = {
       ...state,
@@ -392,6 +416,8 @@ function isSaveFile(value: unknown): value is SaveFile {
     hasNumbers(s.tech, INITIAL_TECH) &&
     isStats(s.stats) &&
     isPrestige(s.prestige) &&
+    isNumber(s.contractClicks) &&
+    isObject(s.records) &&
     Array.isArray(s.team) &&
     s.team.every(isEmployee) &&
     Array.isArray(s.candidates) &&

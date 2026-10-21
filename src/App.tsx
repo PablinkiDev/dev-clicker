@@ -14,6 +14,9 @@ import Toast from './components/layout/Toast'
 import GoldenBug from './components/GoldenBug'
 import { BUG_VISIBLE, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
+import AchievementToast from './components/AchievementToast'
+import AchievementList from './components/AchievementList'
+import { ACHIEVEMENTS } from './data/achievements'
 import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
 import EditorShop from './components/EditorShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
@@ -146,9 +149,12 @@ function App() {
   // el navegador frena los intervalos (pueden correr una vez por minuto)
   useEffect(() => {
     let last = Date.now()
+    let session = 0 // segundos desde que se abrió el juego (para "¿Quién necesita dormir?")
     const id = setInterval(() => {
       const now = Date.now()
-      dispatch({ type: 'playTime', seconds: Math.min(MAX_ELAPSED, (now - last) / 1000) })
+      const seconds = Math.min(MAX_ELAPSED, (now - last) / 1000)
+      session += seconds
+      dispatch({ type: 'playTime', seconds, session })
       last = now
     }, 1000)
     return () => clearInterval(id)
@@ -255,7 +261,7 @@ function App() {
   function catchBug() {
     const t = Date.now()
     setNow(t)
-    dispatch({ type: 'catchBug', now: t })
+    dispatch({ type: 'catchBug', now: t, fast: bug !== null && t - bug.id <= 2000 })
     setBug(null)
   }
 
@@ -266,13 +272,13 @@ function App() {
   const [eventRetry, setEventRetry] = useState(0)
 
   /** Despacha los efectos de un evento ya resuelto (el azar y los candidatos se arman acá) */
-  function applyEvent(e: GameEvent, effects: NonNullable<GameEvent['effects']>, text: string) {
+  function applyEvent(e: GameEvent, effects: NonNullable<GameEvent['effects']>, text: string, bet?: 'won' | 'lost') {
     const t = Date.now()
     setNow(t)
     const candidates = effects.some((x) => x.kind === 'candidates')
       ? rerollCandidates(team, Math.min(4, state.stage + 1)) // mejores que lo normal
       : undefined
-    dispatch({ type: 'applyEvent', text, icon: e.icon, effects, now: t, candidates })
+    dispatch({ type: 'applyEvent', text, icon: e.icon, effects, now: t, candidates, tone: e.tone, bet })
   }
 
   function chooseEventOption(index: 0 | 1) {
@@ -280,7 +286,9 @@ function App() {
     const option = event.options[index]
     if (option.outcomes) {
       const outcome = rollOutcome(option.outcomes)
-      applyEvent(event, outcome.effects, `${event.title}: ${outcome.text}`)
+      // El primer resultado es siempre el bueno: si salió ese, la apuesta se ganó
+      const bet = outcome === option.outcomes[0] ? 'won' : 'lost'
+      applyEvent(event, outcome.effects, `${event.title}: ${outcome.text}`, bet)
     } else {
       applyEvent(event, option.effects ?? [], `${event.title}: ${option.label}`)
     }
@@ -505,6 +513,8 @@ function App() {
               history={state.prestige.history}
               onAscend={ascend}
               onSell={sell}
+              achievements={<AchievementList state={state} />}
+              achievementsCount={`${state.records.unlocked.length}/${ACHIEVEMENTS.length}`}
             />
           )}
           {currentView === 'settings' && (
@@ -567,6 +577,7 @@ function App() {
       {ideChrome && <StatusBar line={Math.floor(code) + 1} timeLeft={contract ? timeLeft : null} isUrgent={isUrgent} />}
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
+      <AchievementToast unlocked={state.records.unlocked} />
     </div>
   )
 }

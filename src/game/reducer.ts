@@ -26,6 +26,8 @@ import {
   type Employee,
 } from './team'
 import type { Contract } from './types'
+import { INITIAL_RECORDS, type Records } from './records'
+import { ACHIEVEMENTS } from '../data/achievements'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
 export type Notice = {
@@ -52,6 +54,8 @@ export type Stats = {
   xpEarned: number
   /** Contratos especiales (dorados) entregados */
   specialsDone: number
+  /** Eventos malos que te tocaron en esta empresa */
+  badEvents: number
 }
 
 export const INITIAL_STATS: Stats = {
@@ -61,6 +65,7 @@ export const INITIAL_STATS: Stats = {
   playTime: 0,
   xpEarned: 0,
   specialsDone: 0,
+  badEvents: 0,
 }
 
 /** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
@@ -108,8 +113,12 @@ export type GameState = {
   timeLeft: number
   notice: Notice | null
   stats: Stats
-  /** Lo único que sobrevive a vender la empresa */
+  /** Lo único que sobrevive a vender la empresa (junto con los récords) */
   prestige: Prestige
+  /** Contadores de toda la carrera y logros: no se pierden al vender */
+  records: Records
+  /** Clics hechos en el contrato en curso */
+  contractClicks: number
   /** Terminal: lo que fue pasando. No se guarda en localStorage */
   log: LogEntry[]
 }
@@ -129,9 +138,20 @@ export type GameAction =
   | { type: 'deliver' }
   // now: la hora, para el 🐛 bug dorado (opcional: la simulación no lo usa)
   | { type: 'tick'; elapsed: number; now?: number }
-  | { type: 'catchBug'; now: number }
+  // fast: si se atrapó en sus primeros 2 segundos
+  | { type: 'catchBug'; now: number; fast?: boolean }
   // Un evento al azar ya resuelto (si tenía azar u opciones, se resolvió afuera)
-  | { type: 'applyEvent'; text: string; icon: string; effects: Effect[]; now: number; candidates?: Employee[] }
+  // tone: para las rachas · bet: si era una opción con azar, si salió bien
+  | {
+      type: 'applyEvent'
+      text: string
+      icon: string
+      effects: Effect[]
+      now: number
+      candidates?: Employee[]
+      tone?: 'good' | 'bad' | 'choice'
+      bet?: 'won' | 'lost'
+    }
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
   // Los candidatos nuevos se generan afuera (usan azar) y llegan ya calculados
@@ -155,7 +175,8 @@ export type GameAction =
   | { type: 'invest'; investment: InvestmentId }
   | { type: 'dismissNotice' }
   // Un segundo más de juego (lo manda un reloj en App mientras la pestaña está visible)
-  | { type: 'playTime'; seconds: number }
+  // session: segundos desde que se abrió el juego (no se guarda)
+  | { type: 'playTime'; seconds: number; session?: number }
 
 export function createInitialState(): GameState {
   return {
@@ -184,6 +205,8 @@ export function createInitialState(): GameState {
     notice: null,
     stats: INITIAL_STATS,
     prestige: INITIAL_PRESTIGE,
+    records: INITIAL_RECORDS,
+    contractClicks: 0,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -293,6 +316,11 @@ function deliverContract(state: GameState): GameState {
       contractsDone: state.stats.contractsDone + 1,
       specialsDone: state.stats.specialsDone + (contract.special ? 1 : 0),
     },
+    records: {
+      ...state.records,
+      contracts: state.records.contracts + 1,
+      specials: state.records.specials + (contract.special ? 1 : 0),
+    },
     notice: {
       kind: 'success',
       text: `${contract.client} pagó: +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep} ★`,
@@ -305,7 +333,7 @@ function deliverContract(state: GameState): GameState {
   }
 }
 
-export function gameReducer(state: GameState, action: GameAction): GameState {
+function reduce(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'accept': {
       if (state.contract) return state
@@ -316,6 +344,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         cooldowns: action.cooldowns,
         timeLeft: action.offer.time,
         code: 0,
+        contractClicks: 0,
         notice: null,
         log: addLog(
           state.log,
@@ -337,7 +366,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         log = addLog(log, 'crit', `⚡ Crítico: +${formatRate(lines)} líneas sin un solo typo. Sospechoso.`)
       if (code >= contract.code)
         log = addLog(log, 'success', `✓ Build OK · ${contract.code} líneas · listo para git push`)
-      return finishIfDone({ ...state, code, log })
+      const { records } = state
+      return finishIfDone({
+        ...state,
+        code,
+        log,
+        contractClicks: state.contractClicks + 1,
+        records: {
+          ...records,
+          clicks: records.clicks + 1,
+          crits: records.crits + (action.crit ? 1 : 0),
+          lines: records.lines + (code - state.code),
+          recentCrits: action.crit ? [...records.recentCrits, action.now].slice(-20) : records.recentCrits,
+        },
+      })
     }
 
     case 'deliver':
@@ -349,18 +391,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       // 1. El equipo escribe código (GDD §5)
       const code = addCode(state.code, autoRateOf(state, action.now) * action.elapsed, contract.code)
+      const records = { ...state.records, lines: state.records.lines + (code - state.code) }
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
         return finishIfDone({
           ...state,
           code,
+          records,
           log: addLog(state.log, 'success', `✓ Build OK · el equipo terminó ${contract.code} líneas`),
         })
       }
 
       // 2. Corre el reloj
       const timeLeft = Math.max(0, state.timeLeft - action.elapsed)
-      if (timeLeft > 0) return { ...state, code, timeLeft }
+      if (timeLeft > 0) return { ...state, code, timeLeft, records }
 
       // 3. Se venció el plazo (GDD §4): pérdidas leves y un poco de XP
       const lostMoney = failureMoneyLoss(state.money)
@@ -368,6 +412,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         money: state.money - lostMoney,
+        records,
         rep: Math.max(0, state.rep - FAILURE_REP_LOSS),
         xp: state.xp + gainedXp,
         code: 0,
@@ -439,6 +484,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         money: action.fresh.money + 2000 * investments.seedCapital,
         rep: action.fresh.rep + 5 * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
+        records: state.records,
         prestige: {
           tokens: state.prestige.tokens + tokens,
           sales: state.prestige.sales + 1,
@@ -540,6 +586,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'catchBug':
       return {
         ...state,
+        records: { ...state.records, bugs: state.records.bugs + 1 },
         modifiers: [
           ...activeModifiers(state.modifiers, action.now),
           {
@@ -558,7 +605,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
     case 'applyEvent': {
-      let next: GameState = { ...state, modifiers: activeModifiers(state.modifiers, action.now) }
+      const { records, stats } = state
+      let next: GameState = {
+        ...state,
+        modifiers: activeModifiers(state.modifiers, action.now),
+        stats: { ...stats, badEvents: stats.badEvents + (action.tone === 'bad' ? 1 : 0) },
+        records: {
+          ...records,
+          goodStreak: action.tone === 'good' ? records.goodStreak + 1 : action.tone ? 0 : records.goodStreak,
+          betsWon: records.betsWon + (action.bet === 'won' ? 1 : 0),
+        },
+      }
       for (const effect of action.effects) next = applyEffect(next, effect, action)
       return finishIfDone({ ...next, log: addLog(next.log, 'info', `${action.icon} ${action.text}`) })
     }
@@ -620,11 +677,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       let team = state.team
       let log = state.log
+      let replaced = 0
       if (team.length >= OFFICES[state.office].capacity) {
         // Oficina llena: solo se puede contratar reemplazando a alguien (GDD §5)
         const leaving = team.find((e) => e.uid === action.replaceUid)
         if (!leaving) return state
         team = team.filter((e) => e !== leaving)
+        replaced = 1
         log = addLog(
           log,
           'error',
@@ -637,6 +696,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         money: state.money - price,
         team: [...team, candidate],
         candidates: action.candidates,
+        records: { ...state.records, replacements: state.records.replacements + replaced },
         log: addLog(
           log,
           'success',
@@ -655,4 +715,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
     }
   }
+}
+
+/** Desbloquea los logros que se cumplieron con esta acción (D8) */
+function unlockAchievements(prev: GameState, next: GameState, action: GameAction): GameState {
+  const unlocked = new Set(next.records.unlocked)
+  const fresh = ACHIEVEMENTS.filter((a) => !unlocked.has(a.id) && a.check({ prev, next, action }))
+  if (fresh.length === 0) return next
+  let log = next.log
+  for (const a of fresh) log = addLog(log, 'crit', `🏆 Logro desbloqueado: ${a.icon} ${a.name} · +1 % de producción`)
+  return { ...next, log, records: { ...next.records, unlocked: [...next.records.unlocked, ...fresh.map((a) => a.id)] } }
+}
+
+export function gameReducer(state: GameState, action: GameAction): GameState {
+  const next = reduce(state, action)
+  // 'reset' e importar arrancan otra carrera: no se mezclan con la anterior
+  if (next === state || action.type === 'reset') return next
+  return unlockAchievements(state, next, action)
 }

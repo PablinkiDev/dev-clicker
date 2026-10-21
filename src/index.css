@@ -29,6 +29,7 @@
 
   --animate-float-up: float-up 0.7s ease-out forwards;
   --animate-bug: bug-wander 3s ease-in-out infinite;
+  --animate-slide-in: slide-in 0.35s ease-out;
 
   /* El bug dorado camina en zigzag y se sacude un poco */
   @keyframes bug-wander {
@@ -44,6 +45,14 @@
     }
     75% {
       transform: translate(25px, 24px) rotate(10deg);
+    }
+  }
+
+  /* El aviso de logro entra desde la derecha */
+  @keyframes slide-in {
+    from {
+      transform: translateX(120%);
+      opacity: 0;
     }
   }
 

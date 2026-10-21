@@ -210,3 +210,4 @@ console.log(
 )
 console.log(`Tiempo total simulado: ${formatDuration(clock)}`)
 console.log(`Concentración usada: ${counters.focus} veces`)
+console.log(`Logros: ${state.records.unlocked.length} → ${state.records.unlocked.join(', ')}`)

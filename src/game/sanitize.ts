@@ -47,6 +47,26 @@ export function sanitize(state: GameState): GameState {
       playTime: clamp(state.stats.playTime, 0),
       xpEarned: clamp(state.stats.xpEarned, 0),
       specialsDone: Math.round(clamp(state.stats.specialsDone, 0)),
+      badEvents: Math.round(clamp(state.stats.badEvents, 0)),
+    },
+    contractClicks: Math.round(clamp(state.contractClicks, 0)),
+    records: {
+      ...state.records,
+      ...Object.fromEntries(
+        (
+          [
+            'clicks',
+            'crits',
+            'lines',
+            'contracts',
+            'specials',
+            'replacements',
+            'betsWon',
+            'bugs',
+            'goodStreak',
+          ] as const
+        ).map((key) => [key, clamp(state.records[key], 0)]),
+      ),
     },
     prestige: {
       ...state.prestige,
