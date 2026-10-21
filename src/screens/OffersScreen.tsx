@@ -1,5 +1,5 @@
 import { LANG_ICON, TECH_ICON } from '../ui'
-import { TECHS } from '../data/techs'
+import { TECHS, payTier, specialtyBonus, type TechLevels } from '../data/techs'
 import ScreenHeader from '../components/ScreenHeader'
 import { estimateSeconds } from '../game/formulas'
 import { fileName, formatMoney, formatNumber } from '../game/format'
@@ -14,6 +14,8 @@ type OffersScreenProps = {
   activeFile: string | null
   /** Si todavía no sabe JavaScript, mostramos una pista de que hay más contratos */
   knowsJs: boolean
+  /** Niveles de tecnología: para la especialización de cada oferta */
+  tech: TechLevels
   /** Interruptor de la Captación automática; null si la mejora no está comprada */
   autoAccept: boolean | null
   onAutoAcceptChange: (on: boolean) => void
@@ -34,6 +36,7 @@ function OffersScreen({
   autoRate,
   activeFile,
   knowsJs,
+  tech,
   onAccept,
   autoAccept,
   onAutoAcceptChange,
@@ -80,7 +83,10 @@ function OffersScreen({
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(250px,1fr))]">
         {sorted.map((offer) => {
           const label = DIFFICULTY_LABEL[offer.difficulty]
-          const estimate = estimateSeconds(offer.code, perClick, autoRate)
+          // La especialización acelera los contratos de tu tecnología (D3)
+          const speed = specialtyBonus(tech, offer.lang)
+          const tier = payTier(offer.lang, offer.stack)
+          const estimate = estimateSeconds(offer.code, perClick * speed, autoRate * speed)
           const ratio = estimate / offer.time
           const verdict =
             ratio < 0.7
@@ -126,6 +132,16 @@ function OffersScreen({
                   <span>⏱ {offer.time} s</span>
                   <span className="text-yellow">{formatMoney(offer.reward.money)}</span>
                   <span className="text-purple">+{formatNumber(offer.reward.xp)} XP</span>
+                  {tier > 1 && (
+                    <span className="text-yellow" title="Las tecnologías avanzadas pagan más">
+                      💰 ×{tier.toLocaleString('es-AR', { maximumFractionDigits: 2 })}
+                    </span>
+                  )}
+                  {speed > 1 && (
+                    <span className="text-green" title="Tu especialización en esta tecnología">
+                      ⚡ +{Math.round((speed - 1) * 100)}%
+                    </span>
+                  )}
                 </p>
                 <p className="mt-2 border-t border-dashed border-line pt-2 font-mono text-xs text-muted">
                   <span className={verdict.className}>● {verdict.text}</span> · ~{Math.ceil(estimate)} s de {offer.time}{' '}

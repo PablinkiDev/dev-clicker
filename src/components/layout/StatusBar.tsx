@@ -4,11 +4,10 @@ type StatusBarProps = {
   line: number
   timeLeft: number | null
   isUrgent: boolean
-  isPaused: boolean
 }
 
 /** Barra de estado inferior (solo escritorio). Se pone roja cuando el plazo está por vencer */
-function StatusBar({ line, timeLeft, isUrgent, isPaused }: StatusBarProps) {
+function StatusBar({ line, timeLeft, isUrgent }: StatusBarProps) {
   return (
     <footer
       data-urgent={isUrgent}
@@ -21,7 +20,6 @@ function StatusBar({ line, timeLeft, isUrgent, isPaused }: StatusBarProps) {
         Ln <b>{line}</b>, Col 1
       </span>
       <span className="flex-1" />
-      {isPaused && <span className="px-3">⏸ pausado</span>}
       <span className="px-3">
         ⏱ <b>{timeLeft === null ? '—' : formatTime(timeLeft)}</b>
       </span>

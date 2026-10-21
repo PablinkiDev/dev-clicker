@@ -57,16 +57,17 @@ La 1.0 se atrasa a propósito: primero que enganche.
 
 | # | Historia | Prioridad | Tamaño |
 |---|----------|-----------|--------|
-| D1 | **Números grandes:** abreviar ($40,9 B) para que el panel no se rompa | M | 1 |
-| D2 | **Plazo fijo:** el plazo no crece con la etapa ni la reputación; crece el código. El tablón siempre ofrece al menos una oferta posible (anti-traba) | M | 1–2 |
-| D3 | **Peso real de cada tecnología:** tiers de paga por tecnología + especialización (+líneas en sus contratos por nivel) | M | 1–2 |
-| D4 | **Pestaña oculta = se sigue jugando.** Juego cerrado = no avanza (sin progreso offline, a propósito) | M | 1 |
+| D1 ✅ | **Números grandes:** abreviar ($40,9 B) para que el panel no se rompa | M | 1 |
+| D2 ✅ | **Plazo fijo:** el plazo no crece con la etapa ni la reputación; crece el código. El tablón siempre ofrece al menos una oferta posible (anti-traba) | M | 1–2 |
+| D3 ✅ | **Peso real de cada tecnología:** tiers de paga por tecnología + especialización (+líneas en sus contratos por nivel) | M | 1–2 |
+| D4 ✅ | **Pestaña oculta = se sigue jugando.** Juego cerrado = no avanza (sin progreso offline, a propósito) | M | 1 |
 | D5 | **☕ Café / 🐛 bug dorado:** aparece cada 2–4 min; al tocarlo, producción ×2 por 30 s | M | 1 |
 | D6 | **Eventos al azar** (buenos, malos y con elección), cada 3–6 min | M | 2 |
 | D7 | **Contratos especiales:** oferta dorada ×5 con condición rara (solo clics, sin automatización, plazo corto) | S | 1–2 |
 | D8 | **Logros** (~25), cada uno +1 % de producción | S | 2 |
 | D9 | **Minijuegos simples** (2–3): code review, merge conflict, typing race | S | 2–3 |
 | D10 | **Música y efectos de sonido** (con volumen y mute en Ajustes) | M | 2 |
+| D12 | **Más mejoras personales:** el árbol personal se completa todavía en Freelancer; sumar nodos para todas las etapas | M | 1–2 |
 | D11 | **Rebalancear** con la simulación actualizada a todo lo nuevo | M | 1–2 |
 
 ## Hito C — Listo para amigos (1.0)

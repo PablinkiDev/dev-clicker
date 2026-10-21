@@ -1,6 +1,6 @@
 // Generador de ofertas: funciones que arman el tablón a partir de las plantillas.
 import { CONTRACT_TEMPLATES, GUIDED_CONTRACT } from '../data/contracts'
-import { LANG_TECH, type TechLevels } from '../data/techs'
+import { LANG_TECH, payTier, type TechLevels } from '../data/techs'
 import { ASSUMED_CLICKS_PER_SECOND } from './formulas'
 import { boardSize, repLevel, repScale } from './reputation'
 import { STAGES } from '../data/stages'
@@ -40,6 +40,8 @@ function createOffer(template: ContractTemplate, { stage, endless, rep }: OfferC
   const level = repLevel(rep)
   // Etapa y reputación son grupos distintos: se multiplican
   const scale = contractScale(stage, endless) * repScale(level)
+  // Las tecnologías avanzadas (y los fullstack) pagan más (D3)
+  const tier = payTier(template.lang, template.stack)
   return {
     ...template,
     uid: crypto.randomUUID(),
@@ -47,8 +49,8 @@ function createOffer(template: ContractTemplate, { stage, endless, rep }: OfferC
     // El plazo es FIJO (D2): lo que crece es el código. El jugador tiene que mejorar su producción
     time: template.time,
     reward: {
-      money: Math.round((template.reward.money * factor * scale * (STAGES[stage].payScale ?? 1)) / 5) * 5,
-      xp: Math.round(template.reward.xp * factor * Math.pow(scale, 0.75)),
+      money: Math.round((template.reward.money * factor * scale * tier * (STAGES[stage].payScale ?? 1)) / 5) * 5,
+      xp: Math.round(template.reward.xp * factor * tier * Math.pow(scale, 0.75)),
       rep: template.reward.rep,
     },
   }

@@ -37,6 +37,9 @@ import type { View } from './ui'
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
 const TICK_MS = 100
 
+/** Máximo de segundos que puede avanzar el juego de un saque (pestaña frenada o compu suspendida) */
+const MAX_ELAPSED = 120
+
 function App() {
   // Todo el estado de la partida vive en un solo objeto; las reglas están en game/reducer.ts.
   // Al abrir el juego se carga la partida guardada; si no hay, arranca una nueva.
@@ -60,7 +63,6 @@ function App() {
 
   // Estado de la interfaz (no es parte de la partida)
   const [view, setView] = useState<View>(() => (state.contract ? 'work' : 'board'))
-  const [isVisible, setIsVisible] = useState(() => document.visibilityState === 'visible')
   const [critPop, setCritPop] = useState<{ id: number; lines: number } | null>(null)
 
   // Valores derivados
@@ -98,11 +100,10 @@ function App() {
     )
   })
   useEffect(() => {
-    if (!isVisible) return
     sampleEarnings()
     const id = setInterval(sampleEarnings, 5000)
     return () => clearInterval(id)
-  }, [isVisible])
+  }, [])
   const perClick = clickRate(state) * (focusing ? FOCUS_MULTIPLIER : 1)
   const auto = autoRateOf(state)
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
@@ -114,7 +115,8 @@ function App() {
     perSecond: ASSUMED_CLICKS_PER_SECOND * clickRate(state) + auto,
   }
   const isComplete = contract !== null && code >= contract.code
-  const isRunning = contract !== null && !isComplete && isVisible
+  // El juego sigue aunque la pestaña esté oculta (D4); con el juego cerrado, no avanza
+  const isRunning = contract !== null && !isComplete
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
   const currentView: View = view === 'work' && !contract ? 'board' : view
   const skillsAvailable = SKILLS.filter(
@@ -132,21 +134,17 @@ function App() {
   const errors = log.filter((entry) => entry.kind === 'error').length
   const isUrgent = isRunning && timeLeft / (contract?.time ?? 1) < 0.3
 
-  // Efecto 1: escuchar si la pestaña se oculta o vuelve a verse
+  // Reloj del tiempo jugado: mide el tiempo real entre llamadas, porque con la pestaña oculta
+  // el navegador frena los intervalos (pueden correr una vez por minuto)
   useEffect(() => {
-    function handleVisibility() {
-      setIsVisible(document.visibilityState === 'visible')
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [])
-
-  // Reloj del tiempo jugado: suma un segundo por segundo, solo con la pestaña visible
-  useEffect(() => {
-    if (!isVisible) return
-    const id = setInterval(() => dispatch({ type: 'playTime', seconds: 1 }), 1000)
+    let last = Date.now()
+    const id = setInterval(() => {
+      const now = Date.now()
+      dispatch({ type: 'playTime', seconds: Math.min(MAX_ELAPSED, (now - last) / 1000) })
+      last = now
+    }, 1000)
     return () => clearInterval(id)
-  }, [isVisible])
+  }, [])
 
   // Efecto 2: guardar la partida cada vez que cambia el estado
   useEffect(() => {
@@ -160,7 +158,8 @@ function App() {
     let last = performance.now()
     const id = setInterval(() => {
       const now = performance.now()
-      dispatch({ type: 'tick', elapsed: (now - last) / 1000 })
+      // Tope por si la compu se suspendió: no se "juega" mientras está dormida
+      dispatch({ type: 'tick', elapsed: Math.min(MAX_ELAPSED, (now - last) / 1000) })
       last = now
     }, TICK_MS)
 
@@ -199,7 +198,7 @@ function App() {
   }
 
   // Captación automática: sin contrato, espera un momento (para que se vea) y acepta la mejor oferta viable
-  const autoAccepting = state.skills.autoAccept > 0 && state.autoAccept && !contract && isVisible
+  const autoAccepting = state.skills.autoAccept > 0 && state.autoAccept && !contract
   const acceptAuto = useEffectEvent(() => {
     const offer = pickAutoOffer(offers, auto)
     if (offer) acceptContract(offer, false)
@@ -390,6 +389,7 @@ function App() {
               autoRate={auto}
               activeFile={activeFile}
               knowsJs={state.tech.javascript > 0}
+              tech={state.tech}
               onAccept={acceptContract}
               autoAccept={state.skills.autoAccept > 0 ? state.autoAccept : null}
               onAutoAcceptChange={(on) => dispatch({ type: 'setAutoAccept', on })}
@@ -481,14 +481,7 @@ function App() {
         </main>
       </div>
 
-      {ideChrome && (
-        <StatusBar
-          line={Math.floor(code) + 1}
-          timeLeft={contract ? timeLeft : null}
-          isUrgent={isUrgent}
-          isPaused={contract !== null && !isVisible}
-        />
-      )}
+      {ideChrome && <StatusBar line={Math.floor(code) + 1} timeLeft={contract ? timeLeft : null} isUrgent={isUrgent} />}
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
     </div>

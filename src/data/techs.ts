@@ -46,6 +46,8 @@ export type Tech = {
   maxLevel: number
   /** Tecnologías previas y el nivel que necesitan */
   requires: [TechId, number][]
+  /** Multiplicador de paga y XP de sus contratos (las tecnologías más avanzadas pagan más). Las transversales no tienen */
+  payTier?: number
   /** Etapa mínima de la empresa para aprenderla (índice en STAGES); si falta, desde el principio */
   minStage?: number
   effect: string
@@ -59,7 +61,8 @@ export const TECHS: Tech[] = [
     baseCost: 40,
     maxLevel: 5,
     requires: [],
-    effect: '+10 % de dinero por nivel en contratos .html',
+    payTier: 1,
+    effect: 'Contratos .html: paga ×1 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'css',
@@ -68,7 +71,8 @@ export const TECHS: Tech[] = [
     baseCost: 40,
     maxLevel: 5,
     requires: [],
-    effect: '+10 % de dinero por nivel en contratos .css',
+    payTier: 1,
+    effect: 'Contratos .css: paga ×1 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'javascript',
@@ -80,7 +84,8 @@ export const TECHS: Tech[] = [
       ['html', 1],
       ['css', 1],
     ],
-    effect: 'Desbloquea contratos .js · +10 % de dinero por nivel en ellos',
+    payTier: 1.3,
+    effect: 'Contratos .js: paga ×1,3 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'typescript',
@@ -90,7 +95,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['javascript', 3]],
     minStage: 2,
-    effect: 'Desbloquea contratos .ts · +10 % de dinero por nivel en ellos',
+    payTier: 1.6,
+    effect: 'Contratos .ts: paga ×1,6 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'react',
@@ -100,7 +106,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['javascript', 3]],
     minStage: 2,
-    effect: 'Desbloquea contratos .jsx · +10 % de dinero por nivel en ellos',
+    payTier: 1.6,
+    effect: 'Contratos .jsx: paga ×1,6 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'node',
@@ -110,7 +117,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['javascript', 3]],
     minStage: 2,
-    effect: 'Desbloquea contratos de backend · +10 % de dinero por nivel en ellos',
+    payTier: 1.6,
+    effect: 'Contratos de backend: paga ×1,6 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'sql',
@@ -120,7 +128,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['node', 1]],
     minStage: 2,
-    effect: 'Desbloquea contratos .sql y fullstack · +10 % de dinero por nivel en ellos',
+    payTier: 1.5,
+    effect: 'Contratos .sql y fullstack: paga ×1,5 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'angular',
@@ -130,7 +139,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['typescript', 3]],
     minStage: 2,
-    effect: 'Desbloquea contratos .component.ts · +10 % de dinero por nivel en ellos',
+    payTier: 2,
+    effect: 'Contratos .component.ts: paga ×2 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'nest',
@@ -143,7 +153,8 @@ export const TECHS: Tech[] = [
       ['typescript', 3],
     ],
     minStage: 3,
-    effect: 'Desbloquea contratos de backend empresarial · +10 % de dinero por nivel en ellos',
+    payTier: 2.2,
+    effect: 'Contratos de backend empresarial: paga ×2,2 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'python',
@@ -153,7 +164,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['git', 1]],
     minStage: 2,
-    effect: 'Desbloquea contratos .py · +10 % de dinero por nivel en ellos',
+    payTier: 1.7,
+    effect: 'Contratos .py: paga ×1,7 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'java',
@@ -163,7 +175,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['git', 3]],
     minStage: 3,
-    effect: 'Desbloquea contratos .java · +10 % de dinero por nivel en ellos',
+    payTier: 2,
+    effect: 'Contratos .java: paga ×2 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   {
     id: 'mongo',
@@ -173,7 +186,8 @@ export const TECHS: Tech[] = [
     maxLevel: 5,
     requires: [['node', 3]],
     minStage: 3,
-    effect: 'Desbloquea contratos NoSQL · +10 % de dinero por nivel en ellos',
+    payTier: 1.8,
+    effect: 'Contratos NoSQL: paga ×1,8 · +15 % de velocidad y +10 % de paga en ellos por nivel',
   },
   // Transversales: no tienen contratos propios, dan bonus a todo
   {
@@ -251,4 +265,18 @@ export function missingRequirements(tech: Tech, levels: TechLevels, stage: numbe
   const minStage = tech.minStage ?? 0
   if (stage < minStage) missing.push(`etapa ${STAGES[minStage].name}`)
   return missing.length ? missing.join(' y ') : null
+}
+
+/**
+ * Especialización (D3): cada nivel de la tecnología de un contrato por encima del 1
+ * escribe sus líneas un 15 % más rápido. Así conviene especializarse en un stack.
+ */
+export function specialtyBonus(levels: TechLevels, lang: Lang = 'html'): number {
+  return 1 + 0.15 * Math.max(0, levels[LANG_TECH[lang]] - 1)
+}
+
+/** Multiplicador de paga de un contrato: el de su tecnología, +25 % por cada tecnología extra del stack */
+export function payTier(lang: Lang = 'html', stack: TechId[] = []): number {
+  const tier = TECHS.find((t) => t.id === LANG_TECH[lang])?.payTier ?? 1
+  return tier * (1 + 0.25 * stack.length)
 }
