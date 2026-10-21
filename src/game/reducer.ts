@@ -28,6 +28,7 @@ import {
 import type { Contract } from './types'
 import { INITIAL_RECORDS, type Records } from './records'
 import { ACHIEVEMENTS } from '../data/achievements'
+import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
 export type Notice = {
@@ -152,6 +153,8 @@ export type GameAction =
       tone?: 'good' | 'bad' | 'choice'
       bet?: 'won' | 'lost'
     }
+  // Un minijuego terminado (D9): score de 0 a 1
+  | { type: 'minigame'; score: number; now: number }
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
   // Los candidatos nuevos se generan afuera (usan azar) y llegan ya calculados
@@ -618,6 +621,29 @@ function reduce(state: GameState, action: GameAction): GameState {
       }
       for (const effect of action.effects) next = applyEffect(next, effect, action)
       return finishIfDone({ ...next, log: addLog(next.log, 'info', `${action.icon} ${action.text}`) })
+    }
+
+    case 'minigame': {
+      const reward = minigameReward(action.score)
+      let next: GameState = {
+        ...state,
+        modifiers: activeModifiers(state.modifiers, action.now),
+        records: { ...state.records, minigames: state.records.minigames + 1 },
+      }
+      if (!reward) return { ...next, log: addLog(next.log, 'error', '🎮 Minijuego perdido. Nadie se enteró.') }
+      const effects: Effect[] = [
+        { kind: 'mod', target: 'auto', mult: reward.mult, seconds: MINIGAME_REWARD_SECONDS },
+        { kind: 'xp', contracts: reward.xp },
+      ]
+      for (const effect of effects) next = applyEffect(next, effect, { now: action.now, icon: '🎮' })
+      return {
+        ...next,
+        log: addLog(
+          next.log,
+          'crit',
+          `🎮 Minijuego: equipo ×${formatRate(reward.mult)} por ${MINIGAME_REWARD_SECONDS} s + XP`,
+        ),
+      }
     }
 
     case 'setAutoAccept':

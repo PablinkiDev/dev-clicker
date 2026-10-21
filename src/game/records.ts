@@ -14,6 +14,8 @@ export type Records = {
   /** Opciones con azar de los eventos que salieron bien */
   betsWon: number
   bugs: number
+  /** Minijuegos jugados (D9) */
+  minigames: number
   /** Eventos buenos seguidos */
   goodStreak: number
   /** Hora de los últimos críticos (para "Modo máquina") */
@@ -30,6 +32,7 @@ export const INITIAL_RECORDS: Records = {
   replacements: 0,
   betsWon: 0,
   bugs: 0,
+  minigames: 0,
   goodStreak: 0,
   recentCrits: [],
 }

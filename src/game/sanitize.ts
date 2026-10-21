@@ -63,6 +63,7 @@ export function sanitize(state: GameState): GameState {
             'replacements',
             'betsWon',
             'bugs',
+            'minigames',
             'goodStreak',
           ] as const
         ).map((key) => [key, clamp(state.records[key], 0)]),

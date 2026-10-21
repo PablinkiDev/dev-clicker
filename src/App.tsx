@@ -15,6 +15,8 @@ import GoldenBug from './components/GoldenBug'
 import { BUG_VISIBLE, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
+import { MinigameInvite, MinigameModal } from './components/Minigame'
+import { MINIGAMES, MINIGAME_FIRST_AT, nextMinigameDelay, type MinigameId } from './data/minigames'
 import AchievementList from './components/AchievementList'
 import { ACHIEVEMENTS } from './data/achievements'
 import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
@@ -185,6 +187,8 @@ function App() {
   // del efecto, así que el listener se agrega una sola vez.
   const onSpace = useEffectEvent((event: KeyboardEvent) => {
     if (event.code !== 'Space' || event.repeat || currentView !== 'work' || !contract) return
+    // Escribiendo en un campo (Typing race) o jugando un minijuego, la barra no programa
+    if (event.target instanceof HTMLInputElement || minigame?.playing) return
     event.preventDefault() // que la página no haga scroll
     if (isComplete) deliver()
     else program()
@@ -296,7 +300,8 @@ function App() {
   }
 
   const triggerEvent = useEffectEvent(() => {
-    if (state.stats.playTime < 300) {
+    // No se pisa con un minijuego
+    if (state.stats.playTime < 300 || minigame) {
       setEventRetry((n) => n + 1) // todavía no: se vuelve a programar
       return
     }
@@ -318,6 +323,33 @@ function App() {
     const id = setTimeout(expireEvent, event.options ? 20_000 : 8_000)
     return () => clearTimeout(id)
   }, [event, eventRetry])
+
+  // 🎮 Minijuegos (D9): cada 6–10 min llega una invitación opcional
+  const [minigame, setMinigame] = useState<{ game: MinigameId; playing: boolean } | null>(null)
+  const lastMinigame = useRef<MinigameId | null>(null)
+  const [minigameRetry, setMinigameRetry] = useState(0)
+  const triggerMinigame = useEffectEvent(() => {
+    // Tampoco se pisa con un evento
+    if (state.stats.playTime < MINIGAME_FIRST_AT || event) {
+      setMinigameRetry((n) => n + 1)
+      return
+    }
+    const options = MINIGAMES.filter((m) => m.id !== lastMinigame.current)
+    const game = options[Math.floor(Math.random() * options.length)].id
+    lastMinigame.current = game
+    setMinigame({ game, playing: false })
+  })
+  useEffect(() => {
+    if (minigame) return
+    const id = setTimeout(triggerMinigame, nextMinigameDelay())
+    return () => clearTimeout(id)
+  }, [minigame, minigameRetry])
+
+  function finishMinigame(score: number) {
+    const t = Date.now()
+    setNow(t)
+    dispatch({ type: 'minigame', score, now: t })
+  }
 
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
@@ -424,6 +456,16 @@ function App() {
         <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           {bug && <GoldenBug key={bug.id} x={bug.x} y={bug.y} onCatch={catchBug} />}
           {event && <EventCard event={event} onChoose={chooseEventOption} onClose={() => setEvent(null)} />}
+          {minigame &&
+            (minigame.playing ? (
+              <MinigameModal game={minigame.game} onFinish={finishMinigame} onClose={() => setMinigame(null)} />
+            ) : (
+              <MinigameInvite
+                game={minigame.game}
+                onPlay={() => setMinigame({ ...minigame, playing: true })}
+                onSkip={() => setMinigame(null)}
+              />
+            ))}
           {look.features.nav === 'menu' && (
             <MenuBar
               editor={look.id}

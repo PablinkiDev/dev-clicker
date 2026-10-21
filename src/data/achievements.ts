@@ -4,7 +4,7 @@ import type { GameAction, GameState } from '../game/reducer'
 import { companyValue } from '../game/stages'
 import { OFFICES } from './offices'
 
-export type AchievementCategory = 'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'secret'
+export type AchievementCategory = 'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'games' | 'secret'
 
 export const CATEGORIES: { id: AchievementCategory; icon: string; name: string }[] = [
   { id: 'code', icon: '⌨️', name: 'Programar' },
@@ -13,6 +13,7 @@ export const CATEGORIES: { id: AchievementCategory; icon: string; name: string }
   { id: 'company', icon: '💰', name: 'Empresa' },
   { id: 'tools', icon: '🛠', name: 'Herramientas' },
   { id: 'luck', icon: '🎲', name: 'Suerte' },
+  { id: 'games', icon: '🎮', name: 'Minijuegos' },
   { id: 'secret', icon: '🔒', name: 'Secretos' },
 ]
 
@@ -365,6 +366,21 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     (s) => s.records.betsWon,
     5,
+  ),
+
+  // 🎮 Minijuegos
+  {
+    id: 'lgtm',
+    category: 'games',
+    icon: '✅',
+    name: 'LGTM',
+    description: 'Terminá un minijuego sin errores',
+    check: ({ action }) => action.type === 'minigame' && action.score >= 1,
+  },
+  counter(
+    { id: 'seniorReviewer', category: 'games', icon: '🧐', name: 'Senior reviewer', description: 'Jugá 20 minijuegos' },
+    (s) => s.records.minigames,
+    20,
   ),
 
   // 🔒 Secretos
