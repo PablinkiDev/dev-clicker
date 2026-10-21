@@ -43,7 +43,13 @@ const counters = { fails: 0, clicksLines: 0, autoLines: 0, focus: 0 }
 
 const dispatch = (action: GameAction) => (state = gameReducer(state, action))
 const nowMs = () => clock * 1000
-const ctx = (s: GameState = state): OfferContext => ({ tech: s.tech, stage: s.stage, endless: s.endless, rep: s.rep })
+const ctx = (s: GameState = state): OfferContext => ({
+  tech: s.tech,
+  stage: s.stage,
+  endless: s.endless,
+  rep: s.rep,
+  perSecond: CLICKS_PER_SECOND * clickRate(s) + autoRateOf(s),
+})
 const log = (text: string) =>
   events.push(`${formatDuration(clock).padStart(11)}  (+${formatDuration(clock - cycleStart).padStart(10)})  ${text}`)
 

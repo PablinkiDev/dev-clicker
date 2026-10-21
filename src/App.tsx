@@ -18,7 +18,7 @@ import { SKILLS, missingSkillRequirements } from './data/skills'
 import { TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
-import { critChance, skillCost } from './game/formulas'
+import { ASSUMED_CLICKS_PER_SECOND, critChance, skillCost } from './game/formulas'
 import { autoRateOf, clickRate } from './game/rates'
 import { FOCUS_MULTIPLIER, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
@@ -106,7 +106,13 @@ function App() {
   const perClick = clickRate(state) * (focusing ? FOCUS_MULTIPLIER : 1)
   const auto = autoRateOf(state)
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
-  const offerContext: OfferContext = { tech: state.tech, stage: state.stage, endless: state.endless, rep }
+  const offerContext: OfferContext = {
+    tech: state.tech,
+    stage: state.stage,
+    endless: state.endless,
+    rep,
+    perSecond: ASSUMED_CLICKS_PER_SECOND * clickRate(state) + auto,
+  }
   const isComplete = contract !== null && code >= contract.code
   const isRunning = contract !== null && !isComplete && isVisible
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón

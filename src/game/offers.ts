@@ -1,6 +1,7 @@
 // Generador de ofertas: funciones que arman el tablón a partir de las plantillas.
 import { CONTRACT_TEMPLATES, GUIDED_CONTRACT } from '../data/contracts'
 import { LANG_TECH, type TechLevels } from '../data/techs'
+import { ASSUMED_CLICKS_PER_SECOND } from './formulas'
 import { boardSize, repLevel, repScale } from './reputation'
 import { STAGES } from '../data/stages'
 import { contractScale } from './stages'
@@ -14,6 +15,11 @@ export type OfferContext = {
   /** Contratos entregados en modo infinito */
   endless: number
   rep: number
+  /**
+   * Líneas por segundo que el jugador puede escribir hoy (clics supuestos + equipo).
+   * Sirve para garantizar que siempre haya al menos una oferta posible.
+   */
+  perSecond: number
 }
 
 /** Un mismo cliente no vuelve a ofrecer trabajo hasta pasado este tiempo (GDD §4: 3–5 min) */
@@ -38,7 +44,8 @@ function createOffer(template: ContractTemplate, { stage, endless, rep }: OfferC
     ...template,
     uid: crypto.randomUUID(),
     code: Math.round(template.code * factor * scale),
-    time: Math.round(template.time * (1 + 0.2 * stage) * (1 + 0.05 * level)),
+    // El plazo es FIJO (D2): lo que crece es el código. El jugador tiene que mejorar su producción
+    time: template.time,
     reward: {
       money: Math.round((template.reward.money * factor * scale * (STAGES[stage].payScale ?? 1)) / 5) * 5,
       xp: Math.round(template.reward.xp * factor * Math.pow(scale, 0.75)),
@@ -76,7 +83,7 @@ export function pickAutoOffer(offers: Contract[], autoRate: number): Contract | 
 
 /** Tablón inicial: el contrato guiado + ofertas para completar */
 export function createInitialOffers(tech: TechLevels): Contract[] {
-  const ctx: OfferContext = { tech, stage: 0, endless: 0, rep: 0 }
+  const ctx: OfferContext = { tech, stage: 0, endless: 0, rep: 0, perSecond: ASSUMED_CLICKS_PER_SECOND }
   return refillOffers([createOffer(GUIDED_CONTRACT, ctx)], {}, null, Date.now(), ctx)
 }
 
@@ -119,5 +126,29 @@ export function refillOffers(
     result.push(createOffer(pickRandom(candidates), ctx))
   }
 
-  return result
+  return ensureViable(result, ctx.perSecond)
+}
+
+/** Una oferta es viable si se termina usando como mucho el 80 % del plazo */
+const isViable = (offer: Contract, perSecond: number) => offer.code / perSecond <= offer.time * 0.8
+
+/**
+ * Anti-traba: si ninguna oferta se puede terminar a tiempo con la producción actual, la más
+ * accesible se achica (código y paga en la misma proporción) hasta entrar en el 70 % del plazo.
+ * Así la partida nunca queda sin opciones, aunque te hayas quedado atrás.
+ */
+function ensureViable(offers: Contract[], perSecond: number): Contract[] {
+  if (perSecond <= 0 || offers.some((o) => isViable(o, perSecond))) return offers
+  const easiest = offers.reduce((best, o) => (o.code / o.time < best.code / best.time ? o : best))
+  const factor = (perSecond * easiest.time * 0.7) / easiest.code
+  const shrunk: Contract = {
+    ...easiest,
+    code: Math.max(1, Math.round(easiest.code * factor)),
+    reward: {
+      ...easiest.reward,
+      money: Math.max(5, Math.round((easiest.reward.money * factor) / 5) * 5),
+      xp: Math.max(1, Math.round(easiest.reward.xp * factor)),
+    },
+  }
+  return offers.map((o) => (o === easiest ? shrunk : o))
 }
