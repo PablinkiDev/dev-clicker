@@ -13,6 +13,8 @@ import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
 import { autoRateOf, clickRate } from './rates'
 import { BUG_DURATION, BUG_MULTIPLIER } from './bug'
+import { activeModifiers, type Modifier } from './modifiers'
+import type { Effect } from '../data/events'
 import { FOCUS_COOLDOWN, FOCUS_MULTIPLIER, INITIAL_FOCUS, focusDuration, isFocused, type Focus } from './focus'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
@@ -78,8 +80,8 @@ export type GameState = {
   autoAccept: boolean
   /** Concentración: cuándo termina y cuándo se recarga */
   focus: Focus
-  /** Hasta cuándo dura el 🐛 bug dorado (timestamp; 0 = nunca se atrapó) */
-  bugBoostEndsAt: number
+  /** Multiplicadores temporales activos: el 🐛 bug dorado y los eventos */
+  modifiers: Modifier[]
   /** Empleados contratados (sin contarte a vos) */
   team: Employee[]
   /** Candidatos que se pueden contratar */
@@ -119,6 +121,8 @@ export type GameAction =
   // now: la hora, para el 🐛 bug dorado (opcional: la simulación no lo usa)
   | { type: 'tick'; elapsed: number; now?: number }
   | { type: 'catchBug'; now: number }
+  // Un evento al azar ya resuelto (si tenía azar u opciones, se resolvió afuera)
+  | { type: 'applyEvent'; text: string; icon: string; effects: Effect[]; now: number; candidates?: Employee[] }
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
   // Los candidatos nuevos se generan afuera (usan azar) y llegan ya calculados
@@ -158,7 +162,7 @@ export function createInitialState(): GameState {
     dim: false,
     autoAccept: true,
     focus: INITIAL_FOCUS,
-    bugBoostEndsAt: 0,
+    modifiers: [],
     team: [],
     candidates: createInitialCandidates(),
     stage: 0,
@@ -179,6 +183,69 @@ export function createInitialState(): GameState {
  * Entrega el contrato en curso: cobra, suma XP y reputación y libera el editor.
  * La usan la acción 'deliver' (botón git push) y la Entrega continua (automática).
  */
+/** Aplica un efecto de un evento (D6). Los malos nunca hacen fallar un contrato por sí solos */
+function applyEffect(
+  state: GameState,
+  effect: Effect,
+  { now, icon, candidates }: { now: number; icon: string; candidates?: Employee[] },
+): GameState {
+  const { contract } = state
+  switch (effect.kind) {
+    case 'rep':
+      return { ...state, rep: Math.max(0, state.rep + effect.amount) }
+    case 'xp': {
+      // Referencia: el contrato actual, o el promedio del tablón
+      const reference =
+        contract?.reward.xp ?? state.offers.reduce((sum, o) => sum + o.reward.xp, 0) / Math.max(1, state.offers.length)
+      const xp = Math.round(reference * effect.contracts)
+      return { ...state, xp: state.xp + xp, stats: { ...state.stats, xpEarned: state.stats.xpEarned + xp } }
+    }
+    case 'pay':
+      return { ...state, money: state.money - Math.floor(state.money * effect.pct) }
+    case 'mod':
+      return {
+        ...state,
+        modifiers: [
+          ...state.modifiers,
+          {
+            id: `${icon}-${now}-${effect.target}`,
+            icon,
+            target: effect.target,
+            mult: effect.mult,
+            endsAt: now + effect.seconds * 1000,
+          },
+        ],
+      }
+    case 'time':
+      // Nunca menos de 5 s: te complica, pero no te hace perder solo
+      return contract ? { ...state, timeLeft: Math.max(5, state.timeLeft * (1 + effect.pct)) } : state
+    case 'code': {
+      if (!contract) return state
+      const target = Math.max(1, Math.round(contract.code * (1 + effect.pct)))
+      return { ...state, contract: { ...contract, code: target }, code: Math.min(state.code, target) }
+    }
+    case 'progress':
+      return contract ? { ...state, code: Math.min(contract.code, state.code + contract.code * effect.pct) } : state
+    case 'reward':
+      return contract
+        ? {
+            ...state,
+            contract: {
+              ...contract,
+              reward: { ...contract.reward, money: Math.round((contract.reward.money * effect.mult) / 5) * 5 },
+            },
+          }
+        : state
+    case 'focusReset':
+      return {
+        ...state,
+        focus: { ...state.focus, readyAt: Math.min(state.focus.readyAt, Math.max(now, state.focus.endsAt)) },
+      }
+    case 'candidates':
+      return candidates ? { ...state, candidates } : state
+  }
+}
+
 /** Con Entrega continua, un contrato completo se entrega solo (GDD §9) */
 function finishIfDone(state: GameState): GameState {
   const done = state.contract !== null && state.code >= state.contract.code
@@ -253,7 +320,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
       const editor = getEditor(state.editor)
       const focus = isFocused(state.focus, action.now) ? FOCUS_MULTIPLIER : 1
-      const lines = clickRate(state) * focus * (action.crit ? editor.critMultiplier : 1)
+      const lines = clickRate(state, action.now) * focus * (action.crit ? editor.critMultiplier : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (action.crit)
@@ -463,13 +530,28 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'catchBug':
       return {
         ...state,
-        bugBoostEndsAt: action.now + BUG_DURATION * 1000,
+        modifiers: [
+          ...activeModifiers(state.modifiers, action.now),
+          {
+            id: `bug-${action.now}`,
+            icon: '🐛',
+            target: 'auto',
+            mult: BUG_MULTIPLIER,
+            endsAt: action.now + BUG_DURATION * 1000,
+          },
+        ],
         log: addLog(
           state.log,
           'crit',
           `🐛 ¡Bug dorado atrapado! El equipo produce ×${BUG_MULTIPLIER} por ${BUG_DURATION} s`,
         ),
       }
+
+    case 'applyEvent': {
+      let next: GameState = { ...state, modifiers: activeModifiers(state.modifiers, action.now) }
+      for (const effect of action.effects) next = applyEffect(next, effect, action)
+      return finishIfDone({ ...next, log: addLog(next.log, 'info', `${action.icon} ${action.text}`) })
+    }
 
     case 'setAutoAccept':
       return { ...state, autoAccept: action.on }

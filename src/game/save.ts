@@ -27,7 +27,7 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   dim: false,
   darkMode: { owned: false, on: false },
   autoAccept: true,
-  bugBoostEndsAt: 0,
+  modifiers: [],
   focus: INITIAL_FOCUS,
   stats: INITIAL_STATS,
   prestige: INITIAL_PRESTIGE,
@@ -361,9 +361,7 @@ function isSaveFile(value: unknown): value is SaveFile {
   const s = value.state
   const skills = s.skills
   return (
-    ['code', 'money', 'xp', 'rep', 'stage', 'endless', 'office', 'bugBoostEndsAt', 'timeLeft'].every((key) =>
-      isNumber(s[key]),
-    ) &&
+    ['code', 'money', 'xp', 'rep', 'stage', 'endless', 'office', 'timeLeft'].every((key) => isNumber(s[key])) &&
     isObject(skills) &&
     Object.keys(INITIAL_SKILLS).every((key) => isNumber(skills[key])) &&
     EDITORS.some((e) => e.id === s.editor) &&
@@ -371,6 +369,10 @@ function isSaveFile(value: unknown): value is SaveFile {
     isObject(s.darkMode) &&
     typeof s.dim === 'boolean' &&
     typeof s.autoAccept === 'boolean' &&
+    Array.isArray(s.modifiers) &&
+    s.modifiers.every(
+      (m) => isObject(m) && isNumber(m.mult) && isNumber(m.endsAt) && (m.target === 'auto' || m.target === 'click'),
+    ) &&
     hasNumbers(s.focus, INITIAL_FOCUS) &&
     hasNumbers(s.tech, INITIAL_TECH) &&
     isStats(s.stats) &&

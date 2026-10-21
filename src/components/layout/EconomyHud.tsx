@@ -21,8 +21,8 @@ type EconomyHudProps = {
   upgradesAvailable: number
   /** Concentración: null si no se aprendió */
   focus: { active: boolean; seconds: number } | null
-  /** Segundos que le quedan al 🐛 bug dorado (0 = no está activo) */
-  bugBoost: number
+  /** Modificadores activos (bug dorado, eventos) con los segundos que les quedan */
+  modifiers: { id: string; icon: string; target: 'auto' | 'click'; mult: number; seconds: number }[]
   goal: Goal
   onNavigate: (view: View) => void
 }
@@ -153,13 +153,18 @@ function EconomyHud(props: EconomyHudProps) {
       <Cell onClick={() => onNavigate('team')}>
         <Label aside={<span className="font-mono text-[11px] text-muted">{critPercent}% crit</span>}>Producción</Label>
         <span
-          className={`block font-mono text-lg font-extrabold tracking-tight md:text-xl ${props.bugBoost > 0 ? 'text-yellow' : 'text-green'}`}
+          className={`block font-mono text-lg font-extrabold tracking-tight md:text-xl ${props.modifiers.some((m) => m.target === 'auto' && m.mult > 1) ? 'text-yellow' : 'text-green'}`}
         >
           {formatRate(auto)} <small className="text-xs text-muted">l/s</small>
         </span>
         <Sub>
           {formatRate(perClick)} por clic
-          {props.bugBoost > 0 && <span className="text-yellow"> · 🐛 ×2 {props.bugBoost}s</span>}
+          {props.modifiers.map((m) => (
+            <span key={m.id} className={m.mult >= 1 ? 'text-yellow' : 'text-red'}>
+              {' · '}
+              {m.icon} {m.target === 'click' ? 'clic ' : ''}×{formatRate(m.mult)} {m.seconds}s
+            </span>
+          ))}
           {focus && (
             <>
               {' · 🎯 '}

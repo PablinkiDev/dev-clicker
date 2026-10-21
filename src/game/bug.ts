@@ -13,7 +13,3 @@ export const BUG_VISIBLE: number = 12
 export function nextBugDelay(): number {
   return (120 + Math.random() * 120) * 1000
 }
-
-export function isBugBoosted(endsAt: number, now: number | undefined): boolean {
-  return now !== undefined && now < endsAt
-}

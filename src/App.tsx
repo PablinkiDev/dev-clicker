@@ -12,7 +12,9 @@ import Terminal from './components/layout/Terminal'
 import TitleBar from './components/layout/TitleBar'
 import Toast from './components/layout/Toast'
 import GoldenBug from './components/GoldenBug'
-import { BUG_VISIBLE, isBugBoosted, nextBugDelay } from './game/bug'
+import { BUG_VISIBLE, nextBugDelay } from './game/bug'
+import EventCard from './components/EventCard'
+import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
 import EditorShop from './components/EditorShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
@@ -74,8 +76,8 @@ function App() {
   const { ideChrome } = look.features
   // Reloj de la Concentración: solo hace falta mientras está activa o recargándose
   const [now, setNow] = useState(() => Date.now())
-  // También corre mientras dura el bug dorado, para mostrar los segundos que le quedan
-  const focusBusy = now < state.focus.readyAt || now < state.bugBoostEndsAt
+  // También corre mientras hay modificadores activos (bug dorado, eventos), para mostrar sus segundos
+  const focusBusy = now < state.focus.readyAt || state.modifiers.some((m) => now < m.endsAt)
   useEffect(() => {
     if (!focusBusy) return
     const id = setInterval(() => setNow(Date.now()), 250)
@@ -107,9 +109,11 @@ function App() {
     const id = setInterval(sampleEarnings, 5000)
     return () => clearInterval(id)
   }, [])
-  const perClick = clickRate(state) * (focusing ? FOCUS_MULTIPLIER : 1)
+  const perClick = clickRate(state, now) * (focusing ? FOCUS_MULTIPLIER : 1)
   const auto = autoRateOf(state, now)
-  const bugBoost = isBugBoosted(state.bugBoostEndsAt, now) ? Math.ceil((state.bugBoostEndsAt - now) / 1000) : 0
+  const activeMods = state.modifiers
+    .filter((m) => now < m.endsAt)
+    .map((m) => ({ ...m, seconds: Math.ceil((m.endsAt - now) / 1000) }))
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
   const offerContext: OfferContext = {
     tech: state.tech,
@@ -255,6 +259,58 @@ function App() {
     setBug(null)
   }
 
+  // 🎲 Eventos al azar (D6): cada 3–6 min, nunca en los primeros 5 min de una partida
+  const [event, setEvent] = useState<GameEvent | null>(null)
+  const lastEventId = useRef<string | null>(null)
+  // Sube cada vez que hay que volver a programar un evento sin que haya cambiado `event`
+  const [eventRetry, setEventRetry] = useState(0)
+
+  /** Despacha los efectos de un evento ya resuelto (el azar y los candidatos se arman acá) */
+  function applyEvent(e: GameEvent, effects: NonNullable<GameEvent['effects']>, text: string) {
+    const t = Date.now()
+    setNow(t)
+    const candidates = effects.some((x) => x.kind === 'candidates')
+      ? rerollCandidates(team, Math.min(4, state.stage + 1)) // mejores que lo normal
+      : undefined
+    dispatch({ type: 'applyEvent', text, icon: e.icon, effects, now: t, candidates })
+  }
+
+  function chooseEventOption(index: 0 | 1) {
+    if (!event?.options) return
+    const option = event.options[index]
+    if (option.outcomes) {
+      const outcome = rollOutcome(option.outcomes)
+      applyEvent(event, outcome.effects, `${event.title}: ${outcome.text}`)
+    } else {
+      applyEvent(event, option.effects ?? [], `${event.title}: ${option.label}`)
+    }
+    setEvent(null)
+  }
+
+  const triggerEvent = useEffectEvent(() => {
+    if (state.stats.playTime < 300) {
+      setEventRetry((n) => n + 1) // todavía no: se vuelve a programar
+      return
+    }
+    const e = pickEvent(contract !== null, lastEventId.current)
+    lastEventId.current = e.id
+    if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
+    setEvent(e)
+  })
+  // Sin evento en pantalla: programa el próximo. Con evento: lo cierra (o elige la opción segura) a su tiempo
+  const expireEvent = useEffectEvent(() => {
+    if (event?.options) chooseEventOption(event.safe ?? 1)
+    else setEvent(null)
+  })
+  useEffect(() => {
+    if (!event) {
+      const id = setTimeout(triggerEvent, nextEventDelay())
+      return () => clearTimeout(id)
+    }
+    const id = setTimeout(expireEvent, event.options ? 20_000 : 8_000)
+    return () => clearTimeout(id)
+  }, [event, eventRetry])
+
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
@@ -359,6 +415,7 @@ function App() {
 
         <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           {bug && <GoldenBug key={bug.id} x={bug.x} y={bug.y} onCatch={catchBug} />}
+          {event && <EventCard event={event} onChoose={chooseEventOption} onClose={() => setEvent(null)} />}
           {look.features.nav === 'menu' && (
             <MenuBar
               editor={look.id}
@@ -382,7 +439,7 @@ function App() {
             nextPurchase={nextPurchase(state)}
             upgradesAvailable={skillsAvailable + techsAvailable}
             focus={focusInfo}
-            bugBoost={bugBoost}
+            modifiers={activeMods}
             goal={currentGoal(state)}
             onNavigate={setView}
           />
