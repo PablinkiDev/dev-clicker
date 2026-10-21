@@ -278,24 +278,35 @@ function migrate(raw: unknown): unknown {
     file = { ...file, version: 17 }
   }
 
-  // Siempre: completar claves nuevas que falten (por ejemplo, una partida guardada con la versión
-  // nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite)
+  // Siempre: completar claves nuevas que falten o que vengan rotas (por ejemplo, una partida guardada
+  // con la versión nueva pero con datos viejos en memoria, como pasa con la recarga en caliente de Vite:
+  // un campo que no existía termina como NaN, y JSON lo guarda como null)
   state = { ...FIELD_DEFAULTS, ...state }
-  if (isObject(state.tech)) state = { ...state, tech: { ...INITIAL_TECH, ...state.tech } }
-  if (isObject(state.stats)) state = { ...state, stats: { ...INITIAL_STATS, ...state.stats } }
-  if (isObject(state.skills)) state = { ...state, skills: { ...INITIAL_SKILLS, ...state.skills } }
+  if (isObject(state.tech)) state = { ...state, tech: fixNumbers(INITIAL_TECH, state.tech) }
+  if (isObject(state.stats)) state = { ...state, stats: fixNumbers(INITIAL_STATS, state.stats) }
+  if (isObject(state.skills)) state = { ...state, skills: fixNumbers(INITIAL_SKILLS, state.skills) }
+  if (isObject(state.focus)) state = { ...state, focus: fixNumbers(INITIAL_FOCUS, state.focus) }
   if (isObject(state.prestige) && isObject(state.prestige.investments)) {
     state = {
       ...state,
       prestige: {
         ...INITIAL_PRESTIGE,
         ...state.prestige,
-        investments: { ...INITIAL_INVESTMENTS, ...state.prestige.investments },
+        investments: fixNumbers(INITIAL_INVESTMENTS, state.prestige.investments),
       },
     }
   }
 
   return { ...file, state }
+}
+
+/** Toma cada número de `value`; si falta o no es un número válido (null, NaN, texto), usa el de `defaults` */
+function fixNumbers<T extends object>(defaults: T, value: Record<string, unknown>): T {
+  const result: Record<string, unknown> = { ...value }
+  for (const [key, fallback] of Object.entries(defaults)) {
+    if (!isNumber(value[key])) result[key] = fallback
+  }
+  return result as T
 }
 
 // --- Validación -------------------------------------------------------------
@@ -325,6 +336,10 @@ function isContract(value: unknown): boolean {
     isObject(value.reward) &&
     // El lenguaje y el stack tienen que existir en el juego (si no, la interfaz no sabe dibujarlos)
     (value.lang === undefined || (typeof value.lang === 'string' && value.lang in LANG_EXT)) &&
+    (value.special === undefined ||
+      value.special === 'clicksOnly' ||
+      value.special === 'rush' ||
+      value.special === 'giant') &&
     (value.stack === undefined ||
       (Array.isArray(value.stack) && value.stack.every((id) => typeof id === 'string' && id in INITIAL_TECH)))
   )

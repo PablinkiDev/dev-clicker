@@ -37,6 +37,8 @@ export function clickRate(state: GameState, now?: number): number {
  * now: la hora, para los modificadores temporales (bug dorado, eventos). Sin hora no se cuentan
  */
 export function autoRateOf(state: GameState, now?: number): number {
+  // Contrato especial "Solo a mano": el equipo no puede tocarlo
+  if (state.contract?.special === 'clicksOnly') return 0
   return (
     modifierMultiplier(state.modifiers, 'auto', now) *
     autoRate(state.team, getEditor(state.editor).autoBonus) *

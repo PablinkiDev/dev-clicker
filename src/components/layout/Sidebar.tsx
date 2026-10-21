@@ -72,6 +72,7 @@ function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarP
           >
             <LangIcon lang={o.lang} />
             <span className="truncate">{fileName(o.id, o.lang)}</span>
+            {o.special && <span title="Contrato especial">⭐</span>}
             <span className={`ml-auto font-mono text-[11px] font-extrabold ${DIFFICULTY_MARK[o.difficulty].className}`}>
               {DIFFICULTY_MARK[o.difficulty].letter}
             </span>

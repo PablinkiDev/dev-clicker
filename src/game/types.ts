@@ -35,7 +35,12 @@ export type ContractTemplate = {
   once?: boolean
 }
 
+/** Reglas de los contratos especiales (dorados) */
+export type SpecialRule = 'clicksOnly' | 'rush' | 'giant'
+
 /** Una oferta concreta del tablón: una plantilla con valores propios y un id único */
 export type Contract = ContractTemplate & {
   uid: string
+  /** Contrato especial (D7): paga mucho más, con una condición rara */
+  special?: SpecialRule
 }

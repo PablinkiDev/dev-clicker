@@ -50,9 +50,18 @@ export type Stats = {
   playTime: number
   /** XP ganada con contratos (no baja al gastar): para medir cuánto ganás por minuto */
   xpEarned: number
+  /** Contratos especiales (dorados) entregados */
+  specialsDone: number
 }
 
-export const INITIAL_STATS: Stats = { moneyEarned: 0, contractsDone: 0, contractsFailed: 0, playTime: 0, xpEarned: 0 }
+export const INITIAL_STATS: Stats = {
+  moneyEarned: 0,
+  contractsDone: 0,
+  contractsFailed: 0,
+  playTime: 0,
+  xpEarned: 0,
+  specialsDone: 0,
+}
 
 /** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
 export const DARK_MODE_PRICE = 60
@@ -282,6 +291,7 @@ function deliverContract(state: GameState): GameState {
       moneyEarned: state.stats.moneyEarned + money,
       xpEarned: state.stats.xpEarned + xp,
       contractsDone: state.stats.contractsDone + 1,
+      specialsDone: state.stats.specialsDone + (contract.special ? 1 : 0),
     },
     notice: {
       kind: 'success',

@@ -1,3 +1,4 @@
+import { SPECIAL_RULES } from '../game/offers'
 import { formatMoney, formatNumber, formatTime } from '../game/format'
 import type { Contract } from '../game/types'
 
@@ -43,6 +44,14 @@ function ContractCard({ contract, code, timeLeft }: ContractCardProps) {
           +{formatNumber(contract.reward.xp)} XP
         </span>
         <span className="rounded border border-cyan/30 px-2 py-0.5 text-cyan">+{contract.reward.rep} ★</span>
+        {contract.special && (
+          <span
+            className="rounded border border-yellow/60 bg-yellow/10 px-2 py-0.5 font-bold text-yellow"
+            title={SPECIAL_RULES[contract.special].detail}
+          >
+            ⭐ {SPECIAL_RULES[contract.special].name}
+          </span>
+        )}
       </div>
 
       {/* Barra fina: tiempo que queda. Barra verde: progreso del código */}

@@ -1,4 +1,5 @@
 import { LANG_ICON, TECH_ICON } from '../ui'
+import { SPECIAL_RULES } from '../game/offers'
 import { TECHS, payTier, specialtyBonus, type TechLevels } from '../data/techs'
 import ScreenHeader from '../components/ScreenHeader'
 import { estimateSeconds } from '../game/formulas'
@@ -43,7 +44,10 @@ function OffersScreen({
 }: OffersScreenProps) {
   // Ordenamos una copia: nunca hay que modificar (mutar) las props ni el estado
   const sorted = [...offers].sort(
-    (a, b) => DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
+    // Los especiales primero; después de fácil a difícil
+    (a, b) =>
+      Number(!!b.special) - Number(!!a.special) ||
+      DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
   )
 
   return (
@@ -86,7 +90,10 @@ function OffersScreen({
           // La especialización acelera los contratos de tu tecnología (D3)
           const speed = specialtyBonus(tech, offer.lang)
           const tier = payTier(offer.lang, offer.stack)
-          const estimate = estimateSeconds(offer.code, perClick * speed, autoRate * speed)
+          // "Solo a mano": el equipo no ayuda
+          const team = offer.special === 'clicksOnly' ? 0 : autoRate
+          const estimate = estimateSeconds(offer.code, perClick * speed, team * speed)
+          const special = offer.special && SPECIAL_RULES[offer.special]
           const ratio = estimate / offer.time
           const verdict =
             ratio < 0.7
@@ -101,8 +108,18 @@ function OffersScreen({
                 type="button"
                 onClick={() => onAccept(offer)}
                 disabled={activeFile !== null}
-                className="h-full w-full cursor-pointer rounded-xl border border-line bg-panel-2 p-3.5 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-cyan/50 disabled:cursor-default disabled:opacity-60"
+                className={`h-full w-full cursor-pointer rounded-xl border p-3.5 text-left transition enabled:hover:-translate-y-0.5 disabled:cursor-default disabled:opacity-60 ${
+                  special
+                    ? 'border-yellow/70 bg-linear-to-b from-yellow/12 to-panel-2 shadow-[0_0_0_3px_rgba(255,203,107,.12)] enabled:hover:border-yellow'
+                    : 'border-line bg-panel-2 enabled:hover:border-cyan/50'
+                }`}
               >
+                {special && (
+                  <p className="mb-1.5 font-mono text-[11px] font-bold text-yellow" title={special.detail}>
+                    ⭐ Contrato especial · {special.name}
+                    <span className="block font-normal text-muted">{special.detail}</span>
+                  </p>
+                )}
                 <p className="mb-1 truncate font-mono text-[11px] text-muted">
                   <span className={LANG_ICON[offer.lang ?? 'html'].className}>
                     {LANG_ICON[offer.lang ?? 'html'].icon}

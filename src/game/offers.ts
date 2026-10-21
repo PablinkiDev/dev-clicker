@@ -5,7 +5,7 @@ import { ASSUMED_CLICKS_PER_SECOND } from './formulas'
 import { boardSize, repLevel, repScale } from './reputation'
 import { STAGES } from '../data/stages'
 import { contractScale } from './stages'
-import type { Contract, ContractTemplate, Difficulty } from './types'
+import type { Contract, ContractTemplate, Difficulty, SpecialRule } from './types'
 
 /** Todo lo que define cómo son las ofertas nuevas */
 export type OfferContext = {
@@ -79,7 +79,8 @@ export function canTake(template: ContractTemplate, tech: TechLevels, stage: num
  */
 export function pickAutoOffer(offers: Contract[], autoRate: number): Contract | null {
   if (autoRate <= 0) return null
-  const viable = offers.filter((o) => o.code / autoRate <= o.time * 0.8)
+  // Los especiales nunca se aceptan solos: son una decisión del jugador
+  const viable = offers.filter((o) => !o.special && o.code / autoRate <= o.time * 0.8)
   return viable.reduce<Contract | null>((best, o) => (!best || o.reward.money > best.reward.money ? o : best), null)
 }
 
@@ -118,17 +119,57 @@ export function refillOffers(
     if (result.some((o) => o.difficulty === difficulty)) continue
     let candidates = available(difficulty)
     if (candidates.length === 0) candidates = available(difficulty, true)
-    if (candidates.length > 0) result.push(createOffer(pickRandom(candidates), ctx))
+    if (candidates.length > 0) result.push(maybeSpecial(createOffer(pickRandom(candidates), ctx), result))
   }
 
   while (result.length < size) {
     let candidates = available()
     if (candidates.length === 0) candidates = available(undefined, true)
     if (candidates.length === 0) break
-    result.push(createOffer(pickRandom(candidates), ctx))
+    result.push(maybeSpecial(createOffer(pickRandom(candidates), ctx), result))
   }
 
   return ensureViable(result, ctx.perSecond)
+}
+
+// --- Contratos especiales (D7) -----------------------------------------------------
+
+/** Cómo es cada regla: nombre, explicación y cómo cambia la oferta */
+export const SPECIAL_RULES: Record<
+  SpecialRule,
+  { name: string; detail: string; code: number; time: number; pay: number }
+> = {
+  clicksOnly: {
+    name: 'Solo a mano',
+    detail: 'El equipo no puede tocar este código: solo tus clics',
+    code: 0.35,
+    time: 1,
+    pay: 5,
+  },
+  rush: { name: 'Para ayer', detail: 'El plazo es menos de la mitad del normal', code: 1, time: 0.4, pay: 4 },
+  giant: { name: 'Proyecto gigante', detail: 'El triple de código, el doble de plazo', code: 3, time: 2, pay: 6 },
+}
+
+/** Chance de que una oferta nueva salga especial (como mucho una por tablón) */
+const SPECIAL_CHANCE = 0.05
+
+/** A veces convierte una oferta nueva en especial: paga ×4–6 y ×3 de XP, con una condición rara */
+function maybeSpecial(offer: Contract, board: Contract[]): Contract {
+  if (offer.once || board.some((o) => o.special) || Math.random() > SPECIAL_CHANCE) return offer
+  const rules = Object.keys(SPECIAL_RULES) as SpecialRule[]
+  const special = rules[Math.floor(Math.random() * rules.length)]
+  const rule = SPECIAL_RULES[special]
+  return {
+    ...offer,
+    special,
+    code: Math.max(1, Math.round(offer.code * rule.code)),
+    time: Math.max(10, Math.round(offer.time * rule.time)),
+    reward: {
+      money: Math.round((offer.reward.money * rule.pay) / 5) * 5,
+      xp: offer.reward.xp * 3,
+      rep: offer.reward.rep * 2,
+    },
+  }
 }
 
 /** Una oferta es viable si se termina usando como mucho el 80 % del plazo */
