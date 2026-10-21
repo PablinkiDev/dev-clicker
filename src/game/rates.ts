@@ -3,6 +3,7 @@
 import { getEditor } from '../data/editors'
 import { specialtyBonus } from '../data/techs'
 import { linesPerClick } from './formulas'
+import { BUG_MULTIPLIER, isBugBoosted } from './bug'
 import { investmentBonus } from './prestige'
 import type { GameState } from './reducer'
 import { contractScale } from './stages'
@@ -30,9 +31,13 @@ export function clickRate(state: GameState): number {
   )
 }
 
-/** Líneas por segundo del equipo y el editor, × Trabajo en equipo × Git × Equipo experimentado */
-export function autoRateOf(state: GameState): number {
+/**
+ * Líneas por segundo del equipo y el editor, × Trabajo en equipo × Git × Equipo experimentado.
+ * now: la hora, para saber si sigue activo el 🐛 bug dorado (sin hora, no se cuenta)
+ */
+export function autoRateOf(state: GameState, now?: number): number {
   return (
+    (isBugBoosted(state.bugBoostEndsAt, now) ? BUG_MULTIPLIER : 1) *
     autoRate(state.team, getEditor(state.editor).autoBonus) *
     contractSpecialty(state) *
     (1 + 0.05 * state.skills.teamwork) *

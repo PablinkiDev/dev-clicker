@@ -21,6 +21,8 @@ type EconomyHudProps = {
   upgradesAvailable: number
   /** Concentración: null si no se aprendió */
   focus: { active: boolean; seconds: number } | null
+  /** Segundos que le quedan al 🐛 bug dorado (0 = no está activo) */
+  bugBoost: number
   goal: Goal
   onNavigate: (view: View) => void
 }
@@ -150,11 +152,14 @@ function EconomyHud(props: EconomyHudProps) {
 
       <Cell onClick={() => onNavigate('team')}>
         <Label aside={<span className="font-mono text-[11px] text-muted">{critPercent}% crit</span>}>Producción</Label>
-        <span className="block font-mono text-lg font-extrabold tracking-tight text-green md:text-xl">
+        <span
+          className={`block font-mono text-lg font-extrabold tracking-tight md:text-xl ${props.bugBoost > 0 ? 'text-yellow' : 'text-green'}`}
+        >
           {formatRate(auto)} <small className="text-xs text-muted">l/s</small>
         </span>
         <Sub>
           {formatRate(perClick)} por clic
+          {props.bugBoost > 0 && <span className="text-yellow"> · 🐛 ×2 {props.bugBoost}s</span>}
           {focus && (
             <>
               {' · 🎯 '}

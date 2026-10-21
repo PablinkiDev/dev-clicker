@@ -11,6 +11,8 @@ import StatusBar from './components/layout/StatusBar'
 import Terminal from './components/layout/Terminal'
 import TitleBar from './components/layout/TitleBar'
 import Toast from './components/layout/Toast'
+import GoldenBug from './components/GoldenBug'
+import { BUG_VISIBLE, isBugBoosted, nextBugDelay } from './game/bug'
 import EditorShop from './components/EditorShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
@@ -72,7 +74,8 @@ function App() {
   const { ideChrome } = look.features
   // Reloj de la Concentración: solo hace falta mientras está activa o recargándose
   const [now, setNow] = useState(() => Date.now())
-  const focusBusy = now < state.focus.readyAt
+  // También corre mientras dura el bug dorado, para mostrar los segundos que le quedan
+  const focusBusy = now < state.focus.readyAt || now < state.bugBoostEndsAt
   useEffect(() => {
     if (!focusBusy) return
     const id = setInterval(() => setNow(Date.now()), 250)
@@ -105,7 +108,8 @@ function App() {
     return () => clearInterval(id)
   }, [])
   const perClick = clickRate(state) * (focusing ? FOCUS_MULTIPLIER : 1)
-  const auto = autoRateOf(state)
+  const auto = autoRateOf(state, now)
+  const bugBoost = isBugBoosted(state.bugBoostEndsAt, now) ? Math.ceil((state.bugBoostEndsAt - now) / 1000) : 0
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
   const offerContext: OfferContext = {
     tech: state.tech,
@@ -159,7 +163,7 @@ function App() {
     const id = setInterval(() => {
       const now = performance.now()
       // Tope por si la compu se suspendió: no se "juega" mientras está dormida
-      dispatch({ type: 'tick', elapsed: Math.min(MAX_ELAPSED, (now - last) / 1000) })
+      dispatch({ type: 'tick', elapsed: Math.min(MAX_ELAPSED, (now - last) / 1000), now: Date.now() })
       last = now
     }, TICK_MS)
 
@@ -229,6 +233,26 @@ function App() {
     // La partida nueva tiene ofertas al azar: se arma acá y el reducer le pasa el prestigio
     dispatch({ type: 'sell', fresh: createInitialState(), now: Date.now() })
     setView('board')
+  }
+
+  // 🐛 Bug dorado: aparece cada 2–4 min en un lugar al azar y se escapa a los BUG_VISIBLE segundos
+  const [bug, setBug] = useState<{ id: number; x: number; y: number } | null>(null)
+  useEffect(() => {
+    const id = setTimeout(
+      () => {
+        if (bug) setBug(null)
+        else setBug({ id: Date.now(), x: 10 + Math.random() * 70, y: 15 + Math.random() * 55 })
+      },
+      bug ? BUG_VISIBLE * 1000 : nextBugDelay(),
+    )
+    return () => clearTimeout(id)
+  }, [bug])
+
+  function catchBug() {
+    const t = Date.now()
+    setNow(t)
+    dispatch({ type: 'catchBug', now: t })
+    setBug(null)
   }
 
   function program() {
@@ -333,7 +357,8 @@ function App() {
           </>
         )}
 
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          {bug && <GoldenBug key={bug.id} x={bug.x} y={bug.y} onCatch={catchBug} />}
           {look.features.nav === 'menu' && (
             <MenuBar
               editor={look.id}
@@ -357,6 +382,7 @@ function App() {
             nextPurchase={nextPurchase(state)}
             upgradesAvailable={skillsAvailable + techsAvailable}
             focus={focusInfo}
+            bugBoost={bugBoost}
             goal={currentGoal(state)}
             onNavigate={setView}
           />

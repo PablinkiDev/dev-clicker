@@ -12,6 +12,7 @@ import { canAscend, companyValue, isEndless } from './stages'
 import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
 import { autoRateOf, clickRate } from './rates'
+import { BUG_DURATION, BUG_MULTIPLIER } from './bug'
 import { FOCUS_COOLDOWN, FOCUS_MULTIPLIER, INITIAL_FOCUS, focusDuration, isFocused, type Focus } from './focus'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
@@ -77,6 +78,8 @@ export type GameState = {
   autoAccept: boolean
   /** Concentración: cuándo termina y cuándo se recarga */
   focus: Focus
+  /** Hasta cuándo dura el 🐛 bug dorado (timestamp; 0 = nunca se atrapó) */
+  bugBoostEndsAt: number
   /** Empleados contratados (sin contarte a vos) */
   team: Employee[]
   /** Candidatos que se pueden contratar */
@@ -113,7 +116,9 @@ export type GameAction =
   | { type: 'program'; crit: boolean; now: number }
   | { type: 'focus'; now: number }
   | { type: 'deliver' }
-  | { type: 'tick'; elapsed: number }
+  // now: la hora, para el 🐛 bug dorado (opcional: la simulación no lo usa)
+  | { type: 'tick'; elapsed: number; now?: number }
+  | { type: 'catchBug'; now: number }
   | { type: 'buySkill'; skill: SkillId }
   | { type: 'learnTech'; tech: TechId }
   // Los candidatos nuevos se generan afuera (usan azar) y llegan ya calculados
@@ -153,6 +158,7 @@ export function createInitialState(): GameState {
     dim: false,
     autoAccept: true,
     focus: INITIAL_FOCUS,
+    bugBoostEndsAt: 0,
     team: [],
     candidates: createInitialCandidates(),
     stage: 0,
@@ -265,7 +271,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
 
       // 1. El equipo escribe código (GDD §5)
-      const code = addCode(state.code, autoRateOf(state) * action.elapsed, contract.code)
+      const code = addCode(state.code, autoRateOf(state, action.now) * action.elapsed, contract.code)
       // Si se completó en este mismo tick, el reloj se detiene: no puede fallar
       if (code >= contract.code) {
         return finishIfDone({
@@ -453,6 +459,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ),
       }
     }
+
+    case 'catchBug':
+      return {
+        ...state,
+        bugBoostEndsAt: action.now + BUG_DURATION * 1000,
+        log: addLog(
+          state.log,
+          'crit',
+          `🐛 ¡Bug dorado atrapado! El equipo produce ×${BUG_MULTIPLIER} por ${BUG_DURATION} s`,
+        ),
+      }
 
     case 'setAutoAccept':
       return { ...state, autoAccept: action.on }

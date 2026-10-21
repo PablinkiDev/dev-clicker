@@ -28,6 +28,24 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --animate-float-up: float-up 0.7s ease-out forwards;
+  --animate-bug: bug-wander 3s ease-in-out infinite;
+
+  /* El bug dorado camina en zigzag y se sacude un poco */
+  @keyframes bug-wander {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(-12deg);
+    }
+    25% {
+      transform: translate(40px, -18px) rotate(14deg);
+    }
+    50% {
+      transform: translate(70px, 10px) rotate(-8deg);
+    }
+    75% {
+      transform: translate(25px, 24px) rotate(10deg);
+    }
+  }
 
   @keyframes float-up {
     to {
