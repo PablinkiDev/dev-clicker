@@ -184,6 +184,10 @@ function DevPanel(props: DevPanelProps) {
             <Btn onClick={props.onMinigame}>🎮 Minijuego ahora</Btn>
             <Btn onClick={props.onBug}>🐛 Bug dorado ahora</Btn>
             <Btn onClick={() => onPatch({ rerolls: 0 })}>🔄 Reroll a precio base</Btn>
+            <Btn onClick={() => onPatch({ records: { ...state.records, boxes: state.records.boxes + 5 } })}>
+              📦 +5 cajas
+            </Btn>
+            <Btn onClick={() => onPatch({ bossCountdown: 0 })}>👹 Jefe ahora</Btn>
           </div>
         </div>
       )}

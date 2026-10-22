@@ -24,9 +24,10 @@ import { nextMinigameDelay } from '../src/data/minigames'
 import { MACRO_LEVELS, macroCps } from '../src/data/macro'
 import { ABILITIES } from '../src/data/abilities'
 import { createBossOffer } from '../src/game/offers'
+import { rollArtifact } from '../src/data/artifacts'
 import { drawCards, getCard, type CardStyle } from '../src/data/cards'
 import { critChanceOf, macroRateOf } from '../src/game/rates'
-import { cardEffects } from '../src/game/cards'
+import { bonuses } from '../src/game/cards'
 
 // --- Parámetros -------------------------------------------------------------------
 const arg = (name: string, fallback: number) => {
@@ -70,7 +71,9 @@ const ctx = (s: GameState = state): OfferContext => ({
   endless: s.endless,
   rep: s.rep,
   perSecond: (CLICKS_PER_SECOND + macroRateOf(s)) * clickRate(s) + autoRateOf(s),
-  timeBonus: (1 + 0.08 * s.skills.timeManagement) * cardEffects(s.cards).timeMult,
+  timeBonus: (1 + 0.08 * s.skills.timeManagement) * bonuses(s).timeMult,
+  codeMult: bonuses(s).codeMult,
+  specialMult: bonuses(s).specialMult,
 })
 const log = (text: string) =>
   events.push(`${formatDuration(clock).padStart(11)}  (+${formatDuration(clock - cycleStart).padStart(10)})  ${text}`)
@@ -182,6 +185,12 @@ function shop() {
         dispatch({ type: 'hire', uid: best.uid, replaceUid: worst.uid, candidates })
       }
     }
+  }
+  // 📦 Abre las cajas apenas las tiene
+  while (state.records.boxes > 0) {
+    const artifact = rollArtifact(state.records.artifacts)
+    if (!artifact) break
+    dispatch({ type: 'openBox', artifact })
   }
   // 👹 Jefes: aparecen igual que en App (el bot los toma si le conviene)
   if (state.stage >= 1 && state.bossCountdown <= 0 && !state.offers.some((o) => o.boss) && !state.contract?.boss) {
@@ -297,5 +306,5 @@ console.log(
 )
 console.log(`Tiempo total simulado: ${formatDuration(clock)}`)
 console.log(`Concentración usada: ${counters.focus} veces`)
-console.log(`Jefes derrotados: ${state.records.bosses} · cajas: ${state.records.boxes}`)
+console.log(`Jefes derrotados: ${state.records.bosses} · artefactos: ${JSON.stringify(state.records.artifacts)}`)
 console.log(`Logros: ${state.records.unlocked.length} → ${state.records.unlocked.join(', ')}`)

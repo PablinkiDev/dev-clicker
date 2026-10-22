@@ -30,3 +30,11 @@ describe('efectos combinados de las cartas', () => {
     expect(cardEffects([{ id: 'no-existe', rare: false }]).clickMult).toBe(1)
   })
 })
+
+describe('artefactos en los bonus', () => {
+  it('se suman a las cartas', async () => {
+    const { bonuses } = await import('./cards')
+    const fx = bonuses({ cards: [{ id: 'pianist', rare: false }], records: { artifacts: { keyboard: 5 } } as never })
+    expect(fx.clickMult).toBeCloseTo(1.5 * 1.4)
+  })
+})

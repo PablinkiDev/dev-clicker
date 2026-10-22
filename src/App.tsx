@@ -47,7 +47,7 @@ import { fileName } from './game/format'
 import { skillCost } from './game/formulas'
 import { autoRateOf, clickRate, critChanceOf, critMultiplier, macroRateOf } from './game/rates'
 import { drawCards } from './data/cards'
-import { cardEffects } from './game/cards'
+import { bonuses } from './game/cards'
 import CardPicker from './components/CardPicker'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
@@ -60,6 +60,8 @@ import SkillsScreen from './screens/SkillsScreen'
 import SettingsScreen from './screens/SettingsScreen'
 import TeamScreen from './screens/TeamScreen'
 import CompanyScreen from './screens/CompanyScreen'
+import SetupScreen from './screens/SetupScreen'
+import { rollArtifact } from './data/artifacts'
 import { canAscend, companyValue, contractScale, isEndless, nextStageRequirements } from './game/stages'
 import { VIEWS, type View } from './ui'
 
@@ -158,7 +160,9 @@ function App() {
     endless: state.endless,
     rep,
     perSecond: (clicksPerSecond + macroRateOf(state)) * clickRate(state) + auto,
-    timeBonus: (1 + 0.08 * skills.timeManagement) * cardEffects(state.cards).timeMult,
+    timeBonus: (1 + 0.08 * skills.timeManagement) * bonuses(state).timeMult,
+    codeMult: bonuses(state).codeMult,
+    specialMult: bonuses(state).specialMult,
   }
   const isComplete = contract !== null && code >= contract.code
   // El juego sigue aunque la pestaña esté oculta (D4); con el juego cerrado, no avanza
@@ -423,7 +427,7 @@ function App() {
     if (!event?.options) return
     const option = event.options[index]
     if (option.outcomes) {
-      const outcome = rollOutcome(option.outcomes, skills.lucky)
+      const outcome = rollOutcome(option.outcomes, skills.lucky + bonuses(state).luck)
       // El primer resultado es siempre el bueno: si salió ese, la apuesta se ganó
       const bet = outcome === option.outcomes[0] ? 'won' : 'lost'
       applyEvent(event, outcome.effects, `${event.title}: ${outcome.text}`, bet)
@@ -439,7 +443,7 @@ function App() {
       setEventRetry((n) => n + 1) // todavía no: se vuelve a programar
       return
     }
-    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky)
+    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky + bonuses(state).luck)
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)
@@ -527,7 +531,7 @@ function App() {
   }
 
   function devEvent() {
-    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky)
+    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky + bonuses(state).luck)
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)
@@ -644,6 +648,7 @@ function App() {
     board: 'ofertas/',
     team: 'equipo/',
     company: 'empresa.json',
+    setup: 'setup.desk',
     skills: 'mejoras.tree',
     settings: 'settings.json',
   }
@@ -803,6 +808,21 @@ function App() {
               achievements={<AchievementList state={state} />}
               achievementsCount={`${state.records.unlocked.length}/${ACHIEVEMENTS.length}`}
               cards={state.cards}
+            />
+          )}
+          {currentView === 'setup' && (
+            <SetupScreen
+              artifacts={state.records.artifacts}
+              boxes={state.records.boxes}
+              tokens={state.prestige.tokens}
+              boxesBought={state.records.boxesBought}
+              onOpen={() => {
+                // El azar se resuelve acá; el reducer solo suma el artefacto
+                const artifact = rollArtifact(state.records.artifacts)
+                if (artifact) dispatch({ type: 'openBox', artifact })
+                return artifact
+              }}
+              onBuy={() => dispatch({ type: 'buyBox' })}
             />
           )}
           {currentView === 'settings' && (

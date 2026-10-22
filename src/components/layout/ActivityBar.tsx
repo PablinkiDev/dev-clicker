@@ -32,6 +32,12 @@ const ICONS: Record<View, ReactNode> = {
       <path d="M17 14c2.3 0 4 1.5 4.5 4" />
     </>
   ),
+  setup: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="1.5" />
+      <path d="M9 20h6M12 16v4" />
+    </>
+  ),
   company: (
     <>
       <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M2 21h20" />

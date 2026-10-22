@@ -311,3 +311,59 @@ describe('clientes jefe', () => {
     expect(after.money).toBe(1000)
   })
 })
+
+describe('artefactos y cajas', () => {
+  const withBoxes = (boxes: number): GameState => {
+    const s = createInitialState()
+    return { ...s, records: { ...s.records, boxes } }
+  }
+
+  it('abrir una caja da el artefacto en Nv.1, y repetirlo lo sube', () => {
+    let s = gameReducer(withBoxes(2), { type: 'openBox', artifact: 'keyboard' })
+    expect(s.records.artifacts.keyboard).toBe(1)
+    s = gameReducer(s, { type: 'openBox', artifact: 'keyboard' })
+    expect(s.records.artifacts.keyboard).toBe(2)
+    expect(s.records.boxes).toBe(0)
+  })
+
+  it('sin cajas no se abre nada', () => {
+    const s = withBoxes(0)
+    expect(gameReducer(s, { type: 'openBox', artifact: 'keyboard' })).toBe(s)
+  })
+
+  it('no pasa del nivel máximo', () => {
+    const s0 = withBoxes(1)
+    const s = { ...s0, records: { ...s0.records, artifacts: { keyboard: 10 } } }
+    expect(gameReducer(s, { type: 'openBox', artifact: 'keyboard' })).toBe(s)
+  })
+
+  it('el teclado mecánico sube los clics', () => {
+    const base = withContract()
+    const normal = gameReducer(base, { type: 'program', crit: false, now: 0 }).code
+    const s = { ...base, records: { ...base.records, artifacts: { keyboard: 5 } } }
+    expect(gameReducer(s, { type: 'program', crit: false, now: 0 }).code).toBeCloseTo(normal * 1.4)
+  })
+
+  it('los artefactos y las cajas sobreviven a la venta, y cada venta da una caja', () => {
+    const s0 = withBoxes(0)
+    const s = {
+      ...s0,
+      stage: 4,
+      stats: { ...s0.stats, moneyEarned: 7e9 },
+      records: { ...s0.records, artifacts: { plant: 3 } },
+    }
+    const after = gameReducer(s, { type: 'sell', fresh: createInitialState(), now: 1 })
+    expect(after.records.artifacts).toEqual({ plant: 3 })
+    expect(after.records.boxes).toBe(1)
+  })
+
+  it('comprar una caja cuesta tokens y la próxima sale más cara', () => {
+    const s0 = withBoxes(0)
+    let s = { ...s0, prestige: { ...s0.prestige, tokens: 20 } }
+    s = gameReducer(s, { type: 'buyBox' })
+    expect(s.prestige.tokens).toBe(17)
+    s = gameReducer(s, { type: 'buyBox' })
+    expect(s.prestige.tokens).toBe(12) // 3 y después 5
+    expect(s.records.boxes).toBe(2)
+  })
+})

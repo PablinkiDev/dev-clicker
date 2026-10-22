@@ -16,6 +16,7 @@ const NANO_KEYS: Record<View, string> = {
   board: '^T',
   team: '^P',
   company: '^K',
+  setup: '^S',
   skills: '^W',
   settings: '^G',
 }

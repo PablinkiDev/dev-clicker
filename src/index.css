@@ -31,6 +31,8 @@
   --animate-bug: bug-wander 3s ease-in-out infinite;
   --animate-slide-in: slide-in 0.35s ease-out;
   --animate-slide-down: slide-down 0.35s ease-out;
+  --animate-shake: shake 0.25s ease-in-out infinite;
+  --animate-pop: pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
 
   /* El bug dorado camina en zigzag y se sacude un poco */
   @keyframes bug-wander {
@@ -61,6 +63,28 @@
   @keyframes slide-down {
     from {
       transform: translateY(-24px);
+      opacity: 0;
+    }
+  }
+
+  /* La caja de suministros tiembla antes de abrirse */
+  @keyframes shake {
+    0%,
+    100% {
+      transform: rotate(0deg) scale(1);
+    }
+    25% {
+      transform: rotate(-8deg) scale(1.05);
+    }
+    75% {
+      transform: rotate(8deg) scale(1.05);
+    }
+  }
+
+  /* El artefacto aparece con un rebote */
+  @keyframes pop {
+    from {
+      transform: scale(0.6);
       opacity: 0;
     }
   }

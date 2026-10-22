@@ -29,6 +29,7 @@ function EditorTabs({ view, contract, onChange, views }: EditorTabsProps) {
     { view: 'board', icon: '▤', iconClass: 'text-muted', name: 'ofertas/' },
     { view: 'team', icon: '●', iconClass: 'text-cyan', name: 'equipo/' },
     { view: 'company', icon: '▲', iconClass: 'text-yellow', name: 'empresa.json' },
+    { view: 'setup', icon: '▣', iconClass: 'text-purple', name: 'setup.desk' },
     { view: 'skills', icon: '⑂', iconClass: 'text-green', name: 'mejoras.tree' },
   ]
   const tabs = allTabs.filter((tab) => views.includes(tab.view))

@@ -22,6 +22,10 @@ export type Records = {
   bosses: number
   /** 📦 Cajas de suministros sin abrir (F3) */
   boxes: number
+  /** Cajas compradas con tokens (cada una sale más cara) */
+  boxesBought: number
+  /** 🏺 Artefactos que tenés: id → nivel (1 a 10) */
+  artifacts: Record<string, number>
   /** Eventos buenos seguidos */
   goodStreak: number
   /** Hora de los últimos críticos (para "Modo máquina") */
@@ -42,6 +46,8 @@ export const INITIAL_RECORDS: Records = {
   minigames: 0,
   bosses: 0,
   boxes: 0,
+  boxesBought: 0,
+  artifacts: {},
   goodStreak: 0,
   recentCrits: [],
 }

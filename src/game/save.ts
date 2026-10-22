@@ -12,6 +12,7 @@ import { INITIAL_INVESTMENTS } from '../data/investments'
 import { INITIAL_RECORDS } from './records'
 import { INITIAL_ABILITIES } from '../data/abilities'
 import { getBoss } from '../data/bosses'
+import { MAX_ARTIFACT_LEVEL, getArtifact } from '../data/artifacts'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES, featuresFor } from '../data/features'
 
@@ -370,6 +371,14 @@ function migrate(raw: unknown): unknown {
           ? [...new Set(records.unlocked.filter((id): id is string => typeof id === 'string' && known.has(id)))]
           : [],
         recentCrits: Array.isArray(records.recentCrits) ? records.recentCrits.filter(isNumber).slice(-20) : [],
+        // Solo artefactos que existen, con niveles de 1 a 10
+        artifacts: isObject(records.artifacts)
+          ? Object.fromEntries(
+              Object.entries(records.artifacts)
+                .filter(([id, level]) => getArtifact(id) && isNumber(level) && level >= 1)
+                .map(([id, level]) => [id, Math.min(MAX_ARTIFACT_LEVEL, Math.round(level as number))]),
+            )
+          : {},
         // null = partida de antes del revelado progresivo: se calcula al final (sin anunciar nada)
         features: Array.isArray(records.features)
           ? records.features.filter((id): id is string => FEATURES.some((f) => f.id === id))

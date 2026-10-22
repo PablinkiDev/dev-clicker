@@ -37,6 +37,23 @@ export type CardEffects = {
   idleMult: number
   /** El Crunch no cansa */
   crunchNoTired: boolean
+  // --- Efectos que hoy solo dan los artefactos (F3) ---
+  /** Duración del Foco y las habilidades */
+  durationMult: number
+  /** Duración de los efectos malos de los eventos */
+  badEventMult: number
+  /** Código que piden los contratos nuevos */
+  codeMult: number
+  /** Probabilidad de contratos especiales */
+  specialMult: number
+  /** Tokens extra al vender */
+  saleTokens: number
+  /** Multiplicador extra de la Hackatón */
+  hackathonExtra: number
+  /** Suerte en las apuestas (cada punto, +10 % de chance) */
+  luck: number
+  /** Fuerza del premio de los minijuegos */
+  minigameMult: number
 }
 
 export const NO_EFFECTS: CardEffects = {
@@ -54,6 +71,14 @@ export const NO_EFFECTS: CardEffects = {
   macroCps: 0,
   idleMult: 1,
   crunchNoTired: false,
+  durationMult: 1,
+  badEventMult: 1,
+  codeMult: 1,
+  specialMult: 1,
+  saleTokens: 0,
+  hackathonExtra: 0,
+  luck: 0,
+  minigameMult: 1,
 }
 
 export type Card = {

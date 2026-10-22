@@ -31,7 +31,8 @@ import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES } from '../data/features'
 import { getCard, type CardPick } from '../data/cards'
 import { BOSS_EVERY, getBoss } from '../data/bosses'
-import { cardEffects } from './cards'
+import { MAX_ARTIFACT_LEVEL, boxPrice, getArtifact } from '../data/artifacts'
+import { bonuses } from './cards'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 import { MACRO_LEVELS } from '../data/macro'
 import {
@@ -206,6 +207,9 @@ export type GameAction =
   // y se ofrecen 3 cartas de especialización (también al azar)
   | { type: 'ascend'; offers: Contract[]; candidates: Employee[]; cardOffer: CardPick[] }
   | { type: 'pickCard'; index: number }
+  // 📦 Abrir una caja: qué artefacto salió se decide afuera (azar), con rollArtifact
+  | { type: 'openBox'; artifact: string }
+  | { type: 'buyBox' }
   // 👹 Llega un cliente jefe al tablón (la oferta se arma afuera: usa azar)
   | { type: 'spawnBoss'; offer: Contract }
   | { type: 'buyEditor' }
@@ -302,7 +306,8 @@ function applyEffect(
             icon,
             target: effect.target,
             mult: effect.mult,
-            endsAt: now + effect.seconds * 1000,
+            // 🎧 Auriculares: los efectos malos duran menos
+            endsAt: now + effect.seconds * 1000 * (effect.mult < 1 ? bonuses(state).badEventMult : 1),
           },
         ],
       }
@@ -378,7 +383,7 @@ function deliverContract(state: GameState): GameState {
       (1 + 0.05 * state.skills.knowledge) *
       qaMultiplier(state.team, state.skills.codeReview) *
       investmentBonus(investments.fastLearning) *
-      cardEffects(state.cards).xpMult,
+      bonuses(state).xpMult,
   )
   // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
   const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
@@ -392,7 +397,7 @@ function deliverContract(state: GameState): GameState {
         techBonus *
         negotiation *
         investmentBonus(investments.premiumContracts) *
-        cardEffects(state.cards).payMult) /
+        bonuses(state).payMult) /
         5,
     ) * 5
   return {
@@ -463,7 +468,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       // (y la carta "Pair programming de por vida", que suma siempre)
       const pairTime =
         (action.now < state.abilities.pair.endsAt ? pairSeconds(state.skills.pairProgramming) : 0) +
-        cardEffects(state.cards).pairSeconds
+        bonuses(state).pairSeconds
       const pair = !action.macro && pairTime > 0 ? autoRateOf(state, action.now) * pairTime : 0
       const lines = clickRate(state, action.now) * focus * (crit ? critMultiplier(state) : 1) + pair
       const code = addCode(state.code, lines, contract.code)
@@ -624,7 +629,8 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'sell': {
       if (!isEndless(state.stage)) return state
       const value = companyValue(state.stats.moneyEarned, state.team)
-      const tokens = tokensForValue(value)
+      // 💻 Laptop con stickers: tokens extra por venta
+      const tokens = tokensForValue(value) + bonuses(state).saleTokens
       const { investments } = state.prestige
       return {
         ...action.fresh,
@@ -633,7 +639,8 @@ function reduce(state: GameState, action: GameAction): GameState {
         money: action.fresh.money + SEED_CAPITAL * investments.seedCapital,
         rep: action.fresh.rep + FIRST_CONTACTS_REP * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
-        records: state.records,
+        // Cada venta trae una 📦 caja de suministros
+        records: { ...state.records, boxes: state.records.boxes + 1 },
         tampered: state.tampered, // la marca es de la carrera, no de la empresa
         prestige: {
           tokens: state.prestige.tokens + tokens,
@@ -724,10 +731,11 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'focus': {
       const level = state.skills.focus
       if (level === 0 || action.now < state.focus.readyAt) return state
-      const endsAt = action.now + focusDuration(level) * 1000
+      // ☕ Taza infinita: dura más
+      const endsAt = action.now + focusDuration(level) * 1000 * bonuses(state).durationMult
       return {
         ...state,
-        focus: { endsAt, readyAt: endsAt + FOCUS_COOLDOWN * 1000 * cardEffects(state.cards).cooldownMult },
+        focus: { endsAt, readyAt: endsAt + FOCUS_COOLDOWN * 1000 * bonuses(state).cooldownMult },
         log: addLog(
           state.log,
           'crit',
@@ -741,9 +749,9 @@ function reduce(state: GameState, action: GameAction): GameState {
       const level = ability ? state.skills[ability.skill] : 0
       if (!ability || level === 0 || action.now < state.abilities[ability.id].readyAt) return state
       const { now } = action
-      const cards = cardEffects(state.cards)
+      const cards = bonuses(state)
       const timer = {
-        endsAt: now + ability.duration(level) * 1000,
+        endsAt: now + ability.duration(level) * 1000 * cards.durationMult,
         readyAt: now + ability.cooldown(level) * 1000 * cards.cooldownMult,
       }
       let next: GameState = {
@@ -754,7 +762,13 @@ function reduce(state: GameState, action: GameAction): GameState {
       if (ability.id === 'hackathon')
         next.modifiers = [
           ...next.modifiers,
-          { id: `hackathon-${now}`, icon: '🏃', target: 'click', mult: HACKATHON_MULT, endsAt: timer.endsAt },
+          {
+            id: `hackathon-${now}`,
+            icon: '🏃',
+            target: 'click',
+            mult: HACKATHON_MULT + cards.hackathonExtra, // 🏆 Trofeo de hackatón
+            endsAt: timer.endsAt,
+          },
         ]
       if (ability.id === 'crunch') {
         const peak = now + CRUNCH_SECONDS * 1000
@@ -838,7 +852,13 @@ function reduce(state: GameState, action: GameAction): GameState {
       }
       if (!reward) return { ...next, log: addLog(next.log, 'error', '🎮 Minijuego perdido. Nadie se enteró.') }
       const effects: Effect[] = [
-        { kind: 'mod', target: 'auto', mult: reward.mult, seconds: MINIGAME_REWARD_SECONDS },
+        // 🎮 Joystick: el premio es más fuerte
+        {
+          kind: 'mod',
+          target: 'auto',
+          mult: reward.mult * bonuses(state).minigameMult,
+          seconds: MINIGAME_REWARD_SECONDS,
+        },
         { kind: 'xp', contracts: reward.xp },
       ]
       for (const effect of effects) next = applyEffect(next, effect, { now: action.now, icon: '🎮' })
@@ -905,6 +925,42 @@ function reduce(state: GameState, action: GameAction): GameState {
           'success',
           `📦 Mudanza a ${next.name} · ahora entran ${officeCapacity(state.office + 1, state.skills.homeOffice)} empleados`,
         ),
+      }
+    }
+
+    case 'openBox': {
+      const artifact = getArtifact(action.artifact)
+      const level = state.records.artifacts[action.artifact] ?? 0
+      if (!artifact || state.records.boxes < 1 || level >= MAX_ARTIFACT_LEVEL) return state
+      return {
+        ...state,
+        records: {
+          ...state.records,
+          boxes: state.records.boxes - 1,
+          artifacts: { ...state.records.artifacts, [artifact.id]: level + 1 },
+        },
+        log: addLog(
+          state.log,
+          'crit',
+          level === 0
+            ? `📦 ¡Artefacto nuevo! ${artifact.icon} ${artifact.name}: ${artifact.text(1)}`
+            : `📦 ${artifact.icon} ${artifact.name} sube a Nv.${level + 1}: ${artifact.text(level + 1)}`,
+        ),
+      }
+    }
+
+    case 'buyBox': {
+      const price = boxPrice(state.records.boxesBought)
+      if (state.prestige.tokens < price) return state
+      return {
+        ...state,
+        prestige: { ...state.prestige, tokens: state.prestige.tokens - price },
+        records: {
+          ...state.records,
+          boxes: state.records.boxes + 1,
+          boxesBought: state.records.boxesBought + 1,
+        },
+        log: addLog(state.log, 'success', `📦 Compraste una caja de suministros por ${price} tokens`),
       }
     }
 

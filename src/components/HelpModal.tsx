@@ -3,6 +3,7 @@
 // así la ayuda no queda vieja cuando se cambia un número.
 import { useEffect, useState, type ReactNode } from 'react'
 import { ABILITIES } from '../data/abilities'
+import { ARTIFACTS, MAX_ARTIFACT_LEVEL, RARITIES } from '../data/artifacts'
 import { BOSSES, BOSS_EVERY, BOSS_SCALE } from '../data/bosses'
 import { CARDS, RARE_CHANCE, STYLES } from '../data/cards'
 import { ACHIEVEMENTS, CATEGORIES } from '../data/achievements'
@@ -299,6 +300,20 @@ function Prestige() {
         Cada token que ganaste en tu carrera da <B>+{Math.round(FOUNDER_BONUS * 100)} % de producción</B> para siempre,
         aunque lo gastes.
       </P>
+      <H>🏺 Artefactos y 📦 cajas</H>
+      <P>
+        Los artefactos son objetos de tu escritorio (pantalla <B>Setup</B>) con mejoras <B>para siempre</B>. Salen de
+        las cajas de suministros: una por cada cliente jefe que vencés, una por cada venta, y se pueden comprar con
+        tokens. Los repetidos suben de nivel, hasta Nv.{MAX_ARTIFACT_LEVEL}. Rarezas:{' '}
+        {Object.values(RARITIES)
+          .map((r) => `${r.name} (${r.weight} %)`)
+          .join(', ')}
+        .
+      </P>
+      <Table
+        head={['Artefacto', 'Rareza', 'Efecto (Nv.1)']}
+        rows={ARTIFACTS.map((a) => [`${a.icon} ${a.name}`, RARITIES[a.rarity].name, a.text(1)])}
+      />
       <H>Árbol de prestigio</H>
       <P>Se paga con tokens; cada nivel cuesta el doble que el anterior. Nada de esto se pierde al vender.</P>
       <Table

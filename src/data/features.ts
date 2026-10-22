@@ -13,6 +13,7 @@ export type FeatureId =
   | 'macro'
   | 'abilities'
   | 'bosses'
+  | 'artifacts'
   | 'prestige'
 
 export type Feature = {
@@ -97,6 +98,14 @@ export const FEATURES: Feature[] = [
     text: 'Cada 10 contratos llega un cliente enorme con reloj estricto. Si le ganás, paga ×10 y te da una 📦 caja de suministros. Si perdés, no pasa nada.',
     view: 'board',
     check: (s) => s.offers.some((o) => o.boss) || s.contract?.boss !== undefined || s.records.bosses > 0,
+  },
+  {
+    id: 'artifacts',
+    icon: '📦',
+    name: 'Tu setup y los artefactos',
+    text: 'Tenés una caja de suministros. Abrila en Setup: trae un artefacto para tu escritorio con una mejora que dura para siempre. Los repetidos suben de nivel.',
+    view: 'setup',
+    check: (s) => s.records.boxes > 0 || Object.keys(s.records.artifacts).length > 0,
   },
   {
     id: 'prestige',

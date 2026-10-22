@@ -4,19 +4,20 @@ import type { Lang, TechId } from './data/techs'
 // Tipos de la interfaz (no son parte de la partida ni se guardan)
 
 /** Pantalla que se ve en el área del editor */
-export type View = 'work' | 'board' | 'team' | 'company' | 'skills' | 'settings'
+export type View = 'work' | 'board' | 'team' | 'company' | 'setup' | 'skills' | 'settings'
 
 export const VIEW_LABEL: Record<View, string> = {
   work: 'Código',
   board: 'Ofertas',
   team: 'Equipo',
   company: 'Empresa',
+  setup: 'Setup',
   skills: 'Mejoras',
   settings: 'Ajustes',
 }
 
 /** Orden en que aparecen las vistas en todas las barras de navegación */
-export const VIEWS: View[] = ['work', 'board', 'team', 'company', 'skills', 'settings']
+export const VIEWS: View[] = ['work', 'board', 'team', 'company', 'setup', 'skills', 'settings']
 
 /** Colores de cada profesión (clases completas para que Tailwind las encuentre) */
 export const ROLE_STYLE: Record<RoleId, { text: string; avatar: string }> = {

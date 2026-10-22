@@ -23,6 +23,10 @@ export type OfferContext = {
   perSecond: number
   /** Gestión del tiempo: multiplicador del plazo (1 si no se tiene) */
   timeBonus?: number
+  /** 🦆 Patito de goma: multiplicador del código que piden (1 si no se tiene) */
+  codeMult?: number
+  /** 🧲 Imán: multiplicador de la probabilidad de contratos especiales */
+  specialMult?: number
 }
 
 /** Un mismo cliente no vuelve a ofrecer trabajo hasta pasado este tiempo (GDD §4: 3–5 min) */
@@ -46,7 +50,7 @@ const TARGET_SHARE: Record<Difficulty, number> = { easy: 0.3, mid: 0.45, hard: 0
  */
 function createOffer(
   template: ContractTemplate,
-  { stage, endless, rep, perSecond, timeBonus = 1 }: OfferContext,
+  { stage, endless, rep, perSecond, timeBonus = 1, codeMult = 1 }: OfferContext,
 ): Contract {
   const level = repLevel(rep)
   const time = Math.round(template.time * timeBonus)
@@ -64,7 +68,7 @@ function createOffer(
   return {
     ...template,
     uid: crypto.randomUUID(),
-    code: Math.round(template.code * factor * scale),
+    code: Math.max(1, Math.round(template.code * factor * scale * codeMult)),
     // El plazo es FIJO (D2): lo que crece es el código. El jugador tiene que mejorar su producción
     time,
     reward: {
@@ -139,14 +143,15 @@ export function refillOffers(
     if (result.some((o) => o.difficulty === difficulty)) continue
     let candidates = available(difficulty)
     if (candidates.length === 0) candidates = available(difficulty, true)
-    if (candidates.length > 0) result.push(maybeSpecial(createOffer(pickRandom(candidates), ctx), result))
+    if (candidates.length > 0)
+      result.push(maybeSpecial(createOffer(pickRandom(candidates), ctx), result, ctx.specialMult))
   }
 
   while (result.length < size) {
     let candidates = available()
     if (candidates.length === 0) candidates = available(undefined, true)
     if (candidates.length === 0) break
-    result.push(maybeSpecial(createOffer(pickRandom(candidates), ctx), result))
+    result.push(maybeSpecial(createOffer(pickRandom(candidates), ctx), result, ctx.specialMult))
   }
 
   return ensureViable(result, ctx.perSecond)
@@ -174,8 +179,8 @@ export const SPECIAL_RULES: Record<
 const SPECIAL_CHANCE = 0.05
 
 /** A veces convierte una oferta nueva en especial: paga ×4–6 y ×3 de XP, con una condición rara */
-function maybeSpecial(offer: Contract, board: Contract[]): Contract {
-  if (offer.once || board.some((o) => o.special) || Math.random() > SPECIAL_CHANCE) return offer
+function maybeSpecial(offer: Contract, board: Contract[], specialMult = 1): Contract {
+  if (offer.once || board.some((o) => o.special) || Math.random() > SPECIAL_CHANCE * specialMult) return offer
   const rules = Object.keys(SPECIAL_RULES) as SpecialRule[]
   const special = rules[Math.floor(Math.random() * rules.length)]
   const rule = SPECIAL_RULES[special]
