@@ -81,7 +81,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | E3 ✅ | **Árbol Empresa:** de 4 a 10 nodos: Marketing (+★ por contrato), Code review obligatorio (+QA), Kubernetes (+DevOps), Headhunter (candidatos +1★), Home office (+2 puestos) e Inversores (interés sobre el dinero en mano) | M | 2 |
 | E4 ✅ | **🤖 Macro de teclado** (Herramientas, con dinero): 1 clic/s desde Startup ($3 M) y 2 clics/s desde Empresa tec. ($40 M), con interruptor. Sus clics no son críticos ni cuentan para logros | S | 1 |
 | E5 ✅ | **Prestigio que se siente:** experiencia de fundador (+10 % de producción por token ganado en la carrera), rama Arranque (Portfolio, Licencia vitalicia, Socio fundador, Procesos heredados), mejoras de +50 % hasta Nv.10, Capital semilla $25 K y Primeros contactos +30 ★, comparación de tiempos en el historial. 2.º ciclo: 32–49 % más rápido en la simulación | M | 2–3 |
-| E6 | **Rebalanceo** a 1–1,5 h, con un segundo ciclo claramente más rápido | M | 1 |
+| E6 ✅ | **Rebalanceo** a 1–1,5 h: con E1–E5 los números ya caen en la meta (ver simulación del Hito E); sin cambios extra | M | 1 |
 
 ## Hito C — Listo para amigos (1.0)
 
@@ -123,6 +123,18 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 3. Las ofertas usan **tu ritmo real de clics** (medido en los últimos 30 s, entre 1 y 6) en vez de suponer 5.
 4. Requisitos: Estudio $400 K / 30 contratos · Startup $8 M / 70 · Empresa tec. $100 M / 120 · Corporación $500 M / 180.
 5. Primer hito de tokens: **$6 B** de valor (antes $110 M).
+
+## 📊 Simulación del Hito E (E6)
+
+6 corridas por ritmo (4 a 1,5 clics/s), 2 ventas cada una. El bot no hace "Buscar otros" ni juega eventos: un jugador real va ~2× más rápido (primera partida real: 1 h 07 donde el bot tardaba 2 h 16).
+
+| Ritmo del bot | 1.ª venta (rango) | Mediana | 2.º ciclo |
+|---|---|---|---|
+| 5 clics/s | 1 h 38 – 2 h 49 | ~2 h 10 | ~1 h 08 (≈48 % más rápido) |
+| 3 clics/s | 1 h 58 – 2 h 37 | ~2 h 10 | ~1 h 10 |
+| 1,5 clics/s | 2 h 35 – 4 h 45 | ~3 h 10 | ~1 h 20 |
+
+Estimado para un jugador real: **~1 h 05 la primera empresa y ~35 min la segunda.**
 
 ## 📌 Decisiones
 
