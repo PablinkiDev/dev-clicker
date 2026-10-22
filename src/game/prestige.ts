@@ -61,6 +61,14 @@ export function investmentBonus(level: number): number {
   return 1 + INVESTMENT_STEP * level
 }
 
+/** 🦄 Ventas que hacen falta para salir a la bolsa (F6: el final del juego) */
+export const IPO_SALES = 12
+
+/** Segundos jugados en toda la carrera: las empresas vendidas más la actual */
+export function careerPlayTime(prestige: Prestige, current: number): number {
+  return prestige.history.reduce((total, sale) => total + (sale.playTime ?? 0), current)
+}
+
 /** Experiencia de fundador (E5): cada token ganado en la carrera (gastado o no) da +10 % de producción */
 export const FOUNDER_BONUS = 0.1
 

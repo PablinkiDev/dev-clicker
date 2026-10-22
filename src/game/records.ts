@@ -24,6 +24,8 @@ export type Records = {
   boxes: number
   /** Cajas compradas con tokens (cada una sale más cara) */
   boxesBought: number
+  /** 🦄 Cuándo saliste a la bolsa (F6: el final del juego); 0 = todavía no */
+  ipoAt: number
   /** 🏁 Desafíos completados (vendiste una empresa con ellos) */
   challengesDone: string[]
   /** 🏺 Artefactos que tenés: id → nivel (1 a 10) */
@@ -49,6 +51,7 @@ export const INITIAL_RECORDS: Records = {
   bosses: 0,
   boxes: 0,
   boxesBought: 0,
+  ipoAt: 0,
   challengesDone: [],
   artifacts: {},
   goodStreak: 0,

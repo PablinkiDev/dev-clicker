@@ -407,3 +407,19 @@ describe('desafíos de run', () => {
     expect(autoRateOf({ ...s, challenge: 'sleepyTeam' }, 0)).toBeCloseTo(autoRateOf(s, 0) * 0.5)
   })
 })
+
+describe('salida a la bolsa (IPO)', () => {
+  it('pide 12 ventas', () => {
+    const s = createInitialState()
+    const eleven = { ...s, prestige: { ...s.prestige, sales: 11 } }
+    expect(gameReducer(eleven, { type: 'ipo', now: 5 })).toBe(eleven)
+  })
+
+  it('con 12 ventas se sale a la bolsa una sola vez y da el logro', () => {
+    const s0 = createInitialState()
+    const s = gameReducer({ ...s0, prestige: { ...s0.prestige, sales: 12 } }, { type: 'ipo', now: 5 })
+    expect(s.records.ipoAt).toBe(5)
+    expect(s.records.unlocked).toContain('ipo')
+    expect(gameReducer(s, { type: 'ipo', now: 9 })).toBe(s)
+  })
+})

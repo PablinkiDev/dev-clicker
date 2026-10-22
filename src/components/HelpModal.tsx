@@ -23,7 +23,7 @@ import { FOCUS_COOLDOWN, FOCUS_MULTIPLIER, focusDuration } from '../game/focus'
 import { FAILURE_REP_LOSS } from '../game/formulas'
 import { formatMoney } from '../game/format'
 import { SPECIAL_RULES } from '../game/offers'
-import { BASE_TOKENS, FOUNDER_BONUS, milestoneValue } from '../game/prestige'
+import { BASE_TOKENS, FOUNDER_BONUS, IPO_SALES, milestoneValue } from '../game/prestige'
 import { ACHIEVEMENT_BONUS } from '../game/records'
 import { REP_LEVELS, boardSize } from '../game/reputation'
 import { ENDLESS_GROWTH } from '../game/stages'
@@ -324,6 +324,12 @@ function Prestige() {
         head={['Desafío', 'Regla', 'Premio']}
         rows={CHALLENGES.map((c) => [`${c.icon} ${c.name}`, c.rule, `+${Math.round(c.tokenBonus * 100)} % tokens`])}
       />
+      <H>🦄 Salida a la bolsa (el final)</H>
+      <P>
+        Cuando vendés {IPO_SALES} empresas, en Empresa aparece el botón <B>Salir a la bolsa</B>: es el final del juego,
+        con las estadísticas de toda tu carrera y un logro legendario. Después podés seguir jugando como leyenda, con
+        todo lo que juntaste.
+      </P>
       <H>Árbol de prestigio</H>
       <P>Se paga con tokens; cada nivel cuesta el doble que el anterior. Nada de esto se pierde al vender.</P>
       <Table

@@ -9,7 +9,7 @@ import { OFFICES, officeCapacity } from '../data/offices'
 import { formatMoney, formatNumber, formatRate } from './format'
 import { STAGES } from '../data/stages'
 import { canAscend, companyValue, isEndless } from './stages'
-import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
+import { INITIAL_PRESTIGE, IPO_SALES, investmentBonus, tokensForValue, type Prestige } from './prestige'
 import { FIRST_CONTACTS_REP, INVESTMENTS, SEED_CAPITAL, investmentCost, type InvestmentId } from '../data/investments'
 import { autoRateOf, clickRate, critMultiplier } from './rates'
 import { BUG_DURATION, BUG_MULTIPLIER } from './bug'
@@ -215,6 +215,8 @@ export type GameAction =
   // 📦 Abrir una caja: qué artefacto salió se decide afuera (azar), con rollArtifact
   | { type: 'openBox'; artifact: string }
   | { type: 'buyBox' }
+  // 🦄 Salir a la bolsa: el final del juego (desde las 12 ventas)
+  | { type: 'ipo'; now: number }
   // 🏁 Elegir el desafío de la empresa nueva (null = jugar sin desafío)
   | { type: 'setChallenge'; id: string | null }
   // 👹 Llega un cliente jefe al tablón (la oferta se arma afuera: usa azar)
@@ -947,6 +949,14 @@ function reduce(state: GameState, action: GameAction): GameState {
         ),
       }
     }
+
+    case 'ipo':
+      if (state.prestige.sales < IPO_SALES || state.records.ipoAt > 0) return state
+      return {
+        ...state,
+        records: { ...state.records, ipoAt: action.now },
+        log: addLog(state.log, 'crit', '🦄 git tag v1.0.0-IPO · ¡Tu empresa salió a la bolsa! Sos una leyenda.'),
+      }
 
     case 'setChallenge': {
       if (!state.challengeChoice) return state

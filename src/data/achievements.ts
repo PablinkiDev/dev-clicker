@@ -385,6 +385,16 @@ export const ACHIEVEMENTS: Achievement[] = [
     20,
   ),
 
+  // 🦄 El final
+  {
+    id: 'ipo',
+    category: 'company',
+    icon: '🦄',
+    name: 'Leyenda de Silicon Valley',
+    description: 'Sacá tu empresa a la bolsa',
+    check: ({ next }) => next.records.ipoAt > 0,
+  },
+
   // 🏁 Desafíos
   counter(
     { id: 'masochist', category: 'company', icon: '🏁', name: 'Masoquista', description: 'Completá un desafío de run' },

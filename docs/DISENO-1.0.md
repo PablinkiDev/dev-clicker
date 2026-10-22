@@ -136,7 +136,7 @@ Al empezar una empresa nueva (después de la primera venta), podés elegir un de
 
 ### F6. 🦄 Final: la IPO
 
-Llegar a cierto hito (❓ **se define más adelante**: vender 12 empresas o una empresa valuada en $1 Qa) habilita la **salida a la bolsa**:
+✅ **Vender 12 empresas** habilita la **salida a la bolsa**:
 - una pantalla final con estadísticas de toda tu carrera, créditos y un logro legendario;
 - después podés **seguir jugando** ("modo leyenda"), con todo lo que juntaste.
 
@@ -227,7 +227,7 @@ Total: unos **50–65 commits**.
 |---|---|---|
 | 1 | Cartas raras | ✅ Sí, 10 % |
 | 2 | Artefactos equipados | ✅ Todos activos |
-| 3 | Condición de la IPO | ❓ Más adelante |
+| 3 | Condición de la IPO | ✅ 12 ventas |
 | 4 | Campus | ✅ Sí, 24 puestos |
 | 5 | Elegir minijuegos | ✅ Por ahora no |
 | 6 | Molestias de UI | ❓ Más adelante |

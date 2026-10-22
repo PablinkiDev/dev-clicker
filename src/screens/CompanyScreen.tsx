@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { STYLES, getCard, type CardPick } from '../data/cards'
 import { getChallenge } from '../data/challenges'
+import { IPO_SALES } from '../game/prestige'
 import ScreenHeader from '../components/ScreenHeader'
 import SellCard from '../components/SellCard'
 import SalesHistory from '../components/SalesHistory'
@@ -35,6 +36,10 @@ type CompanyScreenProps = {
   cards: CardPick[]
   /** 🏁 Desafío de esta empresa (o null) */
   challenge: string | null
+  /** 🦄 Ventas hechas y si ya saliste a la bolsa */
+  sales: number
+  ipoDone: boolean
+  onIpo: () => void
 }
 
 function CompanyScreen({
@@ -53,6 +58,9 @@ function CompanyScreen({
   achievementsCount,
   cards,
   challenge,
+  sales,
+  ipoDone,
+  onIpo,
 }: CompanyScreenProps) {
   const activeChallenge = getChallenge(challenge)
   const [tab, setTab] = useState<'stages' | 'achievements'>('stages')
@@ -232,6 +240,49 @@ function CompanyScreen({
             </div>
           )}
           {!next && <SellCard value={value} stats={stats} teamSize={teamSize} onSell={onSell} />}
+          {sales > 0 && (
+            <div
+              className={`mt-5 max-w-xl rounded-xl border p-3.5 ${ipoDone ? 'border-yellow/60 bg-yellow/10' : 'border-purple/40 bg-purple/5'}`}
+            >
+              <p className="font-extrabold">
+                🦄 Salida a la bolsa {ipoDone && <span className="text-yellow">· ¡Sos una leyenda!</span>}
+              </p>
+              {ipoDone && (
+                <button
+                  type="button"
+                  onClick={onIpo}
+                  className="mt-2 cursor-pointer rounded-lg border border-yellow/60 px-3 py-1.5 text-xs font-bold text-yellow hover:bg-yellow/10"
+                >
+                  Ver mi carrera
+                </button>
+              )}
+              {!ipoDone && (
+                <>
+                  <p className="mb-2 text-xs text-muted">
+                    El final del juego: vendé {IPO_SALES} empresas para sacar tu empresa a la bolsa.
+                  </p>
+                  <p className="mb-1 flex justify-between font-mono text-xs">
+                    <span className="text-muted">Empresas vendidas</span>
+                    <span>
+                      {Math.min(sales, IPO_SALES)}/{IPO_SALES}
+                    </span>
+                  </p>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-panel-3">
+                    <div className="h-full bg-purple" style={{ width: `${Math.min(1, sales / IPO_SALES) * 100}%` }} />
+                  </div>
+                  {sales >= IPO_SALES && (
+                    <button
+                      type="button"
+                      onClick={onIpo}
+                      className="mt-3 w-full cursor-pointer rounded-lg bg-yellow py-2 text-sm font-extrabold text-[#2b1a00]"
+                    >
+                      🦄 Salir a la bolsa
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
           <SalesHistory history={history} />
         </>
       )}

@@ -50,6 +50,7 @@ import { drawCards } from './data/cards'
 import { bonuses } from './game/cards'
 import CardPicker from './components/CardPicker'
 import ChallengePicker from './components/ChallengePicker'
+import IpoScreen from './components/IpoScreen'
 import { getChallenge } from './data/challenges'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
@@ -302,6 +303,9 @@ function App() {
   useEffect(() => {
     if (bossDue) spawnBoss()
   }, [bossDue])
+
+  // 🦄 Pantalla final de la IPO (se abre al salir a la bolsa)
+  const [ipoOpen, setIpoOpen] = useState(false)
 
   // ❓ Ayuda: botón en el panel de arriba o F1
   const [helpOpen, setHelpOpen] = useState(false)
@@ -811,6 +815,18 @@ function App() {
               achievementsCount={`${state.records.unlocked.length}/${ACHIEVEMENTS.length}`}
               cards={state.cards}
               challenge={state.challenge}
+              sales={state.prestige.sales}
+              ipoDone={state.records.ipoAt > 0}
+              onIpo={() => {
+                if (state.records.ipoAt > 0) return setIpoOpen(true) // ya saliste: solo mirar tu carrera
+                if (
+                  !window.confirm('¿Sacar tu empresa a la bolsa? Es el final del juego (después podés seguir jugando).')
+                )
+                  return
+                dispatch({ type: 'ipo', now: Date.now() })
+                setIpoOpen(true)
+                playSfx('levelUp')
+              }}
             />
           )}
           {currentView === 'setup' && (
@@ -913,6 +929,7 @@ function App() {
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {ipoOpen && <IpoScreen state={state} onContinue={() => setIpoOpen(false)} />}
       {state.challengeChoice && (
         <ChallengePicker
           done={state.records.challengesDone}

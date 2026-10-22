@@ -14,6 +14,7 @@ export type FeatureId =
   | 'abilities'
   | 'bosses'
   | 'artifacts'
+  | 'ipo'
   | 'prestige'
 
 export type Feature = {
@@ -106,6 +107,14 @@ export const FEATURES: Feature[] = [
     text: 'Tenés una caja de suministros. Abrila en Setup: trae un artefacto para tu escritorio con una mejora que dura para siempre. Los repetidos suben de nivel.',
     view: 'setup',
     check: (s) => s.records.boxes > 0 || Object.keys(s.records.artifacts).length > 0,
+  },
+  {
+    id: 'ipo',
+    icon: '🦄',
+    name: 'Salida a la bolsa',
+    text: 'Vendiste 12 empresas. Ya podés sacar la próxima a la bolsa: es el final del juego (y después podés seguir jugando como leyenda).',
+    view: 'company',
+    check: (s) => s.prestige.sales >= 12,
   },
   {
     id: 'prestige',

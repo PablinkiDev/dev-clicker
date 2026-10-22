@@ -93,7 +93,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | F3 ✅ | 🏺 **Artefactos y "Tu setup":** 16 artefactos (6 comunes, 4 raros, 3 épicos, 3 legendarios) con niveles 1–10, permanentes. 📦 Cajas: una por jefe, una por venta y compradas con tokens (3, 5, 7… ×1,5). Pantalla nueva Setup: escritorio con siluetas, apertura animada con brillo por rareza y colección. Mismo motor de efectos que las cartas. Simulación: 8 artefactos tras 3 runs | M | 5–6 |
 | F4 ✅ | 👹 **Clientes jefe:** desde Estudio, cada 10 contratos llega un jefe al tablón (8 jefes con nombre y frase, algunos con condición): 2× código, 1,5× plazo, paga ×10, XP ×4 y 📦 1 caja. Perder no tiene multa. La Captación automática no los toma. Simulación: 4–5 jefes por run | M | 2–3 |
 | F5 ✅ | 🏁 **Desafíos de run:** desde la 2.ª empresa se elige uno opcional al arrancar: 🙌 Manos atadas, 🦥 Equipo con sueño, ⏱ Contrarreloj (+75 % tokens), 💸 Bootstrapped, 🐧 Nano para siempre, 🃏 Sin especializaciones (+50 %). 1.ª vez: +2 📦. Logros Masoquista y Sufrimiento profesional. *Cambio de diseño: Garage, Lobo solitario y Sin manos se reemplazaron porque trababan los requisitos de ascenso* | S | 2–3 |
-| F6 | 🦄 **IPO:** final del juego, pantalla de carrera y modo leyenda | M | 2 |
+| F6 ✅ | 🦄 **IPO:** desde las 12 ventas, botón "Salir a la bolsa" en Empresa (con progreso n/12 desde la primera venta). Pantalla final con la carrera en números y créditos, logro legendario "Leyenda de Silicon Valley" y modo leyenda (seguir jugando; "Ver mi carrera" la vuelve a abrir) | M | 2 |
 
 ## Hito G — Contenido
 
