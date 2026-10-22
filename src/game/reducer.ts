@@ -189,6 +189,8 @@ export type GameAction =
   | { type: 'sell'; fresh: GameState; now: number }
   | { type: 'invest'; investment: InvestmentId }
   | { type: 'dismissNotice' }
+  // 🛠 Solo el panel de desarrollo: pisa campos del estado tal cual
+  | { type: 'dev'; patch: Partial<GameState> }
   // Un segundo más de juego (lo manda un reloj en App mientras la pestaña está visible)
   // session: segundos desde que se abrió el juego (no se guarda)
   | { type: 'playTime'; seconds: number; session?: number }
@@ -601,6 +603,9 @@ function reduce(state: GameState, action: GameAction): GameState {
 
     case 'playTime':
       return { ...state, stats: { ...state.stats, playTime: state.stats.playTime + action.seconds } }
+
+    case 'dev':
+      return { ...state, ...action.patch }
 
     case 'dismissNotice':
       return { ...state, notice: null }

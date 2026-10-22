@@ -15,6 +15,7 @@ import GoldenBug from './components/GoldenBug'
 import { bugVisible, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
+import DevPanel from './components/DevPanel'
 import { HelpModal } from './components/HelpModal'
 import {
   applyAudioSettings,
@@ -34,6 +35,7 @@ import MacroShop from './components/MacroShop'
 import { macroCps } from './data/macro'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
+import { STAGES } from './data/stages'
 import { officeCapacity } from './data/offices'
 import { SKILLS, missingSkillRequirements } from './data/skills'
 import { TECHS, missingRequirements } from './data/techs'
@@ -233,6 +235,9 @@ function App() {
     saveGame(state)
   }, [state])
 
+  // 🛠 Panel de desarrollo: velocidad del reloj (siempre 1 fuera de npm run dev)
+  const [devSpeed, setDevSpeed] = useState(1)
+
   // Efecto 3: el reloj. Solo avisa cuánto tiempo pasó; el reducer decide qué significa.
   useEffect(() => {
     if (!isRunning) return
@@ -241,12 +246,12 @@ function App() {
     const id = setInterval(() => {
       const now = performance.now()
       // Tope por si la compu se suspendió: no se "juega" mientras está dormida
-      dispatch({ type: 'tick', elapsed: Math.min(MAX_ELAPSED, (now - last) / 1000), now: Date.now() })
+      dispatch({ type: 'tick', elapsed: Math.min(MAX_ELAPSED, ((now - last) / 1000) * devSpeed), now: Date.now() })
       last = now
     }, TICK_MS)
 
     return () => clearInterval(id)
-  }, [isRunning])
+  }, [isRunning, devSpeed])
 
   // ❓ Ayuda: botón en el panel de arriba o F1
   const [helpOpen, setHelpOpen] = useState(false)
@@ -444,6 +449,40 @@ function App() {
     )
     return () => clearInterval(id)
   }, [macroRate, isRunning])
+
+  // --- 🛠 Acciones del panel de desarrollo ---
+  function devStage(stage: number) {
+    const offers = refillOffers([], {}, null, Date.now(), { ...offerContext, stage })
+    // La oficina mínima que pide la etapa, para no quedar en una combinación imposible
+    const office = Math.max(state.office, STAGES[stage].requires?.office ?? 0)
+    dispatch({
+      type: 'dev',
+      patch: {
+        stage,
+        office,
+        offers,
+        candidates: rerollCandidates(team, stage, skills.headhunter),
+        contract: null,
+        code: 0,
+      },
+    })
+  }
+
+  function devMaxTrees() {
+    const max = <T extends { id: string; maxLevel: number }>(items: T[]) =>
+      Object.fromEntries(items.map((i) => [i.id, i.maxLevel]))
+    dispatch({
+      type: 'dev',
+      patch: { skills: { ...skills, ...max(SKILLS) }, tech: { ...state.tech, ...max(TECHS) } },
+    })
+  }
+
+  function devEvent() {
+    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky)
+    lastEventId.current = e.id
+    if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
+    setEvent(e)
+  }
 
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
@@ -743,6 +782,21 @@ function App() {
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {import.meta.env.DEV && (
+        <DevPanel
+          state={state}
+          onPatch={(patch) => dispatch({ type: 'dev', patch })}
+          onStage={devStage}
+          onMaxTrees={devMaxTrees}
+          onEvent={devEvent}
+          onMinigame={() =>
+            setMinigame({ game: MINIGAMES[Math.floor(Math.random() * MINIGAMES.length)].id, playing: false })
+          }
+          onBug={() => setBug({ id: Date.now(), x: 10 + Math.random() * 70, y: 15 + Math.random() * 55 })}
+          speed={devSpeed}
+          onSpeed={setDevSpeed}
+        />
+      )}
     </div>
   )
 }

@@ -83,6 +83,36 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | E5 ✅ | **Prestigio que se siente:** experiencia de fundador (+10 % de producción por token ganado en la carrera), rama Arranque (Portfolio, Licencia vitalicia, Socio fundador, Procesos heredados), mejoras de +50 % hasta Nv.10, Capital semilla $25 K y Primeros contactos +30 ★, comparación de tiempos en el historial. 2.º ciclo: 32–49 % más rápido en la simulación | M | 2–3 |
 | E6 ✅ | **Rebalanceo** a 1–1,5 h: con E1–E5 los números ya caen en la meta (ver simulación del Hito E); sin cambios extra | M | 1 |
 
+## Hito F — Sistemas nuevos (ver docs/DISENO-1.0.md)
+
+| # | Historia | Prioridad | Tamaño |
+|---|----------|-----------|--------|
+| F1 | 🃏 **Especializaciones:** al ascender, elegir 1 de 3 cartas (Manos rápidas / Automatizador / Equilibrado) | M | 3–4 |
+| F2 | ⚡ **Habilidades activas:** barra con Hackatón, Crunch, Pair programming y Café doble (atajos 1–5) | M | 3 |
+| F3 | 🏺 **Artefactos y "Tu setup":** cajas de suministros, ~20 artefactos con rarezas y niveles, pantalla del escritorio | M | 5–6 |
+| F4 | 👹 **Clientes jefe:** cada ~10 contratos, oferta enorme con condición; premio: caja | M | 2–3 |
+| F5 | 🏁 **Desafíos de run:** reglas opcionales con más tokens | S | 2–3 |
+| F6 | 🦄 **IPO:** final del juego, pantalla de carrera y modo leyenda | M | 2 |
+
+## Hito G — Contenido
+
+| # | Historia | Prioridad | Tamaño |
+|---|----------|-----------|--------|
+| G1 | 👥 **5 profesiones nuevas** (Pasante, Diseñador UX, PM, Data Scientist, Tech Lead) | M | 3–4 |
+| G2 | 🎮 **5 minijuegos para no programadores** (Aplastá bugs, Conectá servidores, Ordená el deploy, Memoria, Simón dice) | M | 4–5 |
+| G3 | Más eventos (~45), contratos y logros (~70) | S | 3–4 |
+| G4 | 🎨 **Personalización:** nombre y logo de la empresa, avatar, títulos y mascota | M | 4–5 |
+
+## Hito H — UI y pulido
+
+| # | Historia | Prioridad | Tamaño |
+|---|----------|-----------|--------|
+| H1 | Animaciones de recompensa (números, barras, compras) | M | 2 |
+| H2 | Centro de notificaciones | S | 1–2 |
+| H3 | Pantalla de estadísticas con gráficos | C | 2 |
+| H4 | Indicador "¡Nuevo!" en lo desbloqueado | S | 1 |
+| H5 | Molestias de UI (lista pendiente de Agustín) | M | ? |
+
 ## Hito C — Listo para amigos (1.0)
 
 | # | Historia | Prioridad | Tamaño |
@@ -98,6 +128,8 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | C10 | **Repensar el diseño de los árboles de Mejoras** (los nodos andan, pero el look no termina de convencer) | S | 1–2 |
 | C9 ✅ | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
 | C11 ✅ | **Ayuda ❓ (y F1):** modal con cómo jugar y una wiki de todo el juego (contratos, equipo, mejoras, etapas, prestigio, extras y atajos). Las tablas salen de los datos del juego | M | 1 |
+| C12 | **Guardado firmado y revisión de seguridad:** firmar también el guardado de localStorage, partida trucada = marcada + logro burlón (nunca se borra), tests con Vitest del reducer, el guardado y las migraciones, `npm audit` y headers de seguridad (CSP) en el deploy | M | 2–3 |
+| C13 ✅ | **🛠 Panel de desarrollo** (solo `npm run dev`): etapa, dinero, XP, reputación, tokens, dinero ganado, velocidad del reloj ×1–×100, árboles al máximo, completar contrato y disparar eventos, minijuegos y bug dorado | M | 1 |
 
 **Total estimado para 1.0:** ~40 commits chicos.
 
