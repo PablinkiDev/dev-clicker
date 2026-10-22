@@ -1,6 +1,14 @@
 // Todo el estado del juego y las reglas que lo cambian.
 // El reducer es una función pura: (estado, acción) → estado nuevo. No usa React,
 // no lee la hora ni números al azar: eso llega desde afuera, dentro de las acciones.
+import {
+  DEFAULT_PROFILE,
+  cleanCompany,
+  cleanProfile,
+  randomCompany,
+  type CompanyIdentity,
+  type Profile,
+} from '../data/personalization'
 import { FAILURE_REP_LOSS, addCode, failureMoneyLoss, failureXp, skillCost, xpMultiplier } from './formulas'
 import { INITIAL_SKILLS, SKILLS, missingSkillRequirements, type SkillId, type SkillLevels } from '../data/skills'
 import { EDITORS, nextEditor, type EditorId } from '../data/editors'
@@ -161,6 +169,10 @@ export type GameState = {
   rerolls: number
   /** La partida se editó a mano (firma inválida): se marca para siempre, nunca se borra */
   tampered: boolean
+  /** 🏢 Nombre y logo de esta empresa (G4): se elige con cada empresa nueva */
+  company: CompanyIdentity
+  /** 🧑‍💻 Tu avatar, título y mascota (G4): son tuyos, sobreviven a las ventas */
+  profile: Profile
   /** 🤖 Macro de teclado: nivel comprado (0 = no) y si está prendida */
   macro: number
   macroOn: boolean
@@ -216,6 +228,11 @@ export type GameAction =
   // y se ofrecen 3 cartas de especialización (también al azar)
   | { type: 'ascend'; offers: Contract[]; candidates: Employee[]; cardOffer: CardPick[] }
   | { type: 'pickCard'; index: number }
+  /** 🎨 Personalización (G4): se limpia en el reducer (nombre corto, opciones que existen y desbloqueadas) */
+  | { type: 'setCompany'; company: CompanyIdentity }
+  | { type: 'setProfile'; profile: Partial<Profile> }
+  /** 🐈 Acariciaste a la mascota */
+  | { type: 'pet' }
   // 📦 Abrir una caja: qué artefacto salió se decide afuera (azar), con rollArtifact
   | { type: 'openBox'; artifact: string }
   | { type: 'buyBox' }
@@ -284,6 +301,8 @@ export function createInitialState(): GameState {
     macro: 0,
     macroOn: true,
     tampered: false,
+    company: randomCompany(),
+    profile: DEFAULT_PROFILE,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -669,6 +688,7 @@ function reduce(state: GameState, action: GameAction): GameState {
         // La empresa nueva arranca preguntando si querés un desafío
         challengeChoice: true,
         tampered: state.tampered, // la marca es de la carrera, no de la empresa
+        profile: state.profile, // el avatar, el título y la mascota son tuyos
         prestige: {
           tokens: state.prestige.tokens + tokens,
           sales: state.prestige.sales + 1,
@@ -685,6 +705,7 @@ function reduce(state: GameState, action: GameAction): GameState {
               endless: state.endless,
               playTime: state.stats.playTime,
               challenge: state.challenge ?? undefined,
+              company: state.company,
             },
             ...state.prestige.history,
           ],
@@ -980,6 +1001,15 @@ function reduce(state: GameState, action: GameAction): GameState {
         records: { ...state.records, ipoAt: action.now },
         log: addLog(state.log, 'crit', '🦄 git tag v1.0.0-IPO · ¡Tu empresa salió a la bolsa! Sos una leyenda.'),
       }
+
+    case 'setCompany':
+      return { ...state, company: cleanCompany(action.company) }
+
+    case 'setProfile':
+      return { ...state, profile: cleanProfile({ ...state.profile, ...action.profile }, state.records.unlocked) }
+
+    case 'pet':
+      return state.profile.mascot ? { ...state, records: { ...state.records, pets: state.records.pets + 1 } } : state
 
     case 'setChallenge': {
       if (!state.challengeChoice) return state

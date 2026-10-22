@@ -177,7 +177,7 @@ Cada una **cambia una mecánica**; no es solo otro "+%".
 - **Contratos:** clientes nuevos por etapa, y que los jefes tengan textos propios.
 - **Logros:** de 43 a ~70, para artefactos, desafíos, jefes, especializaciones y la IPO.
 
-### G4. 🎨 Personalización (sin editores)
+### G4. 🎨 Personalización (sin editores) ✅
 
 Los editores quedan como están. La personalización nueva va por otro lado:
 

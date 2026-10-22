@@ -50,6 +50,7 @@ import { drawCards } from './data/cards'
 import CardPicker from './components/CardPicker'
 import ChallengePicker from './components/ChallengePicker'
 import IpoScreen from './components/IpoScreen'
+import MascotWalker from './components/MascotWalker'
 import { getChallenge } from './data/challenges'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers } from './game/offers'
@@ -304,6 +305,8 @@ function App() {
 
   // 🦄 Pantalla final de la IPO (se abre al salir a la bolsa)
   const [ipoOpen, setIpoOpen] = useState(false)
+  /** 🐈 Para que el panel de dev haga pasear a la mascota ya (cambia la key del componente) */
+  const [mascotSummon, setMascotSummon] = useState(0)
 
   // ❓ Ayuda: botón en el panel de arriba o F1
   const [helpOpen, setHelpOpen] = useState(false)
@@ -689,6 +692,7 @@ function App() {
         modified={contract !== null && code > 0}
         stage={state.stage}
         endlessScale={isEndless(state.stage) ? contractScale(state.stage, state.endless) : null}
+        companyName={state.company.name}
       />
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -710,6 +714,7 @@ function App() {
               capacity={officeCapacity(state.office, skills.homeOffice)}
               showTeam={views.includes('team')}
               money={money}
+              company={state.company}
               onNavigate={navigate}
             />
           </>
@@ -813,6 +818,7 @@ function App() {
               homeOffice={skills.homeOffice}
               codeReview={skills.codeReview}
               onMove={() => dispatch({ type: 'moveOffice' })}
+              profile={state.profile}
             />
           )}
           {currentView === 'company' && (
@@ -834,6 +840,8 @@ function App() {
               challenge={state.challenge}
               sales={state.prestige.sales}
               ipoDone={state.records.ipoAt > 0}
+              company={state.company}
+              onRename={(company) => dispatch({ type: 'setCompany', company })}
               onIpo={() => {
                 if (state.records.ipoAt > 0) return setIpoOpen(true) // ya saliste: solo mirar tu carrera
                 if (
@@ -859,6 +867,10 @@ function App() {
                 return artifact
               }}
               onBuy={() => dispatch({ type: 'buyBox' })}
+              profile={state.profile}
+              unlocked={state.records.unlocked}
+              onProfile={(profile) => dispatch({ type: 'setProfile', profile })}
+              showArtifacts={features.includes('artifacts')}
             />
           )}
           {currentView === 'settings' && (
@@ -945,12 +957,25 @@ function App() {
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
+      {state.profile.mascot && (
+        <MascotWalker
+          key={mascotSummon}
+          mascot={state.profile.mascot}
+          startNow={mascotSummon > 0}
+          onPet={() => {
+            dispatch({ type: 'pet' })
+            playSfx('notify')
+          }}
+        />
+      )}
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
       {ipoOpen && <IpoScreen state={state} onContinue={() => setIpoOpen(false)} />}
       {state.challengeChoice && (
         <ChallengePicker
           done={state.records.challengesDone}
-          onPick={(id) => {
+          company={state.company}
+          onPick={(id, company) => {
+            dispatch({ type: 'setCompany', company })
             dispatch({ type: 'setChallenge', id })
             if (id) playSfx('levelUp')
           }}
@@ -983,6 +1008,7 @@ function App() {
           onMaxTrees={devMaxTrees}
           onEvent={devEvent}
           onMinigame={(game) => setMinigame({ game, playing: true })}
+          onMascot={() => setMascotSummon((n) => n + 1)}
           onBug={() => setBug({ id: Date.now(), x: 10 + Math.random() * 70, y: 15 + Math.random() * 55 })}
           speed={devSpeed}
           onSpeed={setDevSpeed}

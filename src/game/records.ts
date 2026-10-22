@@ -18,6 +18,8 @@ export type Records = {
   bugs: number
   /** Minijuegos jugados (D9) */
   minigames: number
+  /** 🐈 Veces que acariciaste a la mascota (G4) */
+  pets: number
   /** 👹 Clientes jefe derrotados */
   bosses: number
   /** 📦 Cajas de suministros sin abrir (F3) */
@@ -48,6 +50,7 @@ export const INITIAL_RECORDS: Records = {
   betsWon: 0,
   bugs: 0,
   minigames: 0,
+  pets: 0,
   bosses: 0,
   boxes: 0,
   boxesBought: 0,

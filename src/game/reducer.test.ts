@@ -5,6 +5,15 @@ import { autoRate, candidateRoles, createCandidate, devRate } from './team'
 import { EVENTS, canHappen } from '../data/events'
 import { getBoss } from '../data/bosses'
 import { createBossOffer } from './offers'
+import { ACHIEVEMENTS } from '../data/achievements'
+import {
+  DEFAULT_COMPANY,
+  DEFAULT_PROFILE,
+  FACE_ITEMS,
+  HEAD_ITEMS,
+  HOODIES,
+  TITLES,
+} from '../data/personalization'
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state)
 
@@ -483,5 +492,42 @@ describe('variedad (G3)', () => {
   it('los jefes tienen su propio pedido', () => {
     const offer = createBossOffer({ tech: createInitialState().tech, stage: 1, endless: 0, rep: 0, perSecond: 10 })!
     expect(offer.title).toBe(getBoss(offer.boss!)!.title)
+  })
+})
+
+describe('personalización (G4)', () => {
+  it('el nombre se recorta y lo que no existe vuelve a lo de siempre', () => {
+    const s = gameReducer(createInitialState(), {
+      type: 'setCompany',
+      company: { name: '   Una empresa con un nombre larguísimo   ', emoji: '<script>', color: 'fucsia' },
+    })
+    expect(s.company.name).toBe('Una empresa con un nombr')
+    expect(s.company.emoji).toBe(DEFAULT_COMPANY.emoji)
+    expect(s.company.color).toBe(DEFAULT_COMPANY.color)
+  })
+
+  it('los accesorios bloqueados no se pueden poner', () => {
+    const base = createInitialState()
+    expect(gameReducer(base, { type: 'setProfile', profile: { head: 'crown' } }).profile.head).toBe('none')
+    const legend = { ...base, records: { ...base.records, unlocked: ['ipo'] } }
+    expect(gameReducer(legend, { type: 'setProfile', profile: { head: 'crown' } }).profile.head).toBe('crown')
+  })
+
+  it('al vender se guarda el nombre y el perfil sigue', () => {
+    const s = {
+      ...createInitialState(),
+      stage: 4,
+      company: { name: 'Bugs & Cía.', emoji: '🐙', color: 'red' },
+      profile: { ...DEFAULT_PROFILE, mascot: 'cat' as const },
+    }
+    const after = gameReducer(s, { type: 'sell', fresh: createInitialState(), now: 1 })
+    expect(after.prestige.history[0].company?.name).toBe('Bugs & Cía.')
+    expect(after.profile.mascot).toBe('cat')
+  })
+
+  it('todo lo que se desbloquea apunta a un logro que existe', () => {
+    const ids = new Set(ACHIEVEMENTS.map((a) => a.id))
+    for (const choice of [...HOODIES, ...HEAD_ITEMS, ...FACE_ITEMS, ...TITLES])
+      expect(!choice.unlock || ids.has(choice.unlock)).toBe(true)
   })
 })

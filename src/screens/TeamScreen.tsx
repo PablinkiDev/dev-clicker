@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
+import Avatar from '../components/Avatar'
+import { titleName, type Profile } from '../data/personalization'
 import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES, officeCapacity } from '../data/offices'
 import { STAGES } from '../data/stages'
@@ -36,6 +38,8 @@ type TeamScreenProps = {
   /** Precio de la próxima búsqueda de candidatos */
   rerollPrice: number
   onMove: () => void
+  /** 🧑‍💻 Tu avatar y título (G4) */
+  profile: Profile
 }
 
 function TeamScreen({
@@ -52,6 +56,7 @@ function TeamScreen({
   codeReview,
   rerollPrice,
   onMove,
+  profile,
 }: TeamScreenProps) {
   const current = OFFICES[office]
   const next = OFFICES[office + 1]
@@ -168,8 +173,14 @@ function TeamScreen({
       <p className="mb-2.5 font-mono text-xs text-muted">en tu equipo/</p>
       <ul className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))]">
         <li className="rounded-xl border border-purple/45 bg-panel-2 p-3.5">
-          <p className="font-extrabold">Vos</p>
-          <p className="text-xs text-muted">Fundador · programa a mano</p>
+          <div className="flex items-center gap-2.5">
+            <Avatar profile={profile} size={36} />
+            <div className="min-w-0">
+              <p className="font-extrabold">Vos</p>
+              <p className="truncate text-xs text-purple">{titleName(profile.title) ?? 'Fundador'}</p>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-muted">Programás a mano</p>
           <p className="mt-2 text-xs text-muted italic">“Café ilimitado, sueño limitado.”</p>
         </li>
         {team.map((e) => (

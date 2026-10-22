@@ -1,4 +1,6 @@
 import { ROLES } from '../../data/roles'
+import type { CompanyIdentity } from '../../data/personalization'
+import CompanyLogo from '../CompanyLogo'
 import { employeePrice, type Employee } from '../../game/team'
 import { LANG_ICON, ROLE_STYLE } from '../../ui'
 import type { Lang } from '../../data/techs'
@@ -15,6 +17,8 @@ type SidebarProps = {
   /** El equipo todavía no se desbloqueó: no se muestra su carpeta */
   showTeam: boolean
   money: number
+  /** 🏢 Nombre y logo de la empresa: es la carpeta del proyecto (G4) */
+  company: CompanyIdentity
   onNavigate: (view: View) => void
 }
 
@@ -44,13 +48,20 @@ function Folder({ children, extra }: { children: string; extra?: string }) {
 const FILE_ROW = 'flex h-6.5 w-full cursor-pointer items-center gap-1.5 rounded-md pr-2 pl-5.5 text-left text-[13px]'
 
 /** Explorador de archivos: el estado del juego visto como un proyecto */
-function Sidebar({ contract, offers, team, capacity, showTeam, money, onNavigate }: SidebarProps) {
+function Sidebar({ contract, offers, team, capacity, showTeam, money, company, onNavigate }: SidebarProps) {
   const firstHire = employeePrice('dev', 1)
   const goal = Math.min(100, (money / firstHire) * 100)
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-line bg-panel md:flex">
       <p className="px-4 pt-3 pb-2 text-[11px] font-semibold tracking-widest text-muted uppercase">Explorador</p>
+      <p
+        className="mx-1.5 flex items-center gap-2 rounded-md px-2 py-1 text-[13px] font-extrabold"
+        title={company.name}
+      >
+        <CompanyLogo company={company} className="size-5 rounded text-[11px]" />
+        <span className="truncate">{company.name}</span>
+      </p>
 
       <div className="px-1.5 pb-2.5">
         <Folder>en curso</Folder>

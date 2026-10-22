@@ -14,6 +14,7 @@ export type FeatureId =
   | 'abilities'
   | 'bosses'
   | 'artifacts'
+  | 'profile'
   | 'ipo'
   | 'prestige'
 
@@ -99,6 +100,14 @@ export const FEATURES: Feature[] = [
     text: 'Cada 10 contratos llega un cliente enorme con reloj estricto. Si le ganás, paga ×10 y te da una 📦 caja de suministros. Si perdés, no pasa nada.',
     view: 'board',
     check: (s) => s.offers.some((o) => o.boss) || s.contract?.boss !== undefined || s.records.bosses > 0,
+  },
+  {
+    id: 'profile',
+    icon: '🧑‍💻',
+    name: 'Tu perfil',
+    text: 'Personalizá tu avatar, elegí un título (se ganan con logros) y adoptá una mascota para la oficina. Está en Setup.',
+    view: 'setup',
+    check: (s) => s.team.length >= 1 || s.stage >= 1 || s.prestige.sales > 0,
   },
   {
     id: 'artifacts',

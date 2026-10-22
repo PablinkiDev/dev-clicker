@@ -2,6 +2,7 @@
 // La validación de save.ts revisa los TIPOS; acá se revisan los RANGOS: un número bien escrito
 // pero absurdo (un dev de 50★, JavaScript Nv.99) se recorta al máximo posible en vez de romper el juego.
 import { INVESTMENTS } from '../data/investments'
+import { cleanCompany, cleanProfile } from '../data/personalization'
 import { MACRO_LEVELS } from '../data/macro'
 import { getCard, type CardPick } from '../data/cards'
 import { getChallenge } from '../data/challenges'
@@ -69,6 +70,9 @@ export function sanitize(state: GameState): GameState {
     bossCountdown: Math.round(clamp(state.bossCountdown, 0, 100)),
     challenge: getChallenge(state.challenge) ? state.challenge : null,
     challengeChoice: state.challengeChoice === true,
+    // 🎨 Nombre corto y solo opciones que existen (y que ya desbloqueaste)
+    company: cleanCompany(state.company),
+    profile: cleanProfile(state.profile, state.records.unlocked),
     records: {
       ...state.records,
       ...Object.fromEntries(
@@ -88,6 +92,7 @@ export function sanitize(state: GameState): GameState {
             'boxesBought',
             'ipoAt',
             'goodStreak',
+            'pets',
           ] as const
         ).map((key) => [key, clamp(state.records[key], 0)]),
       ),
@@ -97,6 +102,9 @@ export function sanitize(state: GameState): GameState {
       tokens: Math.round(clamp(state.prestige.tokens, 0)),
       sales: Math.round(clamp(state.prestige.sales, 0)),
       investments: clampLevels(state.prestige.investments, INVESTMENTS),
+      history: state.prestige.history.map((sale) =>
+        sale.company === undefined ? sale : { ...sale, company: cleanCompany(sale.company) },
+      ),
     },
   }
 }

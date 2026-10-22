@@ -1,3 +1,4 @@
+import type { CompanyIdentity } from '../data/personalization'
 // Prestigio: vender la empresa a cambio de tokens de inversión (GDD §10).
 import { INITIAL_INVESTMENTS, INVESTMENT_STEP, type InvestmentLevels } from '../data/investments'
 
@@ -17,6 +18,8 @@ export type SaleRecord = {
   playTime?: number
   /** 🏁 Desafío con el que se jugó esa empresa */
   challenge?: string
+  /** 🏢 Nombre y logo de esa empresa (G4; las ventas viejas no lo tienen) */
+  company?: CompanyIdentity
 }
 
 /** Lo que sobrevive a una venta */

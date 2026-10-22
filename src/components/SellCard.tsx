@@ -8,11 +8,13 @@ type SellCardProps = {
   value: number
   stats: Stats
   teamSize: number
+  /** 🏢 Nombre de la empresa (G4) */
+  companyName: string
   onSell: () => void
 }
 
 /** Venta de la empresa: resumen, tokens que se ganan y confirmación en dos pasos */
-function SellCard({ value, stats, teamSize, onSell }: SellCardProps) {
+function SellCard({ value, stats, teamSize, companyName, onSell }: SellCardProps) {
   // Primer clic: muestra la confirmación. Segundo clic: vende. Es irreversible
   const [confirming, setConfirming] = useState(false)
   const tokens = tokensForValue(value)
@@ -23,7 +25,7 @@ function SellCard({ value, stats, teamSize, onSell }: SellCardProps) {
   return (
     <div className="mt-4 max-w-xl rounded-xl border border-purple/45 bg-panel-2 p-3.5">
       <p className="font-mono text-[10px] font-bold tracking-wider text-purple uppercase">Venta de la empresa</p>
-      <p className="font-extrabold">💼 Vendé y arrancá de cero, con ventajas</p>
+      <p className="font-extrabold">💼 Vendé {companyName} y arrancá de cero, con ventajas</p>
       <p className="mb-3 text-xs text-muted">
         Se reinicia todo (dinero, XP, equipo, oficinas, editores, tecnologías y mejoras). Te quedan los tokens de
         inversión.

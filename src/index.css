@@ -33,6 +33,8 @@
   --animate-slide-down: slide-down 0.35s ease-out;
   --animate-shake: shake 0.25s ease-in-out infinite;
   --animate-pop: pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+  --animate-walk: walk 14s linear forwards;
+  --animate-bob: bob 0.5s ease-in-out infinite;
 
   /* El bug dorado camina en zigzag y se sacude un poco */
   @keyframes bug-wander {
@@ -82,6 +84,25 @@
   }
 
   /* El artefacto aparece con un rebote */
+  @keyframes walk {
+    from {
+      transform: translateX(-10vw);
+    }
+    to {
+      transform: translateX(110vw);
+    }
+  }
+
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0) scaleX(-1);
+    }
+    50% {
+      transform: translateY(-4px) scaleX(-1);
+    }
+  }
+
   @keyframes pop {
     from {
       transform: scale(0.6);

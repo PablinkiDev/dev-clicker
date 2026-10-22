@@ -3,6 +3,9 @@ import { STYLES, getCard, type CardPick } from '../data/cards'
 import { getChallenge } from '../data/challenges'
 import { IPO_SALES } from '../game/prestige'
 import ScreenHeader from '../components/ScreenHeader'
+import CompanyEditor from '../components/CompanyEditor'
+import CompanyLogo from '../components/CompanyLogo'
+import type { CompanyIdentity } from '../data/personalization'
 import SellCard from '../components/SellCard'
 import SalesHistory from '../components/SalesHistory'
 import type { SaleRecord } from '../game/prestige'
@@ -40,6 +43,9 @@ type CompanyScreenProps = {
   sales: number
   ipoDone: boolean
   onIpo: () => void
+  /** 🏢 Nombre y logo (G4): se pueden cambiar cuando quieras */
+  company: CompanyIdentity
+  onRename: (company: CompanyIdentity) => void
 }
 
 function CompanyScreen({
@@ -61,7 +67,11 @@ function CompanyScreen({
   sales,
   ipoDone,
   onIpo,
+  company,
+  onRename,
 }: CompanyScreenProps) {
+  /** Lo que se está editando del nombre y el logo (null = no se está editando) */
+  const [draft, setDraft] = useState<CompanyIdentity | null>(null)
   const activeChallenge = getChallenge(challenge)
   const [tab, setTab] = useState<'stages' | 'achievements'>('stages')
   const current = STAGES[stage]
@@ -79,6 +89,51 @@ function CompanyScreen({
           </span>
         )}
       </ScreenHeader>
+
+      <div className="mb-4 max-w-xl rounded-xl border border-line bg-panel-2 p-3.5">
+        {draft ? (
+          <>
+            <CompanyEditor value={draft} onChange={setDraft} />
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onRename(draft)
+                  setDraft(null)
+                }}
+                className="cursor-pointer rounded-lg bg-green px-4 py-2 text-sm font-extrabold text-[#062312]"
+              >
+                Guardar
+              </button>
+              <button
+                type="button"
+                onClick={() => setDraft(null)}
+                className="cursor-pointer rounded-lg border border-line-2 px-4 py-2 text-sm text-muted hover:text-text"
+              >
+                Cancelar
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <CompanyLogo company={company} className="size-11 rounded-xl text-2xl" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-lg font-extrabold">{company.name}</p>
+              <p className="font-mono text-[11px] text-muted">
+                {current.icon} {current.name}
+                {sales > 0 && ` · empresa n.º ${sales + 1}`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDraft(company)}
+              className="cursor-pointer rounded-lg border border-line-2 px-3 py-1.5 text-xs font-bold text-muted hover:text-text"
+            >
+              ✏️ Cambiar
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="mb-4 flex flex-wrap gap-2" role="tablist">
         {(
@@ -239,7 +294,9 @@ function CompanyScreen({
               </dl>
             </div>
           )}
-          {!next && <SellCard value={value} stats={stats} teamSize={teamSize} onSell={onSell} />}
+          {!next && (
+            <SellCard value={value} stats={stats} teamSize={teamSize} companyName={company.name} onSell={onSell} />
+          )}
           {sales > 0 && (
             <div
               className={`mt-5 max-w-xl rounded-xl border p-3.5 ${ipoDone ? 'border-yellow/60 bg-yellow/10' : 'border-purple/40 bg-purple/5'}`}

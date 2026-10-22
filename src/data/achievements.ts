@@ -662,6 +662,27 @@ export const ACHIEVEMENTS: Achievement[] = [
     50,
   ),
 
+  // 🎨 Personalización (G4)
+  counter(
+    {
+      id: 'petLover',
+      category: 'team',
+      icon: '🐾',
+      name: 'Mascota feliz',
+      description: 'Acariciá a la mascota de la oficina 10 veces',
+    },
+    (s) => s.records.pets,
+    10,
+  ),
+  {
+    id: 'freshLook',
+    category: 'team',
+    icon: '🧢',
+    name: 'Con facha',
+    description: 'Ponele un accesorio a tu avatar',
+    check: ({ next }) => next.profile.head !== 'none' || next.profile.face !== 'none',
+  },
+
   // 🔒 Secretos
   counter(
     {

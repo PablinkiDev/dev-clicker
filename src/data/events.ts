@@ -2,6 +2,7 @@
 // Los efectos son datos: el reducer los aplica (applyEffects) y la interfaz solo los muestra.
 import type { FeatureId } from './features'
 import type { RoleId } from './roles'
+import type { MascotId } from './personalization'
 import type { GameState } from '../game/reducer'
 
 export type Effect =
@@ -54,6 +55,8 @@ export type GameEvent = {
   needsArtifact?: string
   /** 🔓 Solo si ya se desbloqueó esta parte del juego (G3) */
   needsFeature?: FeatureId
+  /** 🐈 Solo si tenés esta mascota (G4) */
+  needsMascot?: MascotId
   /** Eventos sin elección: su efecto y cómo se explica */
   effects?: Effect[]
   detail?: string
@@ -691,6 +694,83 @@ export const EVENTS: GameEvent[] = [
     ],
   },
 
+  // --- 🐈 Mascotas (G4) ---
+  {
+    id: 'gato-teclado',
+    tone: 'bad',
+    icon: '🐈',
+    title: 'El gato se acostó en el teclado',
+    quote: 'Escribió "jjjjjjjjjjjjjjjj" y se durmió. No lo podés mover: es ley.',
+    needsMascot: 'cat',
+    detail: 'Tus clics ×0,5 por 30 s',
+    effects: [{ kind: 'mod', target: 'click', mult: 0.5, seconds: 30 }],
+  },
+  {
+    id: 'gato-ronroneo',
+    tone: 'good',
+    icon: '😺',
+    title: 'El gato ronronea al lado tuyo',
+    quote: 'Terapia gratuita. Tu ritmo cardíaco bajó y tus clics subieron.',
+    needsMascot: 'cat',
+    detail: 'Tus clics ×1,5 por 45 s',
+    effects: [{ kind: 'mod', target: 'click', mult: 1.5, seconds: 45 }],
+  },
+  {
+    id: 'perro-saludo',
+    tone: 'good',
+    icon: '🐕',
+    title: 'El perro saludó a todo el equipo',
+    quote: 'Uno por uno. Con la cola a mil. La moral está por las nubes.',
+    needsMascot: 'dog',
+    detail: 'Producción del equipo ×1,4 por 60 s',
+    effects: [{ kind: 'mod', target: 'auto', mult: 1.4, seconds: 60 }],
+  },
+  {
+    id: 'perro-cable',
+    tone: 'bad',
+    icon: '🦴',
+    title: 'El perro mordió el cable del router',
+    quote: 'Te mira con cara de "yo no fui". Tiene el cable en la boca.',
+    needsMascot: 'dog',
+    detail: 'Producción del equipo ×0,6 por 30 s',
+    effects: [{ kind: 'mod', target: 'auto', mult: 0.6, seconds: 30 }],
+  },
+  {
+    id: 'pato-cuac',
+    tone: 'good',
+    icon: '🦆',
+    title: 'El pato hizo cuac en el momento justo',
+    quote: 'Justo cuando ibas a borrar todo. Lo entendiste: era un punto y coma.',
+    needsMascot: 'duck',
+    needsContract: true,
+    detail: 'El contrato actual avanza un 12 %',
+    effects: [{ kind: 'progress', pct: 0.12 }],
+  },
+  {
+    id: 'pato-pan',
+    tone: 'choice',
+    icon: '🍞',
+    title: 'El pato quiere pan',
+    quote: 'Ahora. Te mira fijo. No parpadea.',
+    needsMascot: 'duck',
+    safe: 0,
+    options: [
+      {
+        label: 'Comprarle pan',
+        detail: 'Pagás 1 % de tu dinero · +5 ★',
+        effects: [
+          { kind: 'pay', pct: 0.01 },
+          { kind: 'rep', amount: 5 },
+        ],
+      },
+      {
+        label: 'Ignorarlo',
+        detail: 'Tus clics ×0,8 por 30 s (te sigue mirando)',
+        effects: [{ kind: 'mod', target: 'click', mult: 0.8, seconds: 30 }],
+      },
+    ],
+  },
+
   // --- Generales (G3) ---
   {
     id: 'commit-viral',
@@ -719,6 +799,7 @@ export type EventContext = {
   roles: RoleId[]
   artifacts: string[]
   features: string[]
+  mascot?: MascotId | null
 }
 
 export const eventContextOf = (s: GameState): EventContext => ({
@@ -726,6 +807,7 @@ export const eventContextOf = (s: GameState): EventContext => ({
   roles: s.team.map((e) => e.role),
   artifacts: Object.keys(s.records.artifacts),
   features: s.records.features,
+  mascot: s.profile.mascot,
 })
 
 /** ¿Puede salir este evento ahora? */
@@ -734,7 +816,8 @@ export function canHappen(e: GameEvent, ctx: EventContext): boolean {
     (ctx.hasContract || !e.needsContract) &&
     (!e.needsRole || ctx.roles.includes(e.needsRole)) &&
     (!e.needsArtifact || ctx.artifacts.includes(e.needsArtifact)) &&
-    (!e.needsFeature || ctx.features.includes(e.needsFeature))
+    (!e.needsFeature || ctx.features.includes(e.needsFeature)) &&
+    (!e.needsMascot || ctx.mascot === e.needsMascot)
   )
 }
 

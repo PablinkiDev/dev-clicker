@@ -1,3 +1,5 @@
+import Avatar from './Avatar'
+import { titleName } from '../data/personalization'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { ARTIFACTS } from '../data/artifacts'
 import { formatDuration, formatMoney, formatNumber } from '../game/format'
@@ -30,9 +32,15 @@ function IpoScreen({ state, onContinue }: { state: GameState; onContinue: () => 
         aria-label="Salida a la bolsa"
         className="mx-auto max-w-2xl py-8 text-center"
       >
-        <p className="animate-pop text-8xl">🦄</p>
+        <div className="relative mx-auto w-fit animate-pop">
+          <Avatar profile={state.profile} size={112} />
+          <span className="absolute -right-4 -bottom-1 text-5xl">🦄</span>
+        </div>
+        {titleName(state.profile.title) && (
+          <p className="mt-2 font-mono text-xs text-purple">« {titleName(state.profile.title)} »</p>
+        )}
         <p className="mt-4 font-mono text-xs font-bold tracking-[0.3em] text-yellow uppercase">git tag v1.0.0-IPO</p>
-        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">¡Tu empresa salió a la bolsa!</h1>
+        <h1 className="mt-2 text-3xl font-extrabold md:text-4xl">¡{state.company.name} salió a la bolsa!</h1>
         <p className="mx-auto mt-3 max-w-lg text-muted">
           Empezaste con Nano, una compu y una tía que quería una web. Hoy tu empresa cotiza en bolsa y nadie sabe bien
           qué hace. Sos una leyenda.

@@ -17,6 +17,8 @@ type DevPanelProps = {
   /** Abre un minijuego para jugarlo ya */
   onMinigame: (game: MinigameId) => void
   onBug: () => void
+  /** 🐈 La mascota sale a pasear ya */
+  onMascot: () => void
   speed: number
   onSpeed: (speed: number) => void
 }
@@ -189,6 +191,7 @@ function DevPanel(props: DevPanelProps) {
               📦 +5 cajas
             </Btn>
             <Btn onClick={() => onPatch({ bossCountdown: 0 })}>👹 Jefe ahora</Btn>
+            <Btn onClick={props.onMascot}>🐈 Mascota ahora</Btn>
           </div>
 
           <div>

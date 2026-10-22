@@ -10,6 +10,8 @@ type TitleBarProps = {
   title: string
   /** Hay un contrato con código sin entregar */
   modified: boolean
+  /** 🏢 Nombre de la empresa (G4): en Nano, que no tiene explorador, va en la barra */
+  companyName?: string
 }
 
 /** Etiqueta de modo infinito con el multiplicador de los contratos */
@@ -23,11 +25,11 @@ function EndlessBadge({ scale }: { scale: number | null }) {
 }
 
 /** Barra de título de la "ventana" (solo escritorio). Cada editor tiene la suya */
-function TitleBar({ editor, title, modified, stage, endlessScale }: TitleBarProps) {
+function TitleBar({ editor, title, modified, stage, endlessScale, companyName }: TitleBarProps) {
   if (editor === 'nano') {
     return (
       <header className="hidden h-6.5 shrink-0 items-center justify-between bg-text px-3 font-mono text-xs text-bg md:flex">
-        <span>nano 7.2</span>
+        <span>nano 7.2{companyName ? ` · ${companyName}` : ''}</span>
         <span>{title}</span>
         <span>{modified ? 'Modificado' : ''}</span>
       </header>

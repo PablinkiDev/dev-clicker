@@ -1,4 +1,5 @@
 // Guardado de la partida en localStorage, con versión y validación (GDD §14).
+import { DEFAULT_COMPANY, DEFAULT_PROFILE } from '../data/personalization'
 import { EDITORS } from '../data/editors'
 import { INITIAL_SKILLS } from '../data/skills'
 import { INITIAL_TECH, LANG_EXT } from '../data/techs'
@@ -51,6 +52,8 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   macro: 0,
   macroOn: true,
   tampered: false,
+  company: DEFAULT_COMPANY,
+  profile: DEFAULT_PROFILE,
 }
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */

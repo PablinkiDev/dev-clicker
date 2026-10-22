@@ -1,6 +1,7 @@
 import { formatDuration, formatMoney } from '../game/format'
 import type { SaleRecord } from '../game/prestige'
 import { getChallenge } from '../data/challenges'
+import CompanyLogo from './CompanyLogo'
 
 /** "⚡ 16 % más rápida que la anterior" (si las dos ventas tienen el tiempo jugado) */
 function Comparison({ current, previous }: { current?: number; previous?: number }) {
@@ -26,7 +27,17 @@ function SalesHistory({ history }: { history: SaleRecord[] }) {
         {history.map((sale, i) => (
           <li key={sale.soldAt} className="rounded-xl border border-line bg-panel-2 p-3 font-mono text-xs">
             <p className="mb-1 flex justify-between gap-3">
-              <b className="text-text">💼 Empresa n.º {history.length - i}</b>
+              <b className="flex min-w-0 items-center gap-2 text-text">
+                {sale.company ? (
+                  <>
+                    <CompanyLogo company={sale.company} className="size-5 rounded text-[11px]" />
+                    <span className="truncate">{sale.company.name}</span>
+                    <span className="font-normal text-faint">n.º {history.length - i}</span>
+                  </>
+                ) : (
+                  `💼 Empresa n.º ${history.length - i}`
+                )}
+              </b>
               <span className="text-muted">{new Date(sale.soldAt).toLocaleDateString('es-AR')}</span>
             </p>
             <p className="text-muted">
