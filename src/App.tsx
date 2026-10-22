@@ -53,7 +53,8 @@ import ChallengePicker from './components/ChallengePicker'
 import IpoScreen from './components/IpoScreen'
 import { getChallenge } from './data/challenges'
 import { focusMultiplier, isFocused } from './game/focus'
-import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
+import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers } from './game/offers'
+import { offerContextOf } from './game/offerContext'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
 import { replaceCandidate, rerollCandidates, rerollPrice, type Employee } from './game/team'
@@ -157,16 +158,7 @@ function App() {
     .filter((m) => isActive(m, now))
     .map((m) => ({ ...m, seconds: Math.ceil((m.endsAt - now) / 1000) }))
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
-  const offerContext: OfferContext = {
-    tech: state.tech,
-    stage: state.stage,
-    endless: state.endless,
-    rep,
-    perSecond: (clicksPerSecond + macroRateOf(state)) * clickRate(state) + auto,
-    timeBonus: (1 + 0.08 * skills.timeManagement) * bonuses(state).timeMult,
-    codeMult: bonuses(state).codeMult,
-    specialMult: bonuses(state).specialMult,
-  }
+  const offerContext = offerContextOf(state, clicksPerSecond, now)
   const isComplete = contract !== null && code >= contract.code
   // El juego sigue aunque la pestaña esté oculta (D4); con el juego cerrado, no avanza
   const isRunning = contract !== null && !isComplete

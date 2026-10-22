@@ -125,7 +125,7 @@ Al empezar una empresa nueva (después de la primera venta), podés elegir un de
 |---|---|---|
 | 🙌 Manos atadas | tus clics escriben ×0,25 | +75 % de tokens |
 | 🦥 Equipo con sueño | el equipo produce ×0,5 | +75 % de tokens |
-| ⏱ Contrarreloj | plazos ×0,6 | +75 % de tokens |
+| ⏱ Contrarreloj | plazos ×0,5 | +50 % de tokens |
 | 💸 Bootstrapped | los contratos pagan ×0,6 | +50 % de tokens |
 | 🐧 Nano para siempre | no podés cambiar de editor | +50 % de tokens |
 | 🃏 Sin especializaciones | no hay cartas al ascender | +50 % de tokens |

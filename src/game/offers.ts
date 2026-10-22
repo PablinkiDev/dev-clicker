@@ -21,8 +21,12 @@ export type OfferContext = {
    * Sirve para garantizar que siempre haya al menos una oferta posible.
    */
   perSecond: number
+  /** Producción con la que se dimensiona el código (sin el desafío); si falta, perSecond */
+  sizingPerSecond?: number
   /** Gestión del tiempo: multiplicador del plazo (1 si no se tiene) */
   timeBonus?: number
+  /** 🏁 Plazo del desafío: se aplica después de dimensionar el código (1 si no hay) */
+  challengeTime?: number
   /** 🦆 Patito de goma: multiplicador del código que piden (1 si no se tiene) */
   codeMult?: number
   /** 🧲 Imán: multiplicador de la probabilidad de contratos especiales */
@@ -50,17 +54,27 @@ const TARGET_SHARE: Record<Difficulty, number> = { easy: 0.3, mid: 0.45, hard: 0
  */
 function createOffer(
   template: ContractTemplate,
-  { stage, endless, rep, perSecond, timeBonus = 1, codeMult = 1 }: OfferContext,
+  {
+    stage,
+    endless,
+    rep,
+    perSecond,
+    sizingPerSecond = perSecond,
+    timeBonus = 1,
+    challengeTime = 1,
+    codeMult = 1,
+  }: OfferContext,
 ): Contract {
   const level = repLevel(rep)
-  const time = Math.round(template.time * timeBonus)
+  const sizeTime = Math.round(template.time * timeBonus)
+  const time = Math.max(10, Math.round(sizeTime * challengeTime))
   // Etapa y reputación son grupos distintos: se multiplican
   const base = contractScale(stage, endless) * repScale(level)
   // Si ya sos mucho más rápido que el contrato, el cliente pide más (y paga en proporción):
   // así un contrato nunca dura un suspiro, aunque tu producción crezca más que la etapa
   const fit = template.once
     ? 1
-    : Math.max(1, (perSecond * time * TARGET_SHARE[template.difficulty]) / (template.code * base))
+    : Math.max(1, (sizingPerSecond * sizeTime * TARGET_SHARE[template.difficulty]) / (template.code * base))
   const factor = template.once ? 1 : 0.85 + Math.random() * 0.3
   const scale = base * fit
   // Las tecnologías avanzadas (y los fullstack) pagan más (D3)

@@ -39,9 +39,9 @@ export const CHALLENGES: Challenge[] = [
     id: 'againstTheClock',
     icon: '⏱',
     name: 'Contrarreloj',
-    rule: 'Los plazos de los contratos son ×0,6',
-    tokenBonus: 0.75,
-    effects: { timeMult: 0.6 },
+    rule: 'Los plazos de los contratos son ×0,5',
+    tokenBonus: 0.5,
+    effects: { timeMult: 0.5 },
   },
   {
     id: 'bootstrapped',

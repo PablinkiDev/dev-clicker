@@ -92,8 +92,9 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | F2 ✅ | ⚡ **Habilidades activas:** barra al lado de Programar con Foco (1), 🏃 Hackatón (2), 🔥 Crunch (3), 👯 Pair programming (4) y ☕ Café doble (5). Se aprenden en el árbol personal (Nv.1–3), con tarjeta "¡Nuevo!". *Balance pendiente: en la simulación aceleran ~30 % el primer ciclo* | M | 3 |
 | F3 ✅ | 🏺 **Artefactos y "Tu setup":** 16 artefactos (6 comunes, 4 raros, 3 épicos, 3 legendarios) con niveles 1–10, permanentes. 📦 Cajas: una por jefe, una por venta y compradas con tokens (3, 5, 7… ×1,5). Pantalla nueva Setup: escritorio con siluetas, apertura animada con brillo por rareza y colección. Mismo motor de efectos que las cartas. Simulación: 8 artefactos tras 3 runs | M | 5–6 |
 | F4 ✅ | 👹 **Clientes jefe:** desde Estudio, cada 10 contratos llega un jefe al tablón (8 jefes con nombre y frase, algunos con condición): 2× código, 1,5× plazo, paga ×10, XP ×4 y 📦 1 caja. Perder no tiene multa. La Captación automática no los toma. Simulación: 4–5 jefes por run | M | 2–3 |
-| F5 ✅ | 🏁 **Desafíos de run:** desde la 2.ª empresa se elige uno opcional al arrancar: 🙌 Manos atadas, 🦥 Equipo con sueño, ⏱ Contrarreloj (+75 % tokens), 💸 Bootstrapped, 🐧 Nano para siempre, 🃏 Sin especializaciones (+50 %). 1.ª vez: +2 📦. Logros Masoquista y Sufrimiento profesional. *Cambio de diseño: Garage, Lobo solitario y Sin manos se reemplazaron porque trababan los requisitos de ascenso* | S | 2–3 |
+| F5 ✅ | 🏁 **Desafíos de run:** desde la 2.ª empresa se elige uno opcional al arrancar: 🙌 Manos atadas, 🦥 Equipo con sueño, ⏱ Contrarreloj (+75 % tokens; luego +50 %), 💸 Bootstrapped, 🐧 Nano para siempre, 🃏 Sin especializaciones (+50 %). 1.ª vez: +2 📦. Logros Masoquista y Sufrimiento profesional. *Cambio de diseño: Garage, Lobo solitario y Sin manos se reemplazaron porque trababan los requisitos de ascenso* | S | 2–3 |
 | F6 ✅ | 🦄 **IPO:** desde las 12 ventas, botón "Salir a la bolsa" en Empresa (con progreso n/12 desde la primera venta). Pantalla final con la carrera en números y créditos, logro legendario "Leyenda de Silicon Valley" y modo leyenda (seguir jugando; "Ver mi carrera" la vuelve a abrir) | M | 2 |
+| F7 ✅ | ⚖️ **Rebalanceo post-F:** los contratos se dimensionan sin el desafío (antes el desafío se anulaba solo y Contrarreloj hasta aceleraba la run). Contrarreloj pasa a plazos ×0,5 y +50 % tokens. Simulación de la carrera completa hasta la IPO (ver abajo) | M | 1 |
 
 ## Hito G — Contenido
 
@@ -169,6 +170,19 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | 1,5 clics/s | 2 h 35 – 4 h 45 | ~3 h 10 | ~1 h 20 |
 
 Estimado para un jugador real: **~1 h 05 la primera empresa y ~35 min la segunda.**
+
+## 📊 Simulación post-Hito F (F7)
+
+Carrera completa: 12 ventas, los 6 desafíos en las ventas 2–7, cajas compradas con los tokens que sobran.
+
+| Bot | 1.ª venta | Run con Manos atadas / Equipo con sueño | Runs normales tardías | IPO |
+|---|---|---|---|---|
+| 5 clics/s mix | 1 h 04 – 1 h 25 | 45–50 min | 20–30 min | 6 h – 6 h 50 |
+| 5 clics/s click | 1 h 23 | ~40 min | 22–40 min | ~7 h |
+| 5 clics/s idle | 1 h 19 | ~54 min | 26–36 min | ~7 h 45 |
+| 2 clics/s mix | 1 h 33 | 47 min – 1 h 05 | 30–42 min | ~9 h 10 |
+
+Las runs tardías las frena la cantidad de contratos (30/70/120/180), no el dinero. Al llegar a la IPO: 11–14 de 16 artefactos y casi ningún legendario (queda colección para el modo leyenda).
 
 ## 📌 Decisiones
 

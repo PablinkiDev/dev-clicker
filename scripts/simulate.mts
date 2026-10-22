@@ -24,10 +24,11 @@ import { nextMinigameDelay } from '../src/data/minigames'
 import { MACRO_LEVELS, macroCps } from '../src/data/macro'
 import { ABILITIES } from '../src/data/abilities'
 import { createBossOffer } from '../src/game/offers'
-import { rollArtifact } from '../src/data/artifacts'
+import { boxPrice, rollArtifact } from '../src/data/artifacts'
+import { CHALLENGES } from '../src/data/challenges'
 import { drawCards, getCard, type CardStyle } from '../src/data/cards'
 import { critChanceOf, macroRateOf } from '../src/game/rates'
-import { bonuses } from '../src/game/cards'
+import { offerContextOf } from '../src/game/offerContext'
 
 // --- Parámetros -------------------------------------------------------------------
 const arg = (name: string, fallback: number) => {
@@ -40,6 +41,8 @@ const CYCLES = arg('cycles', 2)
 const BUILD = (
   process.argv.includes('--build') ? process.argv[process.argv.indexOf('--build') + 1] : 'mix'
 ) as CardStyle
+const WITH_CHALLENGES = process.argv.includes('--challenges')
+const WITH_BOXES = !process.argv.includes('--no-boxes')
 const STEP = 0.2 // segundos simulados por paso (como un tick de 200 ms)
 const MAX_HOURS = 120 // corte de seguridad
 /** Vende cuando la venta da al menos estos tokens (o tras 30 min en modo infinito) */
@@ -65,16 +68,7 @@ const counters = { fails: 0, clicksLines: 0, autoLines: 0, focus: 0 }
 
 const dispatch = (action: GameAction) => (state = gameReducer(state, action))
 const nowMs = () => clock * 1000
-const ctx = (s: GameState = state): OfferContext => ({
-  tech: s.tech,
-  stage: s.stage,
-  endless: s.endless,
-  rep: s.rep,
-  perSecond: (CLICKS_PER_SECOND + macroRateOf(s)) * clickRate(s) + autoRateOf(s),
-  timeBonus: (1 + 0.08 * s.skills.timeManagement) * bonuses(s).timeMult,
-  codeMult: bonuses(s).codeMult,
-  specialMult: bonuses(s).specialMult,
-})
+const ctx = (s: GameState = state): OfferContext => offerContextOf(s, CLICKS_PER_SECOND, nowMs())
 const log = (text: string) =>
   events.push(`${formatDuration(clock).padStart(11)}  (+${formatDuration(clock - cycleStart).padStart(10)})  ${text}`)
 
@@ -232,6 +226,12 @@ function sellIfReady(): boolean {
       break
     dispatch({ type: 'invest', investment: options[0].id })
   }
+  // 📦 Con lo que sobra, cajas (si el árbol de inversiones está caro)
+  while (WITH_BOXES && state.prestige.tokens >= boxPrice(state.records.boxesBought)) dispatch({ type: 'buyBox' })
+  // 🏁 Desafío: con --challenges hace cada uno una vez, en orden
+  const next = WITH_CHALLENGES ? CHALLENGES.find((c) => !state.records.challengesDone.includes(c.id)) : undefined
+  dispatch({ type: 'setChallenge', id: next?.id ?? null })
+  if (next) log(`🏁 Desafío: ${next.name}`)
   endlessSince = null
   treeDoneAt = -1
   return true
