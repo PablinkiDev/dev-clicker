@@ -36,6 +36,8 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   records: INITIAL_RECORDS,
   contractClicks: 0,
   rerolls: 0,
+  macro: 0,
+  macroOn: true,
 }
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */

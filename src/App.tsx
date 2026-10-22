@@ -29,6 +29,8 @@ import AchievementList from './components/AchievementList'
 import { ACHIEVEMENTS } from './data/achievements'
 import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
 import EditorShop from './components/EditorShop'
+import MacroShop from './components/MacroShop'
+import { macroCps } from './data/macro'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { officeCapacity } from './data/offices'
@@ -143,7 +145,7 @@ function App() {
     stage: state.stage,
     endless: state.endless,
     rep,
-    perSecond: clicksPerSecond * clickRate(state) + auto,
+    perSecond: (clicksPerSecond + (state.macroOn ? macroCps(state.macro) : 0)) * clickRate(state) + auto,
     timeBonus: 1 + 0.08 * skills.timeManagement,
   }
   const isComplete = contract !== null && code >= contract.code
@@ -419,6 +421,17 @@ function App() {
     playSfx(score > 0 ? 'win' : 'lose')
   }
 
+  // 🤖 Macro de teclado (E4): hace clic sola mientras haya un contrato sin terminar
+  const macroRate = state.macroOn ? macroCps(state.macro) : 0
+  useEffect(() => {
+    if (macroRate === 0 || !isRunning) return
+    const id = setInterval(
+      () => dispatch({ type: 'program', crit: false, now: Date.now(), macro: true }),
+      1000 / macroRate,
+    )
+    return () => clearInterval(id)
+  }, [macroRate, isRunning])
+
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
@@ -661,12 +674,22 @@ function App() {
               prestige={state.prestige}
               onInvest={(investment) => dispatch({ type: 'invest', investment })}
               tools={
-                <EditorShop
-                  editor={editor.id}
-                  money={money}
-                  stage={state.stage}
-                  onBuy={() => dispatch({ type: 'buyEditor' })}
-                />
+                <div className="flex flex-col gap-3">
+                  <EditorShop
+                    editor={editor.id}
+                    money={money}
+                    stage={state.stage}
+                    onBuy={() => dispatch({ type: 'buyEditor' })}
+                  />
+                  <MacroShop
+                    level={state.macro}
+                    on={state.macroOn}
+                    money={money}
+                    stage={state.stage}
+                    onBuy={() => dispatch({ type: 'buyMacro' })}
+                    onToggle={(on) => dispatch({ type: 'setMacro', on })}
+                  />
+                </div>
               }
             />
           )}

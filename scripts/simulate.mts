@@ -21,6 +21,7 @@ import { employeePrice, replaceCandidate, rerollCandidates } from '../src/game/t
 import { getEditor } from '../src/data/editors'
 import { nextBugDelay } from '../src/game/bug'
 import { nextMinigameDelay } from '../src/data/minigames'
+import { MACRO_LEVELS, macroCps } from '../src/data/macro'
 
 // --- Parámetros -------------------------------------------------------------------
 const arg = (name: string, fallback: number) => {
@@ -44,6 +45,7 @@ let state: GameState = createInitialState()
 let clock = 0 // segundos simulados desde el inicio
 let cycleStart = 0
 let clickDebt = 0
+let macroDebt = 0
 let endlessSince: number | null = null
 let treeDoneAt = -1
 let nextBug = nextBugDelay() / 1000
@@ -58,7 +60,7 @@ const ctx = (s: GameState = state): OfferContext => ({
   stage: s.stage,
   endless: s.endless,
   rep: s.rep,
-  perSecond: CLICKS_PER_SECOND * clickRate(s) + autoRateOf(s),
+  perSecond: (CLICKS_PER_SECOND + macroCps(s.macro)) * clickRate(s) + autoRateOf(s),
   timeBonus: 1 + 0.08 * s.skills.timeManagement,
 })
 const log = (text: string) =>
@@ -66,7 +68,7 @@ const log = (text: string) =>
 
 // --- Decisiones del bot -------------------------------------------------------------
 function acceptBest() {
-  const perSecond = CLICKS_PER_SECOND * clickRate(state) + autoRateOf(state)
+  const perSecond = (CLICKS_PER_SECOND + macroCps(state.macro)) * clickRate(state) + autoRateOf(state)
   // La que mejor paga entre las que llega a hacer con margen; si ninguna, la más corta
   const viable = state.offers.filter((o) => o.code / perSecond <= o.time * 0.85)
   const pool = viable.length ? viable : [...state.offers].sort((a, b) => a.code / a.time - b.code / b.time).slice(0, 1)
@@ -132,6 +134,11 @@ function shop() {
   ) {
     dispatch({ type: 'moveOffice' })
     log(`📦 Mudanza a ${OFFICES[state.office].name}`)
+  }
+  const macro = MACRO_LEVELS[state.macro]
+  if (macro && state.stage >= macro.minStage && state.money >= macro.price * 1.5) {
+    dispatch({ type: 'buyMacro' })
+    log(`🤖 ${macro.name}`)
   }
   const editor = nextEditor(state.editor)
   if (editor && state.money >= editor.price * 1.5 && state.stage >= (editor.minStage ?? 0)) {
@@ -205,6 +212,16 @@ while (clock < MAX_HOURS * 3600 && sales < CYCLES) {
     counters.clicksLines += state.code >= before ? state.code - before : 0
   }
   if (!state.contract || state.code >= state.contract.code) clickDebt = 0
+
+  // 🤖 Macro de teclado: clics extra que no cuentan para los récords
+  macroDebt += macroCps(state.macro) * STEP
+  while (macroDebt >= 1 && state.contract && state.code < state.contract.code) {
+    macroDebt -= 1
+    const before = state.code
+    dispatch({ type: 'program', crit: false, now: nowMs(), macro: true })
+    counters.clicksLines += state.code >= before ? state.code - before : 0
+  }
+  if (!state.contract || state.code >= state.contract.code) macroDebt = 0
 
   // El tiempo corre
   const before = state.code

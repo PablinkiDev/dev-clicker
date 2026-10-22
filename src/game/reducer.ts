@@ -29,6 +29,7 @@ import type { Contract } from './types'
 import { INITIAL_RECORDS, type Records } from './records'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
+import { MACRO_LEVELS } from '../data/macro'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
 export type Notice = {
@@ -125,6 +126,9 @@ export type GameState = {
   contractClicks: number
   /** Búsquedas de candidatos seguidas sin contratar (cada una sale más cara) */
   rerolls: number
+  /** 🤖 Macro de teclado: nivel comprado (0 = no) y si está prendida */
+  macro: number
+  macroOn: boolean
   /** Terminal: lo que fue pasando. No se guarda en localStorage */
   log: LogEntry[]
 }
@@ -139,7 +143,10 @@ function addLog(log: LogEntry[], kind: LogEntry['kind'], text: string): LogEntry
 export type GameAction =
   // Si el clic fue crítico se decide afuera (es azar) con la probabilidad de critChance()
   // now: para saber si la Concentración sigue activa (la hora llega de afuera, el reducer es puro)
-  | { type: 'program'; crit: boolean; now: number }
+  // macro: lo hizo la 🤖 Macro de teclado (no es crítico ni cuenta para tus logros)
+  | { type: 'program'; crit: boolean; now: number; macro?: boolean }
+  | { type: 'buyMacro' }
+  | { type: 'setMacro'; on: boolean }
   | { type: 'focus'; now: number }
   | { type: 'deliver' }
   // now: la hora, para el 🐛 bug dorado (opcional: la simulación no lo usa)
@@ -216,6 +223,8 @@ export function createInitialState(): GameState {
     records: INITIAL_RECORDS,
     contractClicks: 0,
     rerolls: 0,
+    macro: 0,
+    macroOn: true,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -370,14 +379,22 @@ function reduce(state: GameState, action: GameAction): GameState {
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
       const focus = isFocused(state.focus, action.now) ? focusMultiplier(state.skills.flowState) : 1
-      const lines = clickRate(state, action.now) * focus * (action.crit ? critMultiplier(state) : 1)
+      const crit = action.crit && !action.macro
+      const lines = clickRate(state, action.now) * focus * (crit ? critMultiplier(state) : 1)
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
-      if (action.crit)
-        log = addLog(log, 'crit', `⚡ Crítico: +${formatRate(lines)} líneas sin un solo typo. Sospechoso.`)
+      if (crit) log = addLog(log, 'crit', `⚡ Crítico: +${formatRate(lines)} líneas sin un solo typo. Sospechoso.`)
       if (code >= contract.code)
         log = addLog(log, 'success', `✓ Build OK · ${contract.code} líneas · listo para git push`)
       const { records } = state
+      // Los clics de la macro escriben código, pero no son tuyos: no cuentan para clics ni logros
+      if (action.macro)
+        return finishIfDone({
+          ...state,
+          code,
+          log,
+          records: { ...records, lines: records.lines + (code - state.code) },
+        })
       return finishIfDone({
         ...state,
         code,
@@ -386,9 +403,9 @@ function reduce(state: GameState, action: GameAction): GameState {
         records: {
           ...records,
           clicks: records.clicks + 1,
-          crits: records.crits + (action.crit ? 1 : 0),
+          crits: records.crits + (crit ? 1 : 0),
           lines: records.lines + (code - state.code),
-          recentCrits: action.crit ? [...records.recentCrits, action.now].slice(-20) : records.recentCrits,
+          recentCrits: crit ? [...records.recentCrits, action.now].slice(-20) : records.recentCrits,
         },
       })
     }
@@ -659,6 +676,25 @@ function reduce(state: GameState, action: GameAction): GameState {
         ),
       }
     }
+
+    case 'buyMacro': {
+      const next = MACRO_LEVELS[state.macro]
+      if (!next || state.money < next.price || state.stage < next.minStage) return state
+      return {
+        ...state,
+        money: state.money - next.price,
+        macro: state.macro + 1,
+        macroOn: true,
+        log: addLog(
+          state.log,
+          'success',
+          `🤖 ${next.name} instalada · ${next.cps} clic${next.cps > 1 ? 's' : ''} por segundo, sin cansarse`,
+        ),
+      }
+    }
+
+    case 'setMacro':
+      return { ...state, macroOn: action.on }
 
     case 'setAutoAccept':
       return { ...state, autoAccept: action.on }

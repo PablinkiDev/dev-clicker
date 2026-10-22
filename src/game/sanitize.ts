@@ -2,6 +2,7 @@
 // La validación de save.ts revisa los TIPOS; acá se revisan los RANGOS: un número bien escrito
 // pero absurdo (un dev de 50★, JavaScript Nv.99) se recorta al máximo posible en vez de romper el juego.
 import { INVESTMENTS } from '../data/investments'
+import { MACRO_LEVELS } from '../data/macro'
 import { OFFICES, officeCapacity } from '../data/offices'
 import { SKILLS } from '../data/skills'
 import { STAGES } from '../data/stages'
@@ -53,6 +54,8 @@ export function sanitize(state: GameState): GameState {
     },
     contractClicks: Math.round(clamp(state.contractClicks, 0)),
     rerolls: Math.round(clamp(state.rerolls, 0, 50)),
+    macro: Math.round(clamp(state.macro, 0, MACRO_LEVELS.length)),
+    macroOn: state.macroOn !== false,
     records: {
       ...state.records,
       ...Object.fromEntries(
