@@ -161,11 +161,12 @@ function Team() {
     <>
       <H>Profesiones</H>
       <Table
-        head={['Rol', 'Qué hace', 'Precio base']}
+        head={['Rol', 'Qué hace', 'Precio base', 'Desde']}
         rows={ROLE_IDS.map((id) => [
           `${ROLES[id].icon} ${ROLES[id].name}`,
           `1★: ${employeeEffect(id, 1)} · 5★: ${employeeEffect(id, 5)}`,
           formatMoney(ROLES[id].basePrice),
+          stageName(ROLES[id].minStage),
         ])}
       />
       <P>
@@ -175,9 +176,10 @@ function Team() {
       <Table head={['Etapa', 'Hasta']} rows={STAGES.map((s, i) => [`${s.icon} ${s.name}`, stars(maxStars(i))])} />
       <H>Candidatos</H>
       <P>
-        Siempre hay 4 candidatos. <B>🔄 Buscar otros</B> trae una lista nueva; cada búsqueda seguida sale ×
-        {REROLL_GROWTH.toLocaleString('es-AR')} más cara, hasta que contratás a alguien. Con la oficina llena podés
-        contratar reemplazando a alguien (el que se va no devuelve lo que costó).
+        Hay un candidato por cada profesión de tu etapa (y un dev de más mientras son pocas). <B>🔄 Buscar otros</B>{' '}
+        trae una lista nueva; cada búsqueda seguida sale ×{REROLL_GROWTH.toLocaleString('es-AR')} más cara, hasta que
+        contratás a alguien. Con la oficina llena podés contratar reemplazando a alguien (el que se va no devuelve lo
+        que costó).
       </P>
       <H>Oficinas</H>
       <Table

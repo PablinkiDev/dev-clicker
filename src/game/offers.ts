@@ -25,8 +25,8 @@ export type OfferContext = {
   sizingPerSecond?: number
   /** Gestión del tiempo: multiplicador del plazo (1 si no se tiene) */
   timeBonus?: number
-  /** 🏁 Plazo del desafío: se aplica después de dimensionar el código (1 si no hay) */
-  challengeTime?: number
+  /** Plazo extra que se aplica después de dimensionar el código: 🏁 desafío × 📋 PM (1 si no hay) */
+  extraTime?: number
   /** 🦆 Patito de goma: multiplicador del código que piden (1 si no se tiene) */
   codeMult?: number
   /** 🧲 Imán: multiplicador de la probabilidad de contratos especiales */
@@ -61,13 +61,13 @@ function createOffer(
     perSecond,
     sizingPerSecond = perSecond,
     timeBonus = 1,
-    challengeTime = 1,
+    extraTime = 1,
     codeMult = 1,
   }: OfferContext,
 ): Contract {
   const level = repLevel(rep)
   const sizeTime = Math.round(template.time * timeBonus)
-  const time = Math.max(10, Math.round(sizeTime * challengeTime))
+  const time = Math.max(10, Math.round(sizeTime * extraTime))
   // Etapa y reputación son grupos distintos: se multiplican
   const base = contractScale(stage, endless) * repScale(level)
   // Si ya sos mucho más rápido que el contrato, el cliente pide más (y paga en proporción):

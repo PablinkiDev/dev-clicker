@@ -144,7 +144,7 @@ Al empezar una empresa nueva (después de la primera venta), podés elegir un de
 
 ## 4. Hito G — Contenido
 
-### G1. 👥 Profesiones nuevas (de 3 a 8)
+### G1. 👥 Profesiones nuevas (de 3 a 8) ✅
 
 Cada una **cambia una mecánica**; no es solo otro "+%".
 

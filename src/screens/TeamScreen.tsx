@@ -4,7 +4,16 @@ import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES, officeCapacity } from '../data/offices'
 import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
-import { employeePrice, maxStars, qaMultiplier, type Employee } from '../game/team'
+import {
+  dataLuck,
+  employeePrice,
+  leadMultiplier,
+  maxStars,
+  pmMultiplier,
+  qaMultiplier,
+  uxMultiplier,
+  type Employee,
+} from '../game/team'
 
 type TeamScreenProps = {
   team: Employee[]
@@ -50,7 +59,15 @@ function TeamScreen({
   const isFull = team.length >= capacity
   const nextLocked = next !== undefined && stage < next.minStage
   const seats = 1 + capacity
-  const qaPercent = Math.round((qaMultiplier(team, codeReview) - 1) * 100)
+  // Lo que aportan las profesiones que no escriben código (solo las que tenés)
+  const percent = (mult: number) => Math.round((mult - 1) * 100)
+  const perks = [
+    { value: percent(qaMultiplier(team, codeReview)), text: 'XP', className: 'text-cyan' },
+    { value: percent(uxMultiplier(team)), text: 'paga', className: 'text-purple' },
+    { value: percent(pmMultiplier(team)), text: 'plazo', className: 'text-blue' },
+    { value: Math.round(dataLuck(team) * 10), text: 'suerte', className: 'text-yellow' },
+    { value: percent(leadMultiplier(team)), text: 'Tech Lead', className: 'text-red' },
+  ].filter((p) => p.value > 0)
 
   // Estado solo de esta pantalla: el candidato elegido mientras se busca a quién reemplazar.
   // Si ese candidato ya no está en la lista (o hay lugar libre), no se está reemplazando a nadie.
@@ -76,12 +93,15 @@ function TeamScreen({
         <span className="mt-1 block font-mono text-xs">
           Producción:{' '}
           <b className="text-green">+{autoRate.toLocaleString('es-AR', { maximumFractionDigits: 1 })} l/s</b>
-          {qaPercent > 0 && (
-            <>
+          {perks.map((p) => (
+            <span key={p.text}>
               {' '}
-              · <b className="text-cyan">+{qaPercent}% XP</b>
-            </>
-          )}
+              ·{' '}
+              <b className={p.className}>
+                +{p.value}% {p.text}
+              </b>
+            </span>
+          ))}
         </span>
       </ScreenHeader>
 

@@ -42,4 +42,15 @@ export const OFFICES: Office[] = [
     minStage: 2,
     description: 'Mesa de ping-pong que nadie usa.',
   },
+  {
+    name: 'Campus',
+    icon: '🌳',
+    capacity: 24,
+    price: 1_000_000_000,
+    minStage: 4,
+    description: 'Tobogán, cervecería artesanal y nadie sabe dónde queda tu escritorio.',
+  },
 ]
+
+/** Índice de la Oficina corporativa (los logros de "llenar la oficina" son sobre esta) */
+export const CORPORATE_OFFICE = 2

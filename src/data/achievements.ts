@@ -2,7 +2,8 @@
 // Cada logro mira el estado de antes y de después de una acción: si se cumple, se desbloquea.
 import type { GameAction, GameState } from '../game/reducer'
 import { companyValue } from '../game/stages'
-import { OFFICES, officeCapacity } from './offices'
+import { CORPORATE_OFFICE, OFFICES, officeCapacity } from './offices'
+import { ROLE_IDS } from './roles'
 import { CHALLENGES } from './challenges'
 
 export type AchievementCategory = 'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'games' | 'secret'
@@ -45,6 +46,8 @@ function counter(
 /** ¿Esta acción entregó un contrato? */
 const delivered = ({ prev, next }: AchievementCheck) => next.records.contracts > prev.records.contracts
 const corporateFull = (s: GameState) =>
+  s.office >= CORPORATE_OFFICE && s.team.length >= officeCapacity(CORPORATE_OFFICE, s.skills.homeOffice)
+const campusFull = (s: GameState) =>
   s.office === OFFICES.length - 1 && s.team.length >= officeCapacity(s.office, s.skills.homeOffice)
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -229,6 +232,22 @@ export const ACHIEVEMENTS: Achievement[] = [
     name: 'Nos va a reemplazar la IA',
     description: 'Llená la oficina corporativa sin ningún desarrollador',
     check: ({ next }) => corporateFull(next) && next.team.every((e) => e.role !== 'dev'),
+  },
+  {
+    id: 'campusFull',
+    category: 'team',
+    icon: '🌳',
+    name: 'Ciudad universitaria',
+    description: 'Llená el Campus',
+    check: ({ next }) => campusFull(next),
+  },
+  {
+    id: 'allRoles',
+    category: 'team',
+    icon: '🌈',
+    name: 'Equipo multidisciplinario',
+    description: `Tené las ${ROLE_IDS.length} profesiones en el equipo a la vez`,
+    check: ({ next }) => ROLE_IDS.every((r) => next.team.some((e) => e.role === r)),
   },
   counter(
     {

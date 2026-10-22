@@ -1,5 +1,5 @@
 // Equipo: empleados con estrellas, sus fórmulas y la generación de candidatos.
-import { NAMES, ROLES, type RoleId } from '../data/roles'
+import { NAMES, ROLES, rolesFor, type RoleId } from '../data/roles'
 import { STAGES } from '../data/stages'
 
 export type Employee = {
@@ -30,30 +30,98 @@ export const QA_XP_PER_STAR: number = 0.1
 /** +25 % de producción automática por cada estrella de DevOps */
 export const OPS_AUTO_PER_STAR: number = 0.25
 
+/** 🎓 Un pasante escribe el 40 % de lo que escribe un dev de sus mismas estrellas */
+export const INTERN_RATE: number = 0.4
+
+/** 🎨 +6 % de paga por contrato por cada estrella de Diseño UX */
+export const UX_PAY_PER_STAR: number = 0.06
+
+/** 📋 +4 % de plazo por cada estrella de PM (como mucho +100 %) */
+export const PM_TIME_PER_STAR: number = 0.04
+const PM_TIME_MAX = 1
+
+/** 📊 +0,2 de suerte (2 % más chances de lo bueno) por cada estrella de Data Scientist */
+export const DATA_LUCK_PER_STAR: number = 0.2
+
+/** 🧑‍🏫 +5 % a todo lo que hacen los demás, por cada estrella de Tech Lead */
+export const LEAD_PER_STAR: number = 0.05
+
 /** Suma algo de los empleados de una profesión (por ejemplo, sus estrellas) */
 function sumRole(team: Employee[], role: RoleId, fn: (stars: number) => number): number {
   return team.filter((e) => e.role === role).reduce((total, e) => total + fn(e.stars), 0)
 }
 
-/** Lo que aporta una persona, en texto para las tarjetas */
-export function employeeEffect(role: RoleId, stars: number): string {
-  if (role === 'dev') return `+${devRate(stars).toLocaleString('es-AR')} líneas/seg automáticas`
-  if (role === 'qa') return `+${Math.round(QA_XP_PER_STAR * stars * 100)}% de XP por contrato`
-  return `+${Math.round(OPS_AUTO_PER_STAR * stars * 100)}% producción automática`
+/** Líneas por segundo de un pasante */
+export const internRate = (stars: number) => Math.round(INTERN_RATE * devRate(stars) * 10) / 10
+
+/** 🧑‍🏫 Cuánto potencia el Tech Lead a los demás (1 si no hay) */
+export function leadMultiplier(team: Employee[]): number {
+  return 1 + sumRole(team, 'lead', (s) => LEAD_PER_STAR * s)
 }
 
-/** Producción automática total: (desarrolladores + editor) × bonus de DevOps */
+const pct = (n: number) => `${Math.round(n * 100)}%`
+
+/** Lo que aporta una persona, en texto para las tarjetas */
+export function employeeEffect(role: RoleId, stars: number): string {
+  switch (role) {
+    case 'dev':
+      return `+${devRate(stars).toLocaleString('es-AR')} líneas/seg automáticas`
+    case 'qa':
+      return `+${pct(QA_XP_PER_STAR * stars)} de XP por contrato`
+    case 'ops':
+      return `+${pct(OPS_AUTO_PER_STAR * stars)} producción automática`
+    case 'intern':
+      return `+${internRate(stars).toLocaleString('es-AR')} líneas/seg · a veces mete un bug, a veces sorprende`
+    case 'ux':
+      return `+${pct(UX_PAY_PER_STAR * stars)} de paga por contrato`
+    case 'pm':
+      return `+${pct(PM_TIME_PER_STAR * stars)} de plazo en los contratos nuevos`
+    case 'data':
+      return `+${pct(DATA_LUCK_PER_STAR * stars * 0.1)} de chances en eventos y apuestas`
+    case 'lead':
+      return `+${pct(LEAD_PER_STAR * stars)} a todo lo que hacen los demás`
+  }
+}
+
+/** Producción automática total: (desarrolladores + pasantes + editor) × bonus de DevOps, potenciado por el Tech Lead */
 /** kubernetes: nivel de la mejora (+20 % al bonus de cada DevOps por nivel) */
 export function autoRate(team: Employee[], editorBonus: number, kubernetes = 0): number {
-  const base = sumRole(team, 'dev', devRate) + editorBonus
-  return base * (1 + sumRole(team, 'ops', (s) => OPS_AUTO_PER_STAR * s) * (1 + 0.2 * kubernetes))
+  const lead = leadMultiplier(team)
+  const base = (sumRole(team, 'dev', devRate) + sumRole(team, 'intern', internRate)) * lead + editorBonus
+  return base * (1 + sumRole(team, 'ops', (s) => OPS_AUTO_PER_STAR * s) * (1 + 0.2 * kubernetes) * lead)
 }
 
 /** Multiplicador de XP que aporta QA */
 /** codeReview: nivel de la mejora (+25 % al bonus de cada QA por nivel) */
 export function qaMultiplier(team: Employee[], codeReview = 0): number {
-  return 1 + sumRole(team, 'qa', (s) => QA_XP_PER_STAR * s) * (1 + 0.25 * codeReview)
+  return 1 + sumRole(team, 'qa', (s) => QA_XP_PER_STAR * s) * (1 + 0.25 * codeReview) * leadMultiplier(team)
 }
+
+/** 🎨 Multiplicador de la paga que aporta Diseño UX */
+export function uxMultiplier(team: Employee[]): number {
+  return 1 + sumRole(team, 'ux', (s) => UX_PAY_PER_STAR * s) * leadMultiplier(team)
+}
+
+/** 📋 Multiplicador del plazo que aporta el PM (se aplica después de dimensionar el código) */
+export function pmMultiplier(team: Employee[]): number {
+  return 1 + Math.min(PM_TIME_MAX, sumRole(team, 'pm', (s) => PM_TIME_PER_STAR * s) * leadMultiplier(team))
+}
+
+/** 📊 Suerte que aporta Data Science (misma escala que la habilidad Suerte) */
+export function dataLuck(team: Employee[]): number {
+  return sumRole(team, 'data', (s) => DATA_LUCK_PER_STAR * s) * leadMultiplier(team)
+}
+
+// --- 🎓 Pasantes: a veces meten un bug, a veces sorprenden -------------------------
+
+/** Cada cuánto hace algo un pasante: de 60 a 120 s */
+export const nextInternDelay = () => (60 + Math.random() * 60) * 1000
+
+/** Con más estrellas, sorprende más seguido: 1★ 40 %, 5★ 80 % */
+export const internSurpriseChance = (stars: number) => 0.3 + 0.1 * stars
+
+/** Qué parte del contrato suma (sorpresa) o resta (bug) */
+export const internSwing = (stars: number, surprise: boolean) => (surprise ? 0.02 * stars : 0.015 * (6 - stars))
 
 // --- Candidatos ---------------------------------------------------------------
 // Usan azar, así que se generan afuera del reducer (igual que las ofertas).
@@ -106,10 +174,16 @@ export function createCandidate(role: RoleId, taken: Employee[], stage: number, 
 /** Candidatos iniciales: siempre hay un dev 1★ para el primer objetivo */
 export function createInitialCandidates(team: Employee[] = []): Employee[] {
   const result: Employee[] = []
-  for (const [role, stars] of [['dev', 1], ['qa'], ['ops'], ['dev']] as const) {
+  for (const [role, stars] of [['dev', 1], ['qa'], ['ops'], ['intern'], ['dev']] as const) {
     result.push(createCandidate(role, [...team, ...result], 0, stars))
   }
   return result
+}
+
+/** Un candidato por cada profesión de la etapa (y un dev más mientras hay pocas) */
+export function candidateRoles(stage: number): RoleId[] {
+  const roles = rolesFor(stage)
+  return roles.length < 6 ? [...roles, 'dev'] : roles
 }
 
 /** Precio base de "Buscar otros": una lista nueva de candidatos */
@@ -126,8 +200,7 @@ export function rerollPrice(stage: number, rerolls: number): number {
 /** Lista nueva de candidatos, todos al azar (el dev 1★ asegurado es solo para el arranque) */
 export function rerollCandidates(team: Employee[], stage: number, headhunter = 0): Employee[] {
   const result: Employee[] = []
-  for (const role of ['dev', 'qa', 'ops', 'dev'] as const)
-    result.push(createCandidate(role, [...team, ...result], stage))
+  for (const role of candidateRoles(stage)) result.push(createCandidate(role, [...team, ...result], stage))
   // Headhunter: los primeros candidatos vienen con una estrella más (sin pasar el máximo de la etapa)
   const top = maxStars(stage)
   return result.map((c, i) => (i < headhunter ? { ...c, stars: Math.min(top, c.stars + 1) } : c))

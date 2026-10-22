@@ -4,6 +4,7 @@ import { bonuses } from './cards'
 import type { OfferContext } from './offers'
 import { autoRateOf, clickRate, macroRateOf } from './rates'
 import type { GameState } from './reducer'
+import { pmMultiplier } from './team'
 
 /** Líneas por segundo con unos clics por segundo dados (clics + macro + equipo) */
 const perSecondOf = (state: GameState, clicksPerSecond: number, now?: number) =>
@@ -24,7 +25,8 @@ export function offerContextOf(state: GameState, clicksPerSecond: number, now?: 
     perSecond: perSecondOf(state, clicksPerSecond, now),
     sizingPerSecond: perSecondOf(neutral, clicksPerSecond, now),
     timeBonus: (1 + 0.08 * state.skills.timeManagement) * effects.timeMult,
-    challengeTime: getChallenge(state.challenge)?.effects?.timeMult ?? 1,
+    // El 📋 PM da más plazo sin agrandar el código: el contrato queda más holgado
+    extraTime: (getChallenge(state.challenge)?.effects?.timeMult ?? 1) * pmMultiplier(state.team),
     codeMult: effects.codeMult,
     specialMult: effects.specialMult,
   }

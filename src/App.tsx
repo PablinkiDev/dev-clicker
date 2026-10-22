@@ -45,9 +45,8 @@ import { TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
 import { skillCost } from './game/formulas'
-import { autoRateOf, clickRate, critChanceOf, critMultiplier, macroRateOf } from './game/rates'
+import { autoRateOf, clickRate, critChanceOf, critMultiplier, luckOf, macroRateOf } from './game/rates'
 import { drawCards } from './data/cards'
-import { bonuses } from './game/cards'
 import CardPicker from './components/CardPicker'
 import ChallengePicker from './components/ChallengePicker'
 import IpoScreen from './components/IpoScreen'
@@ -57,7 +56,14 @@ import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers } from
 import { offerContextOf } from './game/offerContext'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
-import { replaceCandidate, rerollCandidates, rerollPrice, type Employee } from './game/team'
+import {
+  internSurpriseChance,
+  nextInternDelay,
+  replaceCandidate,
+  rerollCandidates,
+  rerollPrice,
+  type Employee,
+} from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
@@ -405,6 +411,25 @@ function App() {
     setBug(null)
   }
 
+  // 🎓 Pasantes (G1): cada 1–2 min, uno al azar sorprende o mete un bug (solo con un contrato en curso)
+  const internCount = state.team.filter((e) => e.role === 'intern').length
+  const [internTick, setInternTick] = useState(0)
+  useEffect(() => {
+    if (internCount === 0 || !isRunning) return
+    const id = setTimeout(() => {
+      const interns = state.team.filter((e) => e.role === 'intern')
+      const intern = interns[Math.floor(Math.random() * interns.length)]
+      if (intern) {
+        const surprise = Math.random() < internSurpriseChance(intern.stars)
+        dispatch({ type: 'intern', uid: intern.uid, surprise })
+        playSfx(surprise ? 'notify' : 'lose')
+      }
+      setInternTick((n) => n + 1)
+    }, nextInternDelay())
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- se reprograma solo al cambiar la cantidad o al terminar uno
+  }, [internCount, isRunning, internTick])
+
   // 🎲 Eventos al azar (D6): cada 3–6 min, nunca en los primeros 5 min de una partida
   const [event, setEvent] = useState<GameEvent | null>(null)
   const lastEventId = useRef<string | null>(null)
@@ -425,7 +450,7 @@ function App() {
     if (!event?.options) return
     const option = event.options[index]
     if (option.outcomes) {
-      const outcome = rollOutcome(option.outcomes, skills.lucky + bonuses(state).luck)
+      const outcome = rollOutcome(option.outcomes, luckOf(state))
       // El primer resultado es siempre el bueno: si salió ese, la apuesta se ganó
       const bet = outcome === option.outcomes[0] ? 'won' : 'lost'
       applyEvent(event, outcome.effects, `${event.title}: ${outcome.text}`, bet)
@@ -441,7 +466,7 @@ function App() {
       setEventRetry((n) => n + 1) // todavía no: se vuelve a programar
       return
     }
-    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky + bonuses(state).luck)
+    const e = pickEvent(contract !== null, lastEventId.current, luckOf(state))
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)
@@ -529,7 +554,7 @@ function App() {
   }
 
   function devEvent() {
-    const e = pickEvent(contract !== null, lastEventId.current, skills.lucky + bonuses(state).luck)
+    const e = pickEvent(contract !== null, lastEventId.current, luckOf(state))
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)

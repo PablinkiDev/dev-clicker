@@ -24,6 +24,11 @@ export const ROLE_STYLE: Record<RoleId, { text: string; avatar: string }> = {
   dev: { text: 'text-green', avatar: 'from-[#1f9d55] to-[#5af78e]' },
   qa: { text: 'text-cyan', avatar: 'from-[#1f8fbf] to-[#89ddff]' },
   ops: { text: 'text-orange', avatar: 'from-[#c9620a] to-[#f7a26c]' },
+  intern: { text: 'text-muted', avatar: 'from-[#4a5372] to-[#9aa4c4]' },
+  ux: { text: 'text-purple', avatar: 'from-[#8e44ad] to-[#c792ea]' },
+  pm: { text: 'text-blue', avatar: 'from-[#2c5bd1] to-[#82aaff]' },
+  data: { text: 'text-yellow', avatar: 'from-[#b8860b] to-[#ffcb6b]' },
+  lead: { text: 'text-red', avatar: 'from-[#b4233a] to-[#ff6e7f]' },
 }
 
 /** Ícono y color de cada lenguaje: en el explorador, el tablón, las pestañas y las tecnologías */

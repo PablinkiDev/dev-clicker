@@ -12,7 +12,7 @@ import { founderBonus, investmentBonus } from './prestige'
 import { achievementMultiplier } from './records'
 import type { GameState } from './reducer'
 import { contractScale } from './stages'
-import { autoRate } from './team'
+import { autoRate, dataLuck } from './team'
 
 /** Especialización en la tecnología del contrato en curso (1 si no hay contrato) */
 function contractSpecialty(state: GameState): number {
@@ -98,4 +98,9 @@ export function autoRateOf(state: GameState, now?: number): number {
     founderBonus(state.prestige) *
     achievementMultiplier(state.records)
   )
+}
+
+/** 🍀 Suerte en eventos y apuestas: habilidad Suerte + cartas y artefactos + 📊 Data Scientists */
+export function luckOf(state: GameState): number {
+  return state.skills.lucky + bonuses(state).luck + dataLuck(state.team)
 }

@@ -22,7 +22,9 @@ import {
   rerollPrice,
   employeeEffect,
   employeePrice,
+  internSwing,
   qaMultiplier,
+  uxMultiplier,
   type Employee,
 } from './team'
 import type { Contract } from './types'
@@ -187,6 +189,8 @@ export type GameAction =
   | { type: 'tick'; elapsed: number; now?: number }
   // fast: si se atrapó en sus primeros 2 segundos
   | { type: 'catchBug'; now: number; fast?: boolean }
+  /** 🎓 Un pasante hizo algo: sorprendió (suma código) o metió un bug (resta). El azar va afuera */
+  | { type: 'intern'; uid: string; surprise: boolean }
   // Un evento al azar ya resuelto (si tenía azar u opciones, se resolvió afuera)
   // tone: para las rachas · bet: si era una opción con azar, si salió bien
   | {
@@ -408,6 +412,7 @@ function deliverContract(state: GameState): GameState {
         techBonus *
         negotiation *
         investmentBonus(investments.premiumContracts) *
+        uxMultiplier(state.team) *
         bonuses(state).payMult) /
         5,
     ) * 5
@@ -825,6 +830,22 @@ function reduce(state: GameState, action: GameAction): GameState {
         }
       }
       return { ...next, log: addLog(next.log, 'crit', `${ability.icon} ${ability.name}: ${ability.describe(level)}`) }
+    }
+
+    case 'intern': {
+      const intern = state.team.find((e) => e.uid === action.uid && e.role === 'intern')
+      const { contract } = state
+      if (!intern || !contract || state.code >= contract.code) return state
+      const lines = Math.max(1, Math.round(contract.code * internSwing(intern.stars, action.surprise)))
+      const text = action.surprise
+        ? `🎓 ${intern.name} (pasante) se iluminó: +${formatRate(lines)} líneas`
+        : `🎓 ${intern.name} (pasante) metió un bug: −${formatRate(lines)} líneas`
+      return finishIfDone({
+        ...state,
+        code: action.surprise ? Math.min(contract.code, state.code + lines) : Math.max(0, state.code - lines),
+        notice: { kind: action.surprise ? 'success' : 'error', text },
+        log: addLog(state.log, action.surprise ? 'success' : 'error', text),
+      })
     }
 
     case 'catchBug':

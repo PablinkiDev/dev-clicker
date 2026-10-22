@@ -17,7 +17,13 @@ import { tokensForValue } from '../src/game/prestige'
 import { autoRateOf, clickRate } from '../src/game/rates'
 import { createInitialState, gameReducer, type GameAction, type GameState } from '../src/game/reducer'
 import { canAscend, companyValue, isEndless } from '../src/game/stages'
-import { employeePrice, replaceCandidate, rerollCandidates } from '../src/game/team'
+import {
+  employeePrice,
+  internSurpriseChance,
+  nextInternDelay,
+  replaceCandidate,
+  rerollCandidates,
+} from '../src/game/team'
 import { getEditor } from '../src/data/editors'
 import { nextBugDelay } from '../src/game/bug'
 import { nextMinigameDelay } from '../src/data/minigames'
@@ -62,6 +68,7 @@ let macroDebt = 0
 let endlessSince: number | null = null
 let treeDoneAt = -1
 let nextBug = nextBugDelay() / 1000
+let nextIntern = nextInternDelay() / 1000
 let nextMinigame = 300 + nextMinigameDelay() / 1000
 const events: string[] = []
 const counters = { fails: 0, clicksLines: 0, autoLines: 0, focus: 0 }
@@ -162,9 +169,16 @@ function shop() {
   }
   // Sin devs no hay producción: el primero siempre es un dev; después, el de más estrellas
   const hasDev = state.team.some((e) => e.role === 'dev')
-  const best = [...state.candidates].sort(
-    (a, b) => Number(!hasDev && b.role === 'dev') - Number(!hasDev && a.role === 'dev') || b.stars - a.stars,
-  )[0]
+  // Después, por estrellas; a igualdad, por lo que más rinde (G1: el pasante, solo al principio)
+  const PRIORITY = ['dev', 'lead', 'ops', 'ux', 'pm', 'qa', 'data', 'intern']
+  const best = [...state.candidates]
+    .filter((c) => c.role !== 'intern' || state.stage === 0)
+    .sort(
+      (a, b) =>
+        Number(!hasDev && b.role === 'dev') - Number(!hasDev && a.role === 'dev') ||
+        b.stars - a.stars ||
+        PRIORITY.indexOf(a.role) - PRIORITY.indexOf(b.role),
+    )[0]
   if (best) {
     const price = employeePrice(best.role, best.stars, state.stage)
     const candidates = replaceCandidate(state.candidates, best, state.team, state.stage)
@@ -281,6 +295,14 @@ while (clock < MAX_HOURS * 3600 && sales < CYCLES) {
   if (clock >= nextBug) {
     if (Math.random() < BUG_CATCH_RATE) dispatch({ type: 'catchBug', now: nowMs() })
     nextBug = clock + nextBugDelay(state.skills.hawkEye) / 1000
+  }
+  // 🎓 Pasantes: cada 1–2 min, uno sorprende o mete un bug
+  if (clock >= nextIntern) {
+    const interns = state.team.filter((e) => e.role === 'intern')
+    const intern = interns[Math.floor(Math.random() * interns.length)]
+    if (intern)
+      dispatch({ type: 'intern', uid: intern.uid, surprise: Math.random() < internSurpriseChance(intern.stars) })
+    nextIntern = clock + nextInternDelay() / 1000
   }
   if (clock >= nextMinigame) {
     if (Math.random() < MINIGAME_PLAY_RATE) dispatch({ type: 'minigame', score: MINIGAME_SCORE, now: nowMs() })

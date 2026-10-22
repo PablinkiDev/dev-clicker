@@ -1,7 +1,7 @@
 // Tests del reducer (C12): las reglas del juego que no se pueden romper sin darnos cuenta.
 import { describe, expect, it } from 'vitest'
 import { createInitialState, gameReducer, type GameAction, type GameState } from './reducer'
-import { createCandidate } from './team'
+import { autoRate, candidateRoles, createCandidate, devRate } from './team'
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state)
 
@@ -421,5 +421,35 @@ describe('salida a la bolsa (IPO)', () => {
     expect(s.records.ipoAt).toBe(5)
     expect(s.records.unlocked).toContain('ipo')
     expect(gameReducer(s, { type: 'ipo', now: 9 })).toBe(s)
+  })
+})
+
+describe('profesiones (G1)', () => {
+  it('el Diseñador UX sube la paga', () => {
+    const s = withContract()
+    const full = { ...s, contract: { ...s.contract!, reward: { ...s.contract!.reward, money: 10_000 } }, code: 1e9 }
+    const normal = gameReducer(full, { type: 'deliver' }).money
+    const withUx = gameReducer({ ...full, team: [createCandidate('ux', [], 1, 5)] }, { type: 'deliver' }).money
+    expect(withUx).toBe(Math.round((normal * 1.3) / 5) * 5)
+  })
+
+  it('el Tech Lead potencia a los demás', () => {
+    const dev = createCandidate('dev', [], 0, 3)
+    const lead = createCandidate('lead', [dev], 3, 4)
+    expect(autoRate([dev, lead], 0)).toBeCloseTo(devRate(3) * 1.2)
+  })
+
+  it('el pasante suma o resta código sin pasarse', () => {
+    const intern = createCandidate('intern', [], 0, 5)
+    const s = { ...withContract(), team: [intern] }
+    const plus = gameReducer(s, { type: 'intern', uid: intern.uid, surprise: true })
+    expect(plus.code).toBeGreaterThan(0)
+    expect(gameReducer(s, { type: 'intern', uid: intern.uid, surprise: false }).code).toBe(0)
+    expect(gameReducer({ ...s, contract: null }, { type: 'intern', uid: intern.uid, surprise: true }).code).toBe(0)
+  })
+
+  it('hay un candidato por profesión de la etapa', () => {
+    expect(candidateRoles(0)).toEqual(['dev', 'qa', 'ops', 'intern', 'dev'])
+    expect(candidateRoles(3)).toHaveLength(8)
   })
 })

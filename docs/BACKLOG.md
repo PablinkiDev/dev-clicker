@@ -100,7 +100,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 
 | # | Historia | Prioridad | Tamaño |
 |---|----------|-----------|--------|
-| G1 | 👥 **5 profesiones nuevas** (Pasante, Diseñador UX, PM, Data Scientist, Tech Lead) | M | 3–4 |
+| G1 ✅ | 👥 **5 profesiones nuevas:** 🎓 Pasante (barato, 40 % de un dev; cada 1–2 min sorprende o mete un bug), 🎨 Diseñador UX (+6 % paga/★, Estudio), 📋 PM (+4 % plazo/★ sin agrandar el código, máx. +100 %, Startup), 📊 Data Scientist (+2 % suerte/★, Startup), 🧑‍🏫 Tech Lead (+5 %/★ a todo lo de los demás, Empresa tec.). Un candidato por profesión de la etapa. 🌳 Campus: 24 puestos, $1.000 M, desde Corporación. Logros Ciudad universitaria y Equipo multidisciplinario. Simulación: sin cambios en el ritmo | M | 3–4 |
 | G2 | 🎮 **5 minijuegos para no programadores** (Aplastá bugs, Conectá servidores, Ordená el deploy, Memoria, Simón dice) | M | 4–5 |
 | G3 | Más eventos (~45), contratos y logros (~70) | S | 3–4 |
 | G4 | 🎨 **Personalización:** nombre y logo de la empresa, avatar, títulos y mascota | M | 4–5 |
