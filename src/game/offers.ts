@@ -257,6 +257,7 @@ export function createBossOffer(ctx: OfferContext): Contract | null {
     boss: boss.id,
     special: boss.rule,
     client: boss.name,
+    title: boss.title,
     quote: boss.quote,
     code: Math.max(1, Math.round(base.code * BOSS_SCALE.code * (rule?.code ?? 1))),
     time: Math.max(15, Math.round(base.time * BOSS_SCALE.time * (rule?.time ?? 1))),

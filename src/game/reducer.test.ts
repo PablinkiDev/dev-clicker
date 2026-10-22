@@ -2,6 +2,9 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState, gameReducer, type GameAction, type GameState } from './reducer'
 import { autoRate, candidateRoles, createCandidate, devRate } from './team'
+import { EVENTS, canHappen } from '../data/events'
+import { getBoss } from '../data/bosses'
+import { createBossOffer } from './offers'
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state)
 
@@ -451,5 +454,34 @@ describe('profesiones (G1)', () => {
   it('hay un candidato por profesión de la etapa', () => {
     expect(candidateRoles(0)).toEqual(['dev', 'qa', 'ops', 'intern', 'dev'])
     expect(candidateRoles(3)).toHaveLength(8)
+  })
+})
+
+describe('variedad (G3)', () => {
+  it('los eventos de profesiones y artefactos solo salen si los tenés', () => {
+    const intern = EVENTS.find((e) => e.id === 'pasante-medialunas')!
+    const duck = EVENTS.find((e) => e.id === 'patito-habla')!
+    const ctx = { hasContract: true, roles: [], artifacts: [], features: [] }
+    expect(canHappen(intern, ctx)).toBe(false)
+    expect(canHappen(intern, { ...ctx, roles: ['intern'] })).toBe(true)
+    expect(canHappen(duck, { ...ctx, artifacts: ['rubberDuck'] })).toBe(true)
+    expect(canHappen(duck, { ...ctx, hasContract: false, artifacts: ['rubberDuck'] })).toBe(false)
+  })
+
+  it('el regalo del proveedor da una caja', () => {
+    const gift = EVENTS.find((e) => e.id === 'regalo-proveedor')!
+    const s = gameReducer(createInitialState(), {
+      type: 'applyEvent',
+      text: '',
+      icon: gift.icon,
+      effects: gift.effects!,
+      now: 0,
+    })
+    expect(s.records.boxes).toBe(1)
+  })
+
+  it('los jefes tienen su propio pedido', () => {
+    const offer = createBossOffer({ tech: createInitialState().tech, stage: 1, endless: 0, rep: 0, perSecond: 10 })!
+    expect(offer.title).toBe(getBoss(offer.boss!)!.title)
   })
 })

@@ -353,6 +353,8 @@ function applyEffect(
       }
     case 'candidates':
       return candidates ? { ...state, candidates } : state
+    case 'box':
+      return { ...state, records: { ...state.records, boxes: state.records.boxes + 1 } }
   }
 }
 

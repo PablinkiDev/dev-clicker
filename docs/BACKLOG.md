@@ -102,7 +102,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 |---|----------|-----------|--------|
 | G1 ✅ | 👥 **5 profesiones nuevas:** 🎓 Pasante (barato, 40 % de un dev; cada 1–2 min sorprende o mete un bug), 🎨 Diseñador UX (+6 % paga/★, Estudio), 📋 PM (+4 % plazo/★ sin agrandar el código, máx. +100 %, Startup), 📊 Data Scientist (+2 % suerte/★, Startup), 🧑‍🏫 Tech Lead (+5 %/★ a todo lo de los demás, Empresa tec.). Un candidato por profesión de la etapa. 🌳 Campus: 24 puestos, $1.000 M, desde Corporación. Logros Ciudad universitaria y Equipo multidisciplinario. Simulación: sin cambios en el ritmo | M | 3–4 |
 | G2 ✅ | 🎮 **5 minijuegos para no programadores:** 🐛 Aplastá bugs (topo, 20 s; metas 5/10/15; el 🦆 resta 2), 🔌 Conectá los servidores (3 racks de 3/4/5 cables, 30 s), 📦 Ordená el deploy (3 pipelines, un error tira ese deploy, 30 s), 🧠 Memoria de logos (6 pares, 45 s; ⭐ según errores), 💡 Simón dice del servidor (secuencias de 3/5/7). Los 3 de antes quedan marcados 🧑‍💻 para programadores. Panel de dev: lista para jugar cualquiera | M | 4–5 |
-| G3 | Más eventos (~45), contratos y logros (~70) | S | 3–4 |
+| G3 ✅ | 🎲 **Más variedad:** eventos de 30 a 48 (11 ligados a profesiones, 5 a artefactos —incluye ganar 📦—, 2 generales; solo salen si tenés esa profesión/artefacto). 15 clientes nuevos (3 por etapa; Freelancer pasa de 11 a 14 contratos). Los 8 jefes con pedido propio. Logros de 50 a 70 (categoría nueva 🏺 Colección: artefactos, cajas y cartas; más jefes, profesiones, desafíos, IPO, apuestas y minijuegos). Simulación: el bot llega a la IPO con 47/70 | M | 3–4 |
 | G4 | 🎨 **Personalización:** nombre y logo de la empresa, avatar, títulos y mascota | M | 4–5 |
 
 ## Hito H — UI y pulido

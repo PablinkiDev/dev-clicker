@@ -171,7 +171,7 @@ Cada una **cambia una mecánica**; no es solo otro "+%".
 - Los 3 actuales (code review, merge conflict y typing race) siguen, pero se marcan como "🧑‍💻 para programadores".
 - ✅ Por ahora **no** se eligen los minijuegos en Ajustes: aparecen todos.
 
-### G3. Más variedad en lo que ya existe
+### G3. Más variedad en lo que ya existe ✅
 
 - **Eventos:** de 30 a ~45, incluidos eventos ligados a profesiones y artefactos.
 - **Contratos:** clientes nuevos por etapa, y que los jefes tengan textos propios.

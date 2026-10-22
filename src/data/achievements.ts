@@ -5,8 +5,12 @@ import { companyValue } from '../game/stages'
 import { CORPORATE_OFFICE, OFFICES, officeCapacity } from './offices'
 import { ROLE_IDS } from './roles'
 import { CHALLENGES } from './challenges'
+import { ARTIFACTS, MAX_ARTIFACT_LEVEL, getArtifact } from './artifacts'
+import { CARDS, getCard } from './cards'
+import { tokensEarned } from '../game/prestige'
 
-export type AchievementCategory = 'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'games' | 'secret'
+export type AchievementCategory =
+  'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'games' | 'collection' | 'secret'
 
 export const CATEGORIES: { id: AchievementCategory; icon: string; name: string }[] = [
   { id: 'code', icon: '⌨️', name: 'Programar' },
@@ -16,6 +20,7 @@ export const CATEGORIES: { id: AchievementCategory; icon: string; name: string }
   { id: 'tools', icon: '🛠', name: 'Herramientas' },
   { id: 'luck', icon: '🎲', name: 'Suerte' },
   { id: 'games', icon: '🎮', name: 'Minijuegos' },
+  { id: 'collection', icon: '🏺', name: 'Colección' },
   { id: 'secret', icon: '🔒', name: 'Secretos' },
 ]
 
@@ -45,6 +50,12 @@ function counter(
 
 /** ¿Esta acción entregó un contrato? */
 const delivered = ({ prev, next }: AchievementCheck) => next.records.contracts > prev.records.contracts
+/** Artefactos distintos que tenés y cajas abiertas (cada nivel salió de una caja) */
+const artifactCount = (s: GameState) => Object.keys(s.records.artifacts).length
+const boxesOpened = (s: GameState) => Object.values(s.records.artifacts).reduce((sum, level) => sum + level, 0)
+/** Cartas de la empresa actual por estilo */
+const cardStyles = (s: GameState) => s.cards.map((c) => getCard(c.id)?.style)
+
 const corporateFull = (s: GameState) =>
   s.office >= CORPORATE_OFFICE && s.team.length >= officeCapacity(CORPORATE_OFFICE, s.skills.homeOffice)
 const campusFull = (s: GameState) =>
@@ -430,6 +441,225 @@ export const ACHIEVEMENTS: Achievement[] = [
     },
     (s) => s.records.challengesDone.length,
     CHALLENGES.length,
+  ),
+
+  // 👥 Profesiones (G3)
+  {
+    id: 'internGenius',
+    category: 'team',
+    icon: '🎓',
+    name: 'El pasante es un genio',
+    description: 'Que un pasante te sorprenda',
+    check: ({ prev, next, action }) => action.type === 'intern' && action.surprise && next.code > prev.code,
+  },
+  {
+    id: 'bestLead',
+    category: 'team',
+    icon: '🧑‍🏫',
+    name: 'Liderazgo técnico',
+    description: 'Tené un Tech Lead 5★',
+    check: ({ next }) => next.team.some((e) => e.role === 'lead' && e.stars >= 5),
+  },
+
+  // 👹 Jefes (G3)
+  counter(
+    {
+      id: 'firstBoss',
+      category: 'contracts',
+      icon: '👹',
+      name: 'Jefe de nivel',
+      description: 'Vencé a un cliente jefe',
+    },
+    (s) => s.records.bosses,
+    1,
+  ),
+  counter(
+    {
+      id: 'bosses10',
+      category: 'contracts',
+      icon: '🦁',
+      name: 'Domador de clientes',
+      description: 'Vencé a 10 clientes jefe',
+    },
+    (s) => s.records.bosses,
+    10,
+  ),
+  counter(
+    {
+      id: 'bosses50',
+      category: 'contracts',
+      icon: '🫡',
+      name: 'El cliente siempre tiene razón',
+      description: 'Vencé a 50 clientes jefe (y no le dijiste lo que pensabas)',
+    },
+    (s) => s.records.bosses,
+    50,
+  ),
+
+  // 🏺 Colección (G3)
+  counter(
+    {
+      id: 'firstArtifact',
+      category: 'collection',
+      icon: '🪴',
+      name: 'Decorando el escritorio',
+      description: 'Conseguí tu primer artefacto',
+    },
+    artifactCount,
+    1,
+  ),
+  counter(
+    {
+      id: 'artifacts8',
+      category: 'collection',
+      icon: '🗃️',
+      name: 'Coleccionista',
+      description: 'Conseguí 8 artefactos distintos',
+    },
+    artifactCount,
+    8,
+  ),
+  counter(
+    {
+      id: 'artifactsAll',
+      category: 'collection',
+      icon: '🖥️',
+      name: 'Setup de streamer',
+      description: `Conseguí los ${ARTIFACTS.length} artefactos`,
+    },
+    artifactCount,
+    ARTIFACTS.length,
+  ),
+  {
+    id: 'legendary',
+    category: 'collection',
+    icon: '🌟',
+    name: '¡Legendario!',
+    description: 'Conseguí un artefacto legendario',
+    check: ({ next }) => Object.keys(next.records.artifacts).some((id) => getArtifact(id)?.rarity === 'legendary'),
+  },
+  {
+    id: 'maxArtifact',
+    category: 'collection',
+    icon: '🔟',
+    name: 'Al máximo',
+    description: `Subí un artefacto a Nv.${MAX_ARTIFACT_LEVEL}`,
+    check: ({ next }) => Object.values(next.records.artifacts).some((level) => level >= MAX_ARTIFACT_LEVEL),
+  },
+  counter(
+    {
+      id: 'unboxing',
+      category: 'collection',
+      icon: '📦',
+      name: 'Unboxing',
+      description: 'Abrí 25 cajas de suministros',
+    },
+    boxesOpened,
+    25,
+  ),
+  counter(
+    {
+      id: 'unboxing100',
+      category: 'collection',
+      icon: '🎥',
+      name: 'Canal de unboxing',
+      description: 'Abrí 100 cajas de suministros',
+    },
+    boxesOpened,
+    100,
+  ),
+
+  // 🃏 Especializaciones (G3)
+  {
+    id: 'rareCard',
+    category: 'collection',
+    icon: '✨',
+    name: 'Carta brillante',
+    description: 'Elegí una carta rara',
+    check: ({ next }) => next.cards.some((c) => c.rare),
+  },
+  {
+    id: 'specialist',
+    category: 'collection',
+    icon: '🎯',
+    name: 'Especialista',
+    description: 'Juntá 4 cartas del mismo estilo en una empresa',
+    check: ({ next }) => {
+      const styles = cardStyles(next)
+      return styles.some((style) => styles.filter((x) => x === style).length >= 4)
+    },
+  },
+  {
+    id: 'swissKnife',
+    category: 'collection',
+    icon: '🔪',
+    name: 'Navaja suiza',
+    description: 'Tené una carta de cada estilo en la misma empresa',
+    check: ({ next }) => {
+      const styles = cardStyles(next)
+      return new Set(CARDS.map((c) => c.style)).size === new Set(styles.filter(Boolean)).size
+    },
+  },
+
+  // 🏁 Desafíos e IPO (G3)
+  {
+    id: 'nanoOrDeath',
+    category: 'company',
+    icon: '🐧',
+    name: 'Nano o muerte',
+    description: 'Completá el desafío Nano para siempre',
+    check: ({ next }) => next.records.challengesDone.includes('nanoForever'),
+  },
+  {
+    id: 'noHands',
+    category: 'company',
+    icon: '🙌',
+    name: 'Con los codos',
+    description: 'Completá el desafío Manos atadas',
+    check: ({ next }) => next.records.challengesDone.includes('tiedHands'),
+  },
+  {
+    id: 'legendSale',
+    category: 'company',
+    icon: '👑',
+    name: 'La leyenda continúa',
+    description: 'Vendé una empresa después de salir a la bolsa',
+    check: ({ prev, next }) => next.records.ipoAt > 0 && next.prestige.sales > prev.prestige.sales,
+  },
+  counter(
+    {
+      id: 'tokens100',
+      category: 'company',
+      icon: '🪙',
+      name: 'Fondo de inversión',
+      description: 'Ganá 100 tokens en toda tu carrera',
+    },
+    (s) => tokensEarned(s.prestige),
+    100,
+  ),
+
+  // 🎲 y 🎮 (G3)
+  counter(
+    {
+      id: 'bets20',
+      category: 'luck',
+      icon: '🃏',
+      name: 'Contador de cartas',
+      description: 'Ganá 20 apuestas de los eventos',
+    },
+    (s) => s.records.betsWon,
+    20,
+  ),
+  counter(
+    {
+      id: 'minigames50',
+      category: 'games',
+      icon: '🕹️',
+      name: 'Más juego que trabajo',
+      description: 'Jugá 50 minijuegos',
+    },
+    (s) => s.records.minigames,
+    50,
   ),
 
   // 🔒 Secretos

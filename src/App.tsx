@@ -33,7 +33,7 @@ import { FEATURES, isViewVisible } from './data/features'
 import { MINIGAMES, MINIGAME_FIRST_AT, nextMinigameDelay, type MinigameId } from './data/minigames'
 import AchievementList from './components/AchievementList'
 import { ACHIEVEMENTS } from './data/achievements'
-import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
+import { eventContextOf, nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
 import EditorShop from './components/EditorShop'
 import MacroShop from './components/MacroShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
@@ -466,7 +466,7 @@ function App() {
       setEventRetry((n) => n + 1) // todavía no: se vuelve a programar
       return
     }
-    const e = pickEvent(contract !== null, lastEventId.current, luckOf(state))
+    const e = pickEvent(eventContextOf(state), lastEventId.current, luckOf(state))
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)
@@ -554,7 +554,7 @@ function App() {
   }
 
   function devEvent() {
-    const e = pickEvent(contract !== null, lastEventId.current, luckOf(state))
+    const e = pickEvent(eventContextOf(state), lastEventId.current, luckOf(state))
     lastEventId.current = e.id
     if (!e.options) applyEvent(e, e.effects ?? [], `${e.title}: ${e.detail}`)
     setEvent(e)

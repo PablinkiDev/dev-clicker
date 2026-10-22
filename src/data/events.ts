@@ -1,5 +1,8 @@
 // Eventos al azar (D6): cada 3–6 minutos pasa algo. Buenos, malos y con elección.
 // Los efectos son datos: el reducer los aplica (applyEffects) y la interfaz solo los muestra.
+import type { FeatureId } from './features'
+import type { RoleId } from './roles'
+import type { GameState } from '../game/reducer'
 
 export type Effect =
   /** Suma o resta reputación */
@@ -22,6 +25,8 @@ export type Effect =
   | { kind: 'focusReset' }
   /** Llegan candidatos nuevos y mejores (los arma la interfaz, porque usan azar) */
   | { kind: 'candidates' }
+  /** 📦 Una caja de suministros (G3) */
+  | { kind: 'box' }
 
 /** Un resultado posible de una opción con azar */
 export type Outcome = { chance: number; text: string; effects: Effect[] }
@@ -43,6 +48,12 @@ export type GameEvent = {
   quote: string
   /** Solo puede salir si hay un contrato en curso (afecta al contrato) */
   needsContract?: boolean
+  /** 👥 Solo si tenés a alguien de esta profesión (G3) */
+  needsRole?: RoleId
+  /** 🏺 Solo si tenés este artefacto (G3) */
+  needsArtifact?: string
+  /** 🔓 Solo si ya se desbloqueó esta parte del juego (G3) */
+  needsFeature?: FeatureId
   /** Eventos sin elección: su efecto y cómo se explica */
   effects?: Effect[]
   detail?: string
@@ -452,15 +463,288 @@ export const EVENTS: GameEvent[] = [
       },
     ],
   },
+  // --- 👥 Ligados a profesiones (G3) ---
+  {
+    id: 'pasante-medialunas',
+    tone: 'good',
+    icon: '🥐',
+    title: 'El pasante trajo medialunas',
+    quote: 'Una docena. De manteca. Ya nadie se acuerda del push a main.',
+    needsRole: 'intern',
+    detail: 'Producción del equipo ×1,3 por 90 s',
+    effects: [{ kind: 'mod', target: 'auto', mult: 1.3, seconds: 90 }],
+  },
+  {
+    id: 'pasante-produccion',
+    tone: 'bad',
+    icon: '💣',
+    title: 'El pasante probó en producción',
+    quote: '“Pensé que era la base de pruebas.” No era la base de pruebas.',
+    needsRole: 'intern',
+    needsContract: true,
+    detail: 'El contrato actual pide 15 % más de código',
+    effects: [{ kind: 'code', pct: 0.15 }],
+  },
+  {
+    id: 'ux-rediseno',
+    tone: 'choice',
+    icon: '🎨',
+    title: 'El diseñador quiere rediseñar todo',
+    quote: '“No es un cambio de color: es un cambio de paradigma.”',
+    needsRole: 'ux',
+    needsContract: true,
+    safe: 1,
+    options: [
+      {
+        label: 'Dale, rediseñá',
+        detail: 'El contrato paga ×1,5 pero pide 25 % más de código',
+        effects: [
+          { kind: 'reward', mult: 1.5 },
+          { kind: 'code', pct: 0.25 },
+        ],
+      },
+      { label: 'Así está bien', detail: '+3 ★ de reputación', effects: [{ kind: 'rep', amount: 3 }] },
+    ],
+  },
+  {
+    id: 'pm-plazo',
+    tone: 'good',
+    icon: '📋',
+    title: 'El PM negoció el plazo',
+    quote: '“Les dije que era un tema de sinergia.” Funcionó.',
+    needsRole: 'pm',
+    needsContract: true,
+    detail: 'El contrato actual tiene 30 % más de tiempo',
+    effects: [{ kind: 'time', pct: 0.3 }],
+  },
+  {
+    id: 'pm-reunion',
+    tone: 'bad',
+    icon: '📅',
+    title: 'Reunión para planificar la reunión',
+    quote: 'Duró dos horas. Se agendó otra para revisar las conclusiones.',
+    needsRole: 'pm',
+    detail: 'Tus clics ×0,7 por 45 s',
+    effects: [{ kind: 'mod', target: 'click', mult: 0.7, seconds: 45 }],
+  },
+  {
+    id: 'data-prediccion',
+    tone: 'good',
+    icon: '📈',
+    title: 'El modelo predijo un buen cliente',
+    quote: '“97 % de confianza.” El 3 % restante es el cliente pidiendo descuento.',
+    needsRole: 'data',
+    needsContract: true,
+    detail: 'El contrato actual paga +50 %',
+    effects: [{ kind: 'reward', mult: 1.5 }],
+  },
+  {
+    id: 'data-dashboard',
+    tone: 'choice',
+    icon: '📊',
+    title: 'El data scientist quiere un dashboard',
+    quote: '“Con gráficos de torta. Muchos gráficos de torta.”',
+    needsRole: 'data',
+    safe: 1,
+    options: [
+      {
+        label: 'Pagar las licencias',
+        detail: 'Pagás 3 % de tu dinero · +XP de un contrato',
+        effects: [
+          { kind: 'pay', pct: 0.03 },
+          { kind: 'xp', contracts: 1 },
+        ],
+      },
+      { label: 'Usar Excel', detail: 'No pasa nada', effects: [] },
+    ],
+  },
+  {
+    id: 'lead-mentoria',
+    tone: 'good',
+    icon: '🧑‍🏫',
+    title: 'Mentoría del Tech Lead',
+    quote: 'Te explicó algo con una servilleta y de repente lo entendiste todo.',
+    needsRole: 'lead',
+    detail: 'Producción del equipo ×1,5 por 60 s · +XP de medio contrato',
+    effects: [
+      { kind: 'mod', target: 'auto', mult: 1.5, seconds: 60 },
+      { kind: 'xp', contracts: 0.5 },
+    ],
+  },
+  {
+    id: 'lead-refactor',
+    tone: 'choice',
+    icon: '🏗️',
+    title: 'El Tech Lead quiere refactorizar',
+    quote: '“Si lo hacemos bien ahora, después vamos a volar.”',
+    needsRole: 'lead',
+    needsContract: true,
+    safe: 1,
+    options: [
+      {
+        label: 'Refactorizar',
+        detail: '+30 % de código · equipo ×1,8 por 2 min',
+        effects: [
+          { kind: 'code', pct: 0.3 },
+          { kind: 'mod', target: 'auto', mult: 1.8, seconds: 120 },
+        ],
+      },
+      { label: 'Después lo vemos', detail: 'No pasa nada (spoiler: nunca lo ven)', effects: [] },
+    ],
+  },
+  {
+    id: 'qa-salvada',
+    tone: 'good',
+    icon: '🕵️',
+    title: 'QA encontró el bug antes que el cliente',
+    quote: 'Un milagro. Que no se entere el cliente de que casi pasa.',
+    needsRole: 'qa',
+    needsContract: true,
+    detail: '+8 ★ de reputación · el contrato actual paga +20 %',
+    effects: [
+      { kind: 'rep', amount: 8 },
+      { kind: 'reward', mult: 1.2 },
+    ],
+  },
+  {
+    id: 'ops-viernes',
+    tone: 'bad',
+    icon: '☸️',
+    title: 'DevOps migró todo a Kubernetes… un viernes',
+    quote: '“Va a ser más fácil de mantener.” Son las 23 h.',
+    needsRole: 'ops',
+    detail: 'Producción del equipo ×0,6 por 45 s',
+    effects: [{ kind: 'mod', target: 'auto', mult: 0.6, seconds: 45 }],
+  },
+
+  // --- 🏺 Ligados a artefactos (G3) ---
+  {
+    id: 'patito-habla',
+    tone: 'good',
+    icon: '🦆',
+    title: 'El patito de goma te habló',
+    quote: '“Cuac.” Era exactamente lo que necesitabas escuchar.',
+    needsArtifact: 'rubberDuck',
+    needsContract: true,
+    detail: 'El contrato actual avanza un 20 %',
+    effects: [{ kind: 'progress', pct: 0.2 }],
+  },
+  {
+    id: 'plantita-flor',
+    tone: 'good',
+    icon: '🌸',
+    title: 'Tu plantita floreció',
+    quote: 'Sobrevivió a tres deploys y a la falta de ventana.',
+    needsArtifact: 'plant',
+    detail: '+XP equivalente a un contrato',
+    effects: [{ kind: 'xp', contracts: 1 }],
+  },
+  {
+    id: 'taza-rebalso',
+    tone: 'bad',
+    icon: '☕',
+    title: 'La taza infinita rebalsó',
+    quote: 'Infinita para llenarse. No tanto para no derramarse sobre el teclado.',
+    needsArtifact: 'mug',
+    detail: 'Tus clics ×0,5 por 30 s',
+    effects: [{ kind: 'mod', target: 'click', mult: 0.5, seconds: 30 }],
+  },
+  {
+    id: 'regalo-proveedor',
+    tone: 'good',
+    icon: '🎁',
+    title: 'Un proveedor te mandó un regalo',
+    quote: '“Para que nos tengas en cuenta.” Te tienen en cuenta.',
+    needsFeature: 'artifacts',
+    detail: '+1 📦 caja de suministros',
+    effects: [{ kind: 'box' }],
+  },
+  {
+    id: 'hackaton-externa',
+    tone: 'choice',
+    icon: '🏆',
+    title: 'Te invitan a una hackatón',
+    quote: 'Premio: una caja misteriosa. Costo: tu fin de semana.',
+    needsFeature: 'artifacts',
+    safe: 1,
+    options: [
+      {
+        label: 'Ir a competir',
+        detail: 'Pagás 5 % de tu dinero · 50 %: +1 📦 · 50 %: +XP de un contrato',
+        outcomes: [
+          {
+            chance: 0.5,
+            text: '¡Ganaste! +1 📦',
+            effects: [{ kind: 'pay', pct: 0.05 }, { kind: 'box' }],
+          },
+          {
+            chance: 0.5,
+            text: 'Perdiste, pero aprendiste: +XP de un contrato',
+            effects: [
+              { kind: 'pay', pct: 0.05 },
+              { kind: 'xp', contracts: 1 },
+            ],
+          },
+        ],
+      },
+      { label: 'Descansar', detail: 'No pasa nada', effects: [] },
+    ],
+  },
+
+  // --- Generales (G3) ---
+  {
+    id: 'commit-viral',
+    tone: 'good',
+    icon: '🔥',
+    title: 'Tu mensaje de commit se hizo viral',
+    quote: '"arreglé lo que rompí arreglando lo que rompí". 40.000 likes.',
+    detail: '+15 ★ de reputación',
+    effects: [{ kind: 'rep', amount: 15 }],
+  },
+  {
+    id: 'corte-luz',
+    tone: 'bad',
+    icon: '🔌',
+    title: 'Se cortó la luz',
+    quote: 'Guardaste hace 40 minutos. Hace 40 minutos.',
+    needsContract: true,
+    detail: 'El contrato actual tiene 20 % menos de tiempo',
+    effects: [{ kind: 'time', pct: -0.2 }],
+  },
 ]
+
+/** Lo que hay que saber de la partida para ver qué eventos pueden salir */
+export type EventContext = {
+  hasContract: boolean
+  roles: RoleId[]
+  artifacts: string[]
+  features: string[]
+}
+
+export const eventContextOf = (s: GameState): EventContext => ({
+  hasContract: s.contract !== null,
+  roles: s.team.map((e) => e.role),
+  artifacts: Object.keys(s.records.artifacts),
+  features: s.records.features,
+})
+
+/** ¿Puede salir este evento ahora? */
+export function canHappen(e: GameEvent, ctx: EventContext): boolean {
+  return (
+    (ctx.hasContract || !e.needsContract) &&
+    (!e.needsRole || ctx.roles.includes(e.needsRole)) &&
+    (!e.needsArtifact || ctx.artifacts.includes(e.needsArtifact)) &&
+    (!e.needsFeature || ctx.features.includes(e.needsFeature))
+  )
+}
 
 /** Probabilidad de cada tipo de evento */
 const TONE_WEIGHT: Record<GameEvent['tone'], number> = { good: 0.6, bad: 0.25, choice: 0.15 }
 
 /** Elige un evento al azar entre los que pueden salir ahora */
 /** luck: nivel de Suerte de programador (más peso a los eventos buenos) */
-export function pickEvent(hasContract: boolean, lastId: string | null, luck = 0): GameEvent {
-  const pool = EVENTS.filter((e) => (hasContract || !e.needsContract) && e.id !== lastId)
+export function pickEvent(ctx: EventContext, lastId: string | null, luck = 0): GameEvent {
+  const pool = EVENTS.filter((e) => canHappen(e, ctx) && e.id !== lastId)
   const weight = (e: GameEvent) =>
     (TONE_WEIGHT[e.tone] + (e.tone === 'good' ? 0.1 * luck : 0)) / EVENTS.filter((x) => x.tone === e.tone).length
   const total = pool.reduce((sum, e) => sum + weight(e), 0)
