@@ -982,9 +982,7 @@ function App() {
           onStage={devStage}
           onMaxTrees={devMaxTrees}
           onEvent={devEvent}
-          onMinigame={() =>
-            setMinigame({ game: MINIGAMES[Math.floor(Math.random() * MINIGAMES.length)].id, playing: false })
-          }
+          onMinigame={(game) => setMinigame({ game, playing: true })}
           onBug={() => setBug({ id: Date.now(), x: 10 + Math.random() * 70, y: 15 + Math.random() * 55 })}
           speed={devSpeed}
           onSpeed={setDevSpeed}

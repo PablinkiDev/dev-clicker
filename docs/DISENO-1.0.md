@@ -158,7 +158,7 @@ Cada una **cambia una mecánica**; no es solo otro "+%".
 
 ✅ **4.ª oficina: 🌳 Campus**, con 24 puestos (28 con Home office), desde Corporación. *"Tobogán, cervecería artesanal y nadie sabe dónde queda tu escritorio."*
 
-### G2. 🎮 Minijuegos para no programadores (de 3 a 8)
+### G2. 🎮 Minijuegos para no programadores (de 3 a 8) ✅
 
 | Minijuego | Cómo se juega |
 |---|---|

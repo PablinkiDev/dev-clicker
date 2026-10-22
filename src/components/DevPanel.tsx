@@ -1,6 +1,7 @@
 // 🛠 Panel de desarrollo: atajos para probar funcionalidades sin jugar horas.
 // Solo existe con `npm run dev` (import.meta.env.DEV): en el build publicado no aparece.
 import { useState } from 'react'
+import { MINIGAMES, type MinigameId } from '../data/minigames'
 import { OFFICES } from '../data/offices'
 import { STAGES } from '../data/stages'
 import { formatNumber } from '../game/format'
@@ -13,7 +14,8 @@ type DevPanelProps = {
   onStage: (stage: number) => void
   onMaxTrees: () => void
   onEvent: () => void
-  onMinigame: () => void
+  /** Abre un minijuego para jugarlo ya */
+  onMinigame: (game: MinigameId) => void
   onBug: () => void
   speed: number
   onSpeed: (speed: number) => void
@@ -181,13 +183,23 @@ function DevPanel(props: DevPanelProps) {
               📦 Oficina siguiente
             </Btn>
             <Btn onClick={props.onEvent}>🎲 Evento ahora</Btn>
-            <Btn onClick={props.onMinigame}>🎮 Minijuego ahora</Btn>
             <Btn onClick={props.onBug}>🐛 Bug dorado ahora</Btn>
             <Btn onClick={() => onPatch({ rerolls: 0 })}>🔄 Reroll a precio base</Btn>
             <Btn onClick={() => onPatch({ records: { ...state.records, boxes: state.records.boxes + 5 } })}>
               📦 +5 cajas
             </Btn>
             <Btn onClick={() => onPatch({ bossCountdown: 0 })}>👹 Jefe ahora</Btn>
+          </div>
+
+          <div>
+            <p className="mb-1 text-[11px] text-muted">🎮 Jugar un minijuego</p>
+            <div className="grid grid-cols-2 gap-1">
+              {MINIGAMES.map((m) => (
+                <Btn key={m.id} onClick={() => props.onMinigame(m.id)}>
+                  {`${m.icon} ${m.title}${m.forDevs ? ' 🧑‍💻' : ''}`}
+                </Btn>
+              ))}
+            </div>
           </div>
         </div>
       )}

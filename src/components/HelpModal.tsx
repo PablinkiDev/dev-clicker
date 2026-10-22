@@ -396,9 +396,13 @@ function Extras() {
       <H>🎮 Minijuegos</H>
       <P>
         Cada tanto llega una invitación opcional. Según cómo te vaya, tu equipo produce hasta ×3 durante{' '}
-        {MINIGAME_REWARD_SECONDS} s y ganás XP. Si te va mal, no pasa nada.
+        {MINIGAME_REWARD_SECONDS} s y ganás XP. Si te va mal, no pasa nada. Los marcados con 🧑‍💻 piden saber algo de
+        programación; el resto se juega sin saber nada.
       </P>
-      <Table head={['Minijuego', 'Cómo se juega']} rows={MINIGAMES.map((m) => [`${m.icon} ${m.title}`, m.rules])} />
+      <Table
+        head={['Minijuego', 'Cómo se juega']}
+        rows={MINIGAMES.map((m) => [`${m.icon} ${m.title}${m.forDevs ? ' 🧑‍💻' : ''}`, m.rules])}
+      />
       <H>🏆 Logros</H>
       <P>
         Hay {ACHIEVEMENTS.length} logros en {CATEGORIES.length} categorías (

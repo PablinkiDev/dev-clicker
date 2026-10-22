@@ -1,9 +1,17 @@
 // Minijuegos (D9): cada tanto llega una invitación opcional. Si jugás, según cómo te fue,
 // el equipo produce más por un rato y ganás XP. Si te va mal, no pasa nada malo.
 
-export type MinigameId = 'review' | 'merge' | 'typing'
+export type MinigameId = 'review' | 'merge' | 'typing' | 'whack' | 'cables' | 'deploy' | 'memory' | 'simon'
 
-export type MinigameInfo = { id: MinigameId; icon: string; title: string; invite: string; rules: string }
+export type MinigameInfo = {
+  id: MinigameId
+  icon: string
+  title: string
+  invite: string
+  rules: string
+  /** 🧑‍💻 Hace falta saber algo de programación (G2: el resto se juega sin saber nada) */
+  forDevs?: boolean
+}
 
 export const MINIGAMES: MinigameInfo[] = [
   {
@@ -12,6 +20,7 @@ export const MINIGAMES: MinigameInfo[] = [
     title: 'Code review',
     invite: '“¿Me revisás este PR? Es cortito, lo juro.”',
     rules: 'Tocá la línea que tiene el bug. 3 rondas, cada una más rápida.',
+    forDevs: true,
   },
   {
     id: 'merge',
@@ -19,6 +28,7 @@ export const MINIGAMES: MinigameInfo[] = [
     title: 'Merge conflict',
     invite: '“Git dice que hay conflictos. Yo no toqué nada.”',
     rules: 'Leé el ticket y quedate con la versión correcta. 3 conflictos.',
+    forDevs: true,
   },
   {
     id: 'typing',
@@ -26,6 +36,43 @@ export const MINIGAMES: MinigameInfo[] = [
     title: 'Typing race',
     invite: '“Producción se cayó. ¡Rápido, escribí el comando!”',
     rules: 'Escribí 3 comandos exactos antes de que se acabe el tiempo.',
+    forDevs: true,
+  },
+  // 🎮 Para no programadores (G2)
+  {
+    id: 'whack',
+    icon: '🐛',
+    title: 'Aplastá bugs',
+    invite: '“Se escaparon los bugs del sprint. ¡Agarralos!”',
+    rules: 'Tocá los bugs antes de que se escondan. Al patito no: él te ayuda a pensar.',
+  },
+  {
+    id: 'cables',
+    icon: '🔌',
+    title: 'Conectá los servidores',
+    invite: '“Alguien desenchufó el rack para cargar el celular.”',
+    rules: 'Tocá un servidor y después el enchufe de su mismo color. 3 racks.',
+  },
+  {
+    id: 'deploy',
+    icon: '📦',
+    title: 'Ordená el deploy',
+    invite: '“¿Cómo era el orden? ¿Primero deploy y después tests?”',
+    rules: 'Tocá los pasos en el orden correcto. Un error y se cae ese deploy. 3 deploys.',
+  },
+  {
+    id: 'memory',
+    icon: '🧠',
+    title: 'Memoria de logos',
+    invite: '“¿Cuántas tecnologías usamos? Ni idea, pero son pares.”',
+    rules: 'Encontrá los 6 pares de logos. Cuantos menos errores, mejor.',
+  },
+  {
+    id: 'simon',
+    icon: '💡',
+    title: 'Simón dice del servidor',
+    invite: '“El servidor parpadea en código. Repetilo para reiniciarlo.”',
+    rules: 'Mirá la secuencia de luces y repetila. 3 secuencias, cada una más larga.',
   },
 ]
 
@@ -222,3 +269,78 @@ export const TYPING_SECONDS = 25
 export function pickSome<T>(items: T[], n: number): T[] {
   return [...items].sort(() => Math.random() - 0.5).slice(0, n)
 }
+
+// --- 🐛 Aplastá bugs --------------------------------------------------------------------
+
+/** Segundos de juego */
+export const WHACK_SECONDS = 20
+/** Cada cuánto asoma algo (ms): baja con el tiempo, de esto hasta la mitad */
+export const WHACK_SPAWN_MS = 650
+/** Cuánto se queda asomado (ms) */
+export const WHACK_VISIBLE_MS = 1100
+/** Probabilidad de que asome el patito en vez de un bug */
+export const WHACK_DUCK_CHANCE = 0.15
+/** Bugs aplastados para 1, 2 y 3 aciertos */
+export const WHACK_GOALS = [5, 10, 15]
+
+// --- 🔌 Conectá los servidores ------------------------------------------------------------
+
+/** Colores de los cables (clases completas para Tailwind) */
+export const CABLE_COLORS = [
+  { id: 'green', bg: 'bg-green', stroke: '#5af78e' },
+  { id: 'yellow', bg: 'bg-yellow', stroke: '#ffcb6b' },
+  { id: 'purple', bg: 'bg-purple', stroke: '#c792ea' },
+  { id: 'cyan', bg: 'bg-cyan', stroke: '#89ddff' },
+  { id: 'red', bg: 'bg-red', stroke: '#ff6e7f' },
+]
+/** Cables en cada rack: 3, 4 y 5 */
+export const CABLE_ROUNDS = [3, 4, 5]
+/** Segundos para los 3 racks */
+export const CABLE_SECONDS = 30
+
+// --- 📦 Ordená el deploy ----------------------------------------------------------------
+
+/** Cada pipeline, en el orden correcto */
+export const DEPLOY_PIPELINES: string[][] = [
+  ['📝 Escribir el código', '🧪 Correr los tests', '🏗️ Hacer el build', '🚀 Deploy'],
+  ['☕ Hacer café', '📥 git pull', '💻 Programar', '📤 git push'],
+  ['🎫 Leer el ticket', '💻 Programar', '👀 Code review', '🔀 Merge', '🚀 Deploy'],
+  ['🐛 Reproducir el bug', '🔍 Encontrar la causa', '🩹 Arreglarlo', '🧪 Probar que no volvió'],
+  ['💡 Tener una idea', '✏️ Dibujar la pantalla', '💻 Programarla', '🙋 Mostrársela al cliente', '😱 Cambiar todo'],
+  ['🌿 Crear una rama', '💻 Hacer los cambios', '✅ Commit', '📤 Push', '🙏 Abrir el pull request'],
+  ['📦 npm install', '🏗️ npm run build', '🧪 npm test', '🚀 Publicar'],
+  ['🔥 Se cae producción', '📟 Suena el pager', '🧯 Rollback', '📝 Escribir el postmortem'],
+]
+/** Segundos para los 3 deploys */
+export const DEPLOY_SECONDS = 30
+
+// --- 🧠 Memoria de logos ------------------------------------------------------------------
+
+/** Logos (con su nombre, para el que no los conoce) */
+export const MEMORY_LOGOS: { icon: string; name: string }[] = [
+  { icon: '🐍', name: 'Python' },
+  { icon: '☕', name: 'Java' },
+  { icon: '⚛️', name: 'React' },
+  { icon: '🐳', name: 'Docker' },
+  { icon: '🦀', name: 'Rust' },
+  { icon: '🐘', name: 'PHP' },
+  { icon: '🐧', name: 'Linux' },
+  { icon: '💎', name: 'Ruby' },
+  { icon: '🐹', name: 'Go' },
+  { icon: '🍃', name: 'MongoDB' },
+]
+/** Pares en el tablero */
+export const MEMORY_PAIRS = 6
+/** Segundos para encontrarlos */
+export const MEMORY_SECONDS = 45
+/** Errores permitidos para 3 y 2 aciertos (si encontrás todos) */
+export const MEMORY_MISSES = [4, 8]
+
+// --- 💡 Simón dice --------------------------------------------------------------------------
+
+/** Largo de cada secuencia */
+export const SIMON_LENGTHS = [3, 5, 7]
+/** Cuánto se prende cada luz al mostrar la secuencia (ms) */
+export const SIMON_FLASH_MS = 500
+/** Segundos para repetir cada secuencia (desde que termina de mostrarse) */
+export const SIMON_SECONDS = 10

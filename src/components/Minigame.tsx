@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState, type ComponentType } from 'react'
 import {
   MERGE_CONFLICTS,
   MERGE_SECONDS,
@@ -13,42 +13,13 @@ import {
   pickSome,
   type MinigameId,
 } from '../data/minigames'
-
-/** Cuenta regresiva en décimas: llama a onEnd al llegar a 0. Cambiar `run` la reinicia */
-function useCountdown(seconds: number, run: number, onEnd: () => void, paused = false): number {
-  // Se guarda junto con la ronda: si la ronda cambió, todavía no corrió y quedan los segundos completos
-  const key = `${seconds}-${run}`
-  const [tick, setTick] = useState({ key, left: seconds })
-  const end = useEffectEvent(onEnd)
-  useEffect(() => {
-    if (paused) return
-    const deadline = Date.now() + seconds * 1000
-    const id = setInterval(() => {
-      const left = Math.max(0, (deadline - Date.now()) / 1000)
-      setTick({ key, left })
-      if (left === 0) {
-        clearInterval(id)
-        end()
-      }
-    }, 100)
-    return () => clearInterval(id)
-  }, [seconds, key, paused])
-  return tick.key === key ? tick.left : seconds
-}
-
-function TimeBar({ left, total }: { left: number; total: number }) {
-  return (
-    <div className="mb-3 flex items-center gap-2">
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-panel-3">
-        <div
-          className={`h-full transition-[width] duration-100 ${left / total < 0.3 ? 'bg-red' : 'bg-cyan'}`}
-          style={{ width: `${(left / total) * 100}%` }}
-        />
-      </div>
-      <span className="w-10 text-right font-mono text-xs text-muted">{left.toFixed(1)}s</span>
-    </div>
-  )
-}
+import CablesGame from './minigames/CablesGame'
+import DeployGame from './minigames/DeployGame'
+import MemoryGame from './minigames/MemoryGame'
+import { TimeBar, type GameProps } from './minigames/shared'
+import { useCountdown } from './minigames/useCountdown'
+import SimonGame from './minigames/SimonGame'
+import WhackGame from './minigames/WhackGame'
 
 // --- Invitación ---------------------------------------------------------------------------
 
@@ -67,7 +38,9 @@ export function MinigameInvite({ game, onPlay, onSkip }: InviteProps) {
       <div className="flex items-start gap-3">
         <span className="text-3xl leading-none">{info.icon}</span>
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[10px] font-bold tracking-wider text-cyan uppercase">Minijuego</p>
+          <p className="font-mono text-[10px] font-bold tracking-wider text-cyan uppercase">
+            Minijuego{info.forDevs && <span className="ml-1.5 text-purple normal-case">🧑‍💻 para programadores</span>}
+          </p>
           <p className="leading-tight font-extrabold">{info.title}</p>
           <p className="mt-1 text-xs text-muted italic">{info.invite}</p>
         </div>
@@ -97,9 +70,6 @@ export function MinigameInvite({ game, onPlay, onSkip }: InviteProps) {
 }
 
 // --- Los juegos -----------------------------------------------------------------------------
-
-/** Cada juego avisa cuántos aciertos tuvo (de 3) */
-type GameProps = { onDone: (hits: number) => void }
 
 /** 🔍 Tocá la línea con el bug. 3 rondas, cada una más rápida */
 function ReviewGame({ onDone }: GameProps) {
@@ -295,6 +265,18 @@ function TypingGame({ onDone }: GameProps) {
   )
 }
 
+/** Qué componente juega cada minijuego */
+const GAMES: Record<MinigameId, ComponentType<GameProps>> = {
+  review: ReviewGame,
+  merge: MergeGame,
+  typing: TypingGame,
+  whack: WhackGame,
+  cables: CablesGame,
+  deploy: DeployGame,
+  memory: MemoryGame,
+  simon: SimonGame,
+}
+
 // --- Ventana del minijuego ----------------------------------------------------------------
 
 type MinigameModalProps = {
@@ -314,7 +296,7 @@ export function MinigameModal({ game, onFinish, onClose }: MinigameModalProps) {
   }
 
   const reward = hits === null ? null : minigameReward(hits / 3)
-  const Game = game === 'review' ? ReviewGame : game === 'merge' ? MergeGame : TypingGame
+  const Game = GAMES[game]
 
   return (
     <div className="absolute inset-0 z-40 grid place-items-center bg-bg/70 p-3 backdrop-blur-sm">
