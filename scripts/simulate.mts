@@ -23,6 +23,9 @@ import { nextBugDelay } from '../src/game/bug'
 import { nextMinigameDelay } from '../src/data/minigames'
 import { MACRO_LEVELS, macroCps } from '../src/data/macro'
 import { ABILITIES } from '../src/data/abilities'
+import { drawCards, getCard, type CardStyle } from '../src/data/cards'
+import { critChanceOf, macroRateOf } from '../src/game/rates'
+import { cardEffects } from '../src/game/cards'
 
 // --- Parámetros -------------------------------------------------------------------
 const arg = (name: string, fallback: number) => {
@@ -31,6 +34,10 @@ const arg = (name: string, fallback: number) => {
 }
 const CLICKS_PER_SECOND = arg('cps', 5)
 const CYCLES = arg('cycles', 2)
+/** Estilo de build: elige las cartas de ese estilo (--build click | idle | mix) */
+const BUILD = (
+  process.argv.includes('--build') ? process.argv[process.argv.indexOf('--build') + 1] : 'mix'
+) as CardStyle
 const STEP = 0.2 // segundos simulados por paso (como un tick de 200 ms)
 const MAX_HOURS = 120 // corte de seguridad
 /** Vende cuando la venta da al menos estos tokens (o tras 30 min en modo infinito) */
@@ -61,15 +68,15 @@ const ctx = (s: GameState = state): OfferContext => ({
   stage: s.stage,
   endless: s.endless,
   rep: s.rep,
-  perSecond: (CLICKS_PER_SECOND + macroCps(s.macro)) * clickRate(s) + autoRateOf(s),
-  timeBonus: 1 + 0.08 * s.skills.timeManagement,
+  perSecond: (CLICKS_PER_SECOND + macroRateOf(s)) * clickRate(s) + autoRateOf(s),
+  timeBonus: (1 + 0.08 * s.skills.timeManagement) * cardEffects(s.cards).timeMult,
 })
 const log = (text: string) =>
   events.push(`${formatDuration(clock).padStart(11)}  (+${formatDuration(clock - cycleStart).padStart(10)})  ${text}`)
 
 // --- Decisiones del bot -------------------------------------------------------------
 function acceptBest() {
-  const perSecond = (CLICKS_PER_SECOND + macroCps(state.macro)) * clickRate(state) + autoRateOf(state)
+  const perSecond = (CLICKS_PER_SECOND + macroRateOf(state)) * clickRate(state) + autoRateOf(state)
   // La que mejor paga entre las que llega a hacer con margen; si ninguna, la más corta
   const viable = state.offers.filter((o) => o.code / perSecond <= o.time * 0.85)
   const pool = viable.length ? viable : [...state.offers].sort((a, b) => a.code / a.time - b.code / b.time).slice(0, 1)
@@ -89,7 +96,16 @@ function shop() {
       type: 'ascend',
       offers,
       candidates: rerollCandidates(state.team, state.stage + 1, state.skills.headhunter),
+      cardOffer: drawCards({ ...state, stage: state.stage + 1 }),
     })
+    // 🃏 Elige la carta de su estilo (si no salió, la primera)
+    if (state.cardOffer) {
+      const index = Math.max(
+        0,
+        state.cardOffer.findIndex((c) => getCard(c.id)?.style === BUILD),
+      )
+      dispatch({ type: 'pickCard', index })
+    }
     log(
       `▲ Etapa ${state.stage + 1}: ${STAGES[state.stage].name} · ganado ${formatMoney(state.stats.moneyEarned)} · xp ${Math.round(state.stats.xpEarned)} · ${state.stats.contractsDone} contratos`,
     )
@@ -218,7 +234,7 @@ while (clock < MAX_HOURS * 3600 && sales < CYCLES) {
   while (clickDebt >= 1 && state.contract && state.code < state.contract.code) {
     clickDebt -= 1
     const before = state.code
-    const crit = Math.random() < critChance(state.skills.criticalCode, getEditor(state.editor).critBonus)
+    const crit = Math.random() < critChanceOf(state)
     dispatch({ type: 'program', crit, now: nowMs() })
     // Si el clic completó y se entregó solo (Entrega continua), el código vuelve a 0: se cuenta lo que faltaba
     counters.clicksLines += state.code >= before ? state.code - before : 0
@@ -226,7 +242,7 @@ while (clock < MAX_HOURS * 3600 && sales < CYCLES) {
   if (!state.contract || state.code >= state.contract.code) clickDebt = 0
 
   // 🤖 Macro de teclado: clics extra que no cuentan para los récords
-  macroDebt += macroCps(state.macro) * STEP
+  macroDebt += macroRateOf(state) * STEP
   while (macroDebt >= 1 && state.contract && state.code < state.contract.code) {
     macroDebt -= 1
     const before = state.code

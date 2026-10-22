@@ -3,6 +3,7 @@
 // así la ayuda no queda vieja cuando se cambia un número.
 import { useEffect, useState, type ReactNode } from 'react'
 import { ABILITIES } from '../data/abilities'
+import { CARDS, RARE_CHANCE, STYLES } from '../data/cards'
 import { ACHIEVEMENTS, CATEGORIES } from '../data/achievements'
 import { EDITORS } from '../data/editors'
 import { EVENTS } from '../data/events'
@@ -251,6 +252,24 @@ function Stages() {
             ? `${formatMoney(s.requires.moneyEarned)} ganados · ${OFFICES[s.requires.office].name} · ${s.requires.team} empleados · ${s.requires.contractsDone} contratos`
             : '—',
           s.unlocks,
+        ])}
+      />
+      <H>🃏 Especializaciones</H>
+      <P>
+        Cada vez que ascendés aparecen 3 cartas, una de cada estilo, y elegís una. Se suman entre sí y arman tu{' '}
+        <B>build</B>:{' '}
+        {Object.values(STYLES)
+          .map((st) => `${st.icon} ${st.name} (${st.text})`)
+          .join(', ')}
+        . Hay un {Math.round(RARE_CHANCE * 100)} % de chance de que una salga <B>✨ rara</B>, mucho más fuerte. Se
+        pierden al vender la empresa. Las ves en Empresa → build/.
+      </P>
+      <Table
+        head={['Carta', 'Estilo', 'Efecto (normal · rara)']}
+        rows={CARDS.map((c) => [
+          `${c.icon} ${c.name}`,
+          `${STYLES[c.style].icon} ${STYLES[c.style].name}`,
+          `${c.text(false)} · ${c.text(true)}`,
         ])}
       />
       <H>♾️ Modo infinito</H>

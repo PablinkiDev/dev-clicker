@@ -213,3 +213,56 @@ describe('habilidades activas', () => {
     expect(s.focus.readyAt).toBeLessThanOrEqual(60_000)
   })
 })
+
+describe('especializaciones (cartas)', () => {
+  const offered = (s: GameState): GameState => ({
+    ...s,
+    cardOffer: [
+      { id: 'pianist', rare: false },
+      { id: 'scrum', rare: true },
+      { id: 'loyalClient', rare: false },
+    ],
+  })
+
+  it('elegir una carta la suma a la build y cierra la oferta', () => {
+    const s = gameReducer(offered(withContract()), { type: 'pickCard', index: 1 })
+    expect(s.cards).toEqual([{ id: 'scrum', rare: true }])
+    expect(s.cardOffer).toBeNull()
+  })
+
+  it('Dedos de pianista multiplica los clics', () => {
+    const s = withContract()
+    const normal = gameReducer(s, { type: 'program', crit: false, now: 0 }).code
+    const withCard = gameReducer(
+      { ...s, cards: [{ id: 'pianist', rare: false }] },
+      { type: 'program', crit: false, now: 0 },
+    )
+    expect(withCard.code).toBeCloseTo(normal * 1.5)
+  })
+
+  it('Cliente fiel sube la paga', () => {
+    const base = withContract()
+    // Un contrato que pague bastante, para que el redondeo a $5 no tape la diferencia
+    const contract = { ...base.contract!, reward: { ...base.contract!.reward, money: 10_000 } }
+    const full = { ...base, contract, code: contract.code }
+    const normal = gameReducer(full, { type: 'deliver' }).money
+    const withCard = gameReducer({ ...full, cards: [{ id: 'loyalClient', rare: true }] }, { type: 'deliver' }).money
+    expect(withCard).toBeGreaterThan(normal * 1.25)
+  })
+
+  it('el combo crece con clics seguidos y se corta si parás', () => {
+    const base = withContract()
+    // Un contrato enorme, para que no se termine en el medio
+    let s: GameState = { ...base, contract: { ...base.contract!, code: 1e6 }, cards: [{ id: 'combo', rare: false }] }
+    for (let i = 0; i < 25; i++) s = gameReducer(s, { type: 'program', crit: false, now: 1000 + i * 100 })
+    expect(s.combo.count).toBe(25)
+    s = gameReducer(s, { type: 'program', crit: false, now: 10_000 })
+    expect(s.combo.count).toBe(1)
+  })
+
+  it('las cartas se pierden al vender la empresa', () => {
+    const base = createInitialState()
+    const s = { ...base, stage: 4, stats: { ...base.stats, moneyEarned: 7e9 }, cards: [{ id: 'scrum', rare: false }] }
+    expect(gameReducer(s, { type: 'sell', fresh: createInitialState(), now: 1 }).cards).toEqual([])
+  })
+})

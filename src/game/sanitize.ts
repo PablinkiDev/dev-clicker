@@ -3,6 +3,7 @@
 // pero absurdo (un dev de 50★, JavaScript Nv.99) se recorta al máximo posible en vez de romper el juego.
 import { INVESTMENTS } from '../data/investments'
 import { MACRO_LEVELS } from '../data/macro'
+import { getCard, type CardPick } from '../data/cards'
 import { OFFICES, officeCapacity } from '../data/offices'
 import { SKILLS } from '../data/skills'
 import { STAGES } from '../data/stages'
@@ -23,6 +24,9 @@ function clampLevels<K extends string>(levels: Record<K, number>, items: { id: K
 }
 
 const clampEmployee = (e: Employee): Employee => ({ ...e, stars: Math.round(clamp(e.stars, 1, 5)) })
+
+const isCard = (c: unknown): c is CardPick =>
+  typeof c === 'object' && c !== null && 'id' in c && typeof c.id === 'string' && getCard(c.id) !== undefined
 
 export function sanitize(state: GameState): GameState {
   const office = Math.round(clamp(state.office, 0, OFFICES.length - 1))
@@ -57,6 +61,10 @@ export function sanitize(state: GameState): GameState {
     macro: Math.round(clamp(state.macro, 0, MACRO_LEVELS.length)),
     macroOn: state.macroOn !== false,
     tampered: state.tampered === true,
+    // Solo cartas que existen (una partida editada o vieja podría traer cualquier cosa)
+    cards: Array.isArray(state.cards) ? state.cards.filter(isCard) : [],
+    cardOffer: Array.isArray(state.cardOffer) && state.cardOffer.every(isCard) ? state.cardOffer : null,
+    combo: { count: clamp(state.combo?.count, 0), lastAt: clamp(state.combo?.lastAt, 0) },
     records: {
       ...state.records,
       ...Object.fromEntries(

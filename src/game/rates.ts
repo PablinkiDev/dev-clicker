@@ -2,7 +2,11 @@
 // así los números que se ven son exactamente los que se aplican.
 import { getEditor } from '../data/editors'
 import { specialtyBonus } from '../data/techs'
-import { linesPerClick } from './formulas'
+import { COMBO_BONUS, COMBO_STEP, IDLE_SECONDS } from '../data/cards'
+import { macroCps } from '../data/macro'
+import { cardEffects } from './cards'
+import { isFocused } from './focus'
+import { critChance, linesPerClick } from './formulas'
 import { modifierMultiplier } from './modifiers'
 import { founderBonus, investmentBonus } from './prestige'
 import { achievementMultiplier } from './records'
@@ -25,6 +29,7 @@ export function clickRate(state: GameState, now?: number): number {
   const seniority = Math.pow(contractScale(state.stage, state.endless), 0.5)
   // Memoria muscular: cada clic suma una parte de lo que produce el equipo por segundo
   const muscle = 0.01 * state.skills.muscleMemory * autoRateOf(state, now)
+  const cards = cardEffects(state.cards)
   return (
     muscle +
     base *
@@ -35,8 +40,26 @@ export function clickRate(state: GameState, now?: number): number {
       (1 + 0.1 * state.tech.ai) *
       investmentBonus(state.prestige.investments.legacyCode) *
       founderBonus(state.prestige) *
-      achievementMultiplier(state.records)
+      achievementMultiplier(state.records) *
+      cards.clickMult *
+      (1 + comboBonus(state, cards.comboMax, now))
   )
+}
+
+/** 🃏 Combo: cada COMBO_STEP clics seguidos suma COMBO_BONUS, hasta el máximo de la carta (0 si se cortó) */
+export function comboBonus(state: GameState, max: number, now?: number): number {
+  if (max === 0 || now === undefined || now - state.combo.lastAt > 1000) return 0
+  return Math.min(max, COMBO_BONUS * Math.floor(state.combo.count / COMBO_STEP))
+}
+
+/** Probabilidad de crítico: habilidad + editor + cartas */
+export function critChanceOf(state: GameState): number {
+  return critChance(state.skills.criticalCode, getEditor(state.editor).critBonus) + cardEffects(state.cards).critChance
+}
+
+/** Clics por segundo de la Macro de teclado (con las cartas), 0 si no la tenés o está apagada */
+export function macroRateOf(state: GameState): number {
+  return state.macroOn && state.macro > 0 ? macroCps(state.macro) + cardEffects(state.cards).macroCps : 0
 }
 
 /** Cuánto crece el equipo con la etapa: contractScale ^ esto (el clic usa 0,5) */
@@ -44,7 +67,9 @@ export const TEAM_SENIORITY = 0.7
 
 /** Multiplicador de los críticos: el del editor + 0,5 por nivel de Crítico devastador */
 export function critMultiplier(state: GameState): number {
-  return getEditor(state.editor).critMultiplier + 0.5 * state.skills.devastatingCrit
+  return (
+    getEditor(state.editor).critMultiplier + 0.5 * state.skills.devastatingCrit + cardEffects(state.cards).critExtra
+  )
 }
 
 /**
@@ -57,8 +82,15 @@ export function autoRateOf(state: GameState, now?: number): number {
   // El equipo también gana experiencia con proyectos más grandes (un poco más rápido que el clic):
   // así en las etapas altas la automatización pesa más y el jugador tranquilo no se queda atrás
   const seniority = Math.pow(contractScale(state.stage, state.endless), TEAM_SENIORITY)
+  const cards = cardEffects(state.cards)
+  // Cartas que dependen del momento: Café para todos (con el Foco activo) y Horas extra (sin clics hace rato)
+  const focusTeam = now !== undefined && isFocused(state.focus, now) ? cards.focusTeamMult : 1
+  const idle = now !== undefined && now - state.combo.lastAt > IDLE_SECONDS * 1000 ? cards.idleMult : 1
   return (
     seniority *
+    cards.autoMult *
+    focusTeam *
+    idle *
     modifierMultiplier(state.modifiers, 'auto', now) *
     autoRate(state.team, getEditor(state.editor).autoBonus, state.skills.kubernetes) *
     contractSpecialty(state) *

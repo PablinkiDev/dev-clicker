@@ -29,6 +29,8 @@ import type { Contract } from './types'
 import { INITIAL_RECORDS, type Records } from './records'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES } from '../data/features'
+import { getCard, type CardPick } from '../data/cards'
+import { cardEffects } from './cards'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 import { MACRO_LEVELS } from '../data/macro'
 import {
@@ -113,6 +115,12 @@ export type GameState = {
   focus: Focus
   /** ⚡ Habilidades activas (F2): cuándo termina cada una y cuándo se recarga */
   abilities: AbilityTimers
+  /** 🃏 Especializaciones elegidas en esta empresa (F1): se pierden al venderla */
+  cards: CardPick[]
+  /** Cartas ofrecidas al ascender, esperando que elijas una (null si no hay nada pendiente) */
+  cardOffer: CardPick[] | null
+  /** Clics seguidos (para el Combo) y hora del último clic tuyo (para las Horas extra) */
+  combo: { count: number; lastAt: number }
   /** Multiplicadores temporales activos: el 🐛 bug dorado y los eventos */
   modifiers: Modifier[]
   /** Empleados contratados (sin contarte a vos) */
@@ -191,8 +199,10 @@ export type GameAction =
   | { type: 'hire'; uid: string; replaceUid?: string; candidates: Employee[] }
   | { type: 'rerollCandidates'; candidates: Employee[] }
   | { type: 'moveOffice' }
-  // Al ascender se arma un tablón nuevo con contratos de la etapa nueva (usa azar: llega calculado)
-  | { type: 'ascend'; offers: Contract[]; candidates: Employee[] }
+  // Al ascender se arma un tablón nuevo con contratos de la etapa nueva (usa azar: llega calculado),
+  // y se ofrecen 3 cartas de especialización (también al azar)
+  | { type: 'ascend'; offers: Contract[]; candidates: Employee[]; cardOffer: CardPick[] }
+  | { type: 'pickCard'; index: number }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
   | { type: 'toggleDarkMode' }
@@ -227,6 +237,9 @@ export function createInitialState(): GameState {
     autoAccept: true,
     focus: INITIAL_FOCUS,
     abilities: INITIAL_ABILITIES,
+    cards: [],
+    cardOffer: null,
+    combo: { count: 0, lastAt: 0 },
     modifiers: [],
     team: [],
     candidates: createInitialCandidates(),
@@ -358,7 +371,8 @@ function deliverContract(state: GameState): GameState {
       xpMultiplier(state.skills.logicalThinking) *
       (1 + 0.05 * state.skills.knowledge) *
       qaMultiplier(state.team, state.skills.codeReview) *
-      investmentBonus(investments.fastLearning),
+      investmentBonus(investments.fastLearning) *
+      cardEffects(state.cards).xpMult,
   )
   // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
   const techLevel = state.tech[LANG_TECH[contract.lang ?? 'html']]
@@ -367,7 +381,14 @@ function deliverContract(state: GameState): GameState {
   // Negociador: +5 % por nivel
   const negotiation = 1 + 0.05 * state.skills.negotiator
   const money =
-    Math.round((reward.money * techBonus * negotiation * investmentBonus(investments.premiumContracts)) / 5) * 5
+    Math.round(
+      (reward.money *
+        techBonus *
+        negotiation *
+        investmentBonus(investments.premiumContracts) *
+        cardEffects(state.cards).payMult) /
+        5,
+    ) * 5
   return {
     ...state,
     money: state.money + money,
@@ -427,10 +448,11 @@ function reduce(state: GameState, action: GameAction): GameState {
       const focus = isFocused(state.focus, action.now) ? focusMultiplier(state.skills.flowState) : 1
       const crit = action.crit && !action.macro
       // Pair programming: cada clic tuyo suma también unos segundos de lo que produce el equipo
-      const pair =
-        !action.macro && action.now < state.abilities.pair.endsAt
-          ? autoRateOf(state, action.now) * pairSeconds(state.skills.pairProgramming)
-          : 0
+      // (y la carta "Pair programming de por vida", que suma siempre)
+      const pairTime =
+        (action.now < state.abilities.pair.endsAt ? pairSeconds(state.skills.pairProgramming) : 0) +
+        cardEffects(state.cards).pairSeconds
+      const pair = !action.macro && pairTime > 0 ? autoRateOf(state, action.now) * pairTime : 0
       const lines = clickRate(state, action.now) * focus * (crit ? critMultiplier(state) : 1) + pair
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
@@ -446,10 +468,16 @@ function reduce(state: GameState, action: GameAction): GameState {
           log,
           records: { ...records, lines: records.lines + (code - state.code) },
         })
+      // 🃏 Combo: sigue si el clic anterior fue hace menos de 1 s; si no, arranca de nuevo
+      const combo = {
+        count: action.now - state.combo.lastAt <= 1000 ? state.combo.count + 1 : 1,
+        lastAt: action.now,
+      }
       return finishIfDone({
         ...state,
         code,
         log,
+        combo,
         contractClicks: state.contractClicks + 1,
         records: {
           ...records,
@@ -664,7 +692,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       const endsAt = action.now + focusDuration(level) * 1000
       return {
         ...state,
-        focus: { endsAt, readyAt: endsAt + FOCUS_COOLDOWN * 1000 },
+        focus: { endsAt, readyAt: endsAt + FOCUS_COOLDOWN * 1000 * cardEffects(state.cards).cooldownMult },
         log: addLog(
           state.log,
           'crit',
@@ -678,7 +706,11 @@ function reduce(state: GameState, action: GameAction): GameState {
       const level = ability ? state.skills[ability.skill] : 0
       if (!ability || level === 0 || action.now < state.abilities[ability.id].readyAt) return state
       const { now } = action
-      const timer = { endsAt: now + ability.duration(level) * 1000, readyAt: now + ability.cooldown(level) * 1000 }
+      const cards = cardEffects(state.cards)
+      const timer = {
+        endsAt: now + ability.duration(level) * 1000,
+        readyAt: now + ability.cooldown(level) * 1000 * cards.cooldownMult,
+      }
       let next: GameState = {
         ...state,
         modifiers: activeModifiers(state.modifiers, now),
@@ -698,7 +730,8 @@ function reduce(state: GameState, action: GameAction): GameState {
             id: `tired-${now}`,
             icon: '😴',
             target: 'auto',
-            mult: crunchTired(level),
+            // 🃏 Crunch sin culpa: no hay cansancio
+            mult: cards.crunchNoTired ? 1 : crunchTired(level),
             startsAt: peak,
             endsAt: timer.endsAt,
           },
@@ -840,6 +873,22 @@ function reduce(state: GameState, action: GameAction): GameState {
       }
     }
 
+    case 'pickCard': {
+      const pick = state.cardOffer?.[action.index]
+      const card = pick && getCard(pick.id)
+      if (!pick || !card) return state
+      return {
+        ...state,
+        cards: [...state.cards, pick],
+        cardOffer: null,
+        log: addLog(
+          state.log,
+          'crit',
+          `🃏 ${pick.rare ? '✨ RARA · ' : ''}${card.icon} ${card.name}: ${card.text(pick.rare)}`,
+        ),
+      }
+    }
+
     case 'ascend': {
       if (!canAscend(state)) return state
       const next = STAGES[state.stage + 1]
@@ -848,6 +897,7 @@ function reduce(state: GameState, action: GameAction): GameState {
         stage: state.stage + 1,
         offers: action.offers,
         candidates: action.candidates,
+        cardOffer: action.cardOffer.length ? action.cardOffer : null,
         notice: {
           kind: 'success',
           text: `${next.icon} ¡Ahora sos ${next.name}! Se desbloquea: ${next.unlocks.toLowerCase()}`,

@@ -36,7 +36,6 @@ import { ACHIEVEMENTS } from './data/achievements'
 import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/events'
 import EditorShop from './components/EditorShop'
 import MacroShop from './components/MacroShop'
-import { macroCps } from './data/macro'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
 import { STAGES } from './data/stages'
@@ -45,8 +44,11 @@ import { SKILLS, missingSkillRequirements } from './data/skills'
 import { TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
-import { critChance, skillCost } from './game/formulas'
-import { autoRateOf, clickRate, critMultiplier } from './game/rates'
+import { skillCost } from './game/formulas'
+import { autoRateOf, clickRate, critChanceOf, critMultiplier, macroRateOf } from './game/rates'
+import { drawCards } from './data/cards'
+import { cardEffects } from './game/cards'
+import CardPicker from './components/CardPicker'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
@@ -155,8 +157,8 @@ function App() {
     stage: state.stage,
     endless: state.endless,
     rep,
-    perSecond: (clicksPerSecond + (state.macroOn ? macroCps(state.macro) : 0)) * clickRate(state) + auto,
-    timeBonus: 1 + 0.08 * skills.timeManagement,
+    perSecond: (clicksPerSecond + macroRateOf(state)) * clickRate(state) + auto,
+    timeBonus: (1 + 0.08 * skills.timeManagement) * cardEffects(state.cards).timeMult,
   }
   const isComplete = contract !== null && code >= contract.code
   // El juego sigue aunque la pestaña esté oculta (D4); con el juego cerrado, no avanza
@@ -355,7 +357,12 @@ function App() {
       stage: state.stage + 1,
     })
     // Y llegan candidatos nuevos, con las estrellas que permite la etapa nueva
-    dispatch({ type: 'ascend', offers, candidates: rerollCandidates(team, state.stage + 1, skills.headhunter) })
+    dispatch({
+      type: 'ascend',
+      offers,
+      candidates: rerollCandidates(team, state.stage + 1, skills.headhunter),
+      cardOffer: drawCards({ ...state, stage: state.stage + 1 }),
+    })
   }
 
   function sell() {
@@ -472,7 +479,7 @@ function App() {
   }
 
   // 🤖 Macro de teclado (E4): hace clic sola mientras haya un contrato sin terminar
-  const macroRate = state.macroOn ? macroCps(state.macro) : 0
+  const macroRate = macroRateOf(state)
   useEffect(() => {
     if (macroRate === 0 || !isRunning) return
     const id = setInterval(
@@ -566,7 +573,7 @@ function App() {
 
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
-    const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
+    const crit = Math.random() < critChanceOf(state)
     dispatch({ type: 'program', crit, now: Date.now() })
     if (crit) setCritPop({ id: Date.now(), lines: perClick * critMultiplier(state) })
   }
@@ -701,7 +708,7 @@ function App() {
             rep={rep}
             perClick={perClick}
             auto={auto}
-            critPercent={Math.round(critChance(skills.criticalCode, editor.critBonus) * 100)}
+            critPercent={Math.round(critChanceOf(state) * 100)}
             moneyPerMinute={perMinute?.money ?? null}
             xpPerMinute={perMinute?.xp ?? null}
             moneyEarned={state.stats.moneyEarned}
@@ -785,6 +792,7 @@ function App() {
               onSell={sell}
               achievements={<AchievementList state={state} />}
               achievementsCount={`${state.records.unlocked.length}/${ACHIEVEMENTS.length}`}
+              cards={state.cards}
             />
           )}
           {currentView === 'settings' && (
@@ -871,6 +879,17 @@ function App() {
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {state.cardOffer && (
+        <CardPicker
+          offer={state.cardOffer}
+          owned={state.cards}
+          first={state.cards.length === 0 && state.prestige.sales === 0}
+          onPick={(index) => {
+            dispatch({ type: 'pickCard', index })
+            playSfx('levelUp')
+          }}
+        />
+      )}
       {featureQueue.length > 0 && (
         <FeatureCard
           key={featureQueue[0]}

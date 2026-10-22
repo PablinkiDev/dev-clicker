@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { STYLES, getCard, type CardPick } from '../data/cards'
 import ScreenHeader from '../components/ScreenHeader'
 import SellCard from '../components/SellCard'
 import SalesHistory from '../components/SalesHistory'
@@ -29,6 +30,8 @@ type CompanyScreenProps = {
   /** Contenido de la pestaña Logros */
   achievements: ReactNode
   achievementsCount: string
+  /** 🃏 Especializaciones elegidas en esta empresa */
+  cards: CardPick[]
 }
 
 function CompanyScreen({
@@ -45,6 +48,7 @@ function CompanyScreen({
   onSell,
   achievements,
   achievementsCount,
+  cards,
 }: CompanyScreenProps) {
   const [tab, setTab] = useState<'stages' | 'achievements'>('stages')
   const current = STAGES[stage]
@@ -89,6 +93,33 @@ function CompanyScreen({
         achievements
       ) : (
         <>
+          {cards.length > 0 && (
+            <>
+              <p className="mb-2.5 font-mono text-xs text-muted">build/ · tus especializaciones en esta empresa</p>
+              <ul className="mb-5 grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-2">
+                {cards.map((pick) => {
+                  const card = getCard(pick.id)
+                  if (!card) return null
+                  return (
+                    <li
+                      key={pick.id}
+                      className={`flex items-center gap-3 rounded-xl border p-3 ${pick.rare ? 'border-yellow/60 bg-yellow/10' : 'border-line bg-panel-2'}`}
+                    >
+                      <span className="text-2xl">{card.icon}</span>
+                      <span className="min-w-0">
+                        <span className={`block font-mono text-[10px] font-bold uppercase ${STYLES[card.style].color}`}>
+                          {STYLES[card.style].icon} {STYLES[card.style].name}
+                          {pick.rare && ' · ✨ rara'}
+                        </span>
+                        <span className="block text-sm font-extrabold">{card.name}</span>
+                        <span className="block text-xs text-muted">{card.text(pick.rare)}</span>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
           <p className="mb-2.5 font-mono text-xs text-muted">etapas/</p>
           <ol className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-5">
             {STAGES.map((s, i) => {
