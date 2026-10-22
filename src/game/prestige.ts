@@ -1,5 +1,5 @@
 // Prestigio: vender la empresa a cambio de tokens de inversión (GDD §10).
-import { INITIAL_INVESTMENTS, type InvestmentLevels } from '../data/investments'
+import { INITIAL_INVESTMENTS, INVESTMENT_STEP, type InvestmentLevels } from '../data/investments'
 
 /** Registro de una empresa vendida (GDD §10: historial) */
 export type SaleRecord = {
@@ -54,7 +54,19 @@ export function nextMilestone(value: number): number {
   return milestoneValue(tokensForValue(value) - BASE_TOKENS)
 }
 
-/** Multiplicador de una mejora de prestigio de +20 % por nivel */
+/** Multiplicador de una mejora de prestigio de porcentaje (+50 % por nivel) */
 export function investmentBonus(level: number): number {
-  return 1 + 0.2 * level
+  return 1 + INVESTMENT_STEP * level
+}
+
+/** Experiencia de fundador (E5): cada token ganado en la carrera (gastado o no) da +10 % de producción */
+export const FOUNDER_BONUS = 0.1
+
+/** Tokens ganados en toda la carrera */
+export function tokensEarned(prestige: Prestige): number {
+  return prestige.history.reduce((total, sale) => total + sale.tokens, 0)
+}
+
+export function founderBonus(prestige: Prestige): number {
+  return 1 + FOUNDER_BONUS * tokensEarned(prestige)
 }

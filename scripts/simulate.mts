@@ -184,9 +184,14 @@ function sellIfReady(): boolean {
       (i) =>
         state.prestige.investments[i.id] < i.maxLevel && (!i.requires || state.prestige.investments[i.requires] > 0),
     ).sort(
-      (a, b) => investmentCost(state.prestige.investments[a.id]) - investmentCost(state.prestige.investments[b.id]),
+      (a, b) =>
+        investmentCost(a, state.prestige.investments[a.id]) - investmentCost(b, state.prestige.investments[b.id]),
     )
-    if (!options.length || investmentCost(state.prestige.investments[options[0].id]) > state.prestige.tokens) break
+    if (
+      !options.length ||
+      investmentCost(options[0], state.prestige.investments[options[0].id]) > state.prestige.tokens
+    )
+      break
     dispatch({ type: 'invest', investment: options[0].id })
   }
   endlessSince = null

@@ -4,7 +4,7 @@ import { getEditor } from '../data/editors'
 import { specialtyBonus } from '../data/techs'
 import { linesPerClick } from './formulas'
 import { modifierMultiplier } from './modifiers'
-import { investmentBonus } from './prestige'
+import { founderBonus, investmentBonus } from './prestige'
 import { achievementMultiplier } from './records'
 import type { GameState } from './reducer'
 import { contractScale } from './stages'
@@ -34,6 +34,7 @@ export function clickRate(state: GameState, now?: number): number {
       modifierMultiplier(state.modifiers, 'click', now) *
       (1 + 0.1 * state.tech.ai) *
       investmentBonus(state.prestige.investments.legacyCode) *
+      founderBonus(state.prestige) *
       achievementMultiplier(state.records)
   )
 }
@@ -64,6 +65,7 @@ export function autoRateOf(state: GameState, now?: number): number {
     (1 + 0.05 * state.skills.teamwork) *
     (1 + 0.1 * state.tech.git) *
     investmentBonus(state.prestige.investments.seniorTeam) *
+    founderBonus(state.prestige) *
     achievementMultiplier(state.records)
   )
 }

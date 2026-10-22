@@ -80,7 +80,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | E2 ✅ | **Economía de XP:** la XP crece solo ^0,4 con el agrandado por producción y las mejoras cuestan ×1 / ×1,8 / ×1,8 / ×2 / ×4 según su etapa. Cada árbol se completa hacia el final de su etapa (75–100 %) | M | 1 |
 | E3 ✅ | **Árbol Empresa:** de 4 a 10 nodos: Marketing (+★ por contrato), Code review obligatorio (+QA), Kubernetes (+DevOps), Headhunter (candidatos +1★), Home office (+2 puestos) e Inversores (interés sobre el dinero en mano) | M | 2 |
 | E4 ✅ | **🤖 Macro de teclado** (Herramientas, con dinero): 1 clic/s desde Startup ($3 M) y 2 clics/s desde Empresa tec. ($40 M), con interruptor. Sus clics no son críticos ni cuentan para logros | S | 1 |
-| E5 | **Prestigio que se siente:** +10 % de producción por token ganado en toda la carrera, rama de ventajas de arranque (Portfolio, Licencia vitalicia, Socio fundador, Procesos heredados), mejoras de +50 % con 10 niveles, comparación de tiempos en el historial | M | 2–3 |
+| E5 ✅ | **Prestigio que se siente:** experiencia de fundador (+10 % de producción por token ganado en la carrera), rama Arranque (Portfolio, Licencia vitalicia, Socio fundador, Procesos heredados), mejoras de +50 % hasta Nv.10, Capital semilla $25 K y Primeros contactos +30 ★, comparación de tiempos en el historial. 2.º ciclo: 32–49 % más rápido en la simulación | M | 2–3 |
 | E6 | **Rebalanceo** a 1–1,5 h, con un segundo ciclo claramente más rápido | M | 1 |
 
 ## Hito C — Listo para amigos (1.0)

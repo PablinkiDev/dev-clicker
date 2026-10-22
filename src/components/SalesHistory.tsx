@@ -1,6 +1,19 @@
 import { formatDuration, formatMoney } from '../game/format'
 import type { SaleRecord } from '../game/prestige'
 
+/** "⚡ 16 % más rápida que la anterior" (si las dos ventas tienen el tiempo jugado) */
+function Comparison({ current, previous }: { current?: number; previous?: number }) {
+  if (!current || !previous) return null
+  const change = 1 - current / previous
+  const pct = Math.round(Math.abs(change) * 100)
+  if (pct === 0) return <p className="mt-1 text-muted">= Igual de rápida que la anterior</p>
+  return change > 0 ? (
+    <p className="mt-1 font-bold text-green">⚡ {pct} % más rápida que la anterior</p>
+  ) : (
+    <p className="mt-1 text-orange">🐢 {pct} % más lenta que la anterior</p>
+  )
+}
+
 /** Historial de empresas vendidas: la más reciente arriba */
 function SalesHistory({ history }: { history: SaleRecord[] }) {
   if (history.length === 0) return null
@@ -24,6 +37,7 @@ function SalesHistory({ history }: { history: SaleRecord[] }) {
               {sale.endless} en modo infinito
               {sale.playTime !== undefined && ` · ${formatDuration(sale.playTime)} jugados`}
             </p>
+            <Comparison current={sale.playTime} previous={history[i + 1]?.playTime} />
           </li>
         ))}
       </ol>

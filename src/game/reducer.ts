@@ -10,7 +10,7 @@ import { formatMoney, formatNumber, formatRate } from './format'
 import { STAGES } from '../data/stages'
 import { canAscend, companyValue, isEndless } from './stages'
 import { INITIAL_PRESTIGE, investmentBonus, tokensForValue, type Prestige } from './prestige'
-import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
+import { FIRST_CONTACTS_REP, INVESTMENTS, SEED_CAPITAL, investmentCost, type InvestmentId } from '../data/investments'
 import { autoRateOf, clickRate, critMultiplier } from './rates'
 import { BUG_DURATION, BUG_MULTIPLIER } from './bug'
 import { activeModifiers, type Modifier } from './modifiers'
@@ -296,6 +296,31 @@ function applyEffect(
   }
 }
 
+/** Rama Arranque del prestigio (E5): con qué empieza la empresa nueva */
+function startPerks(fresh: GameState, old: GameState): Partial<GameState> {
+  const { portfolio, license, cofounder, processes } = old.prestige.investments
+  const perks: Partial<GameState> = {}
+  if (portfolio > 0) {
+    const level = portfolio >= 2 ? 5 : 3
+    perks.tech = { ...fresh.tech, html: level, css: level, javascript: level }
+  }
+  if (license > 0) {
+    const editor: EditorId = license >= 2 ? 'vscode' : 'sublime'
+    perks.editor = editor
+    perks.look = editor
+  }
+  if (cofounder > 0 && old.team.length > 0) {
+    // El de más estrellas; a igualdad, un dev (sin devs no hay producción)
+    const best = [...old.team].sort(
+      (a, b) => b.stars - a.stars || Number(b.role === 'dev') - Number(a.role === 'dev'),
+    )[0]
+    perks.team = [best]
+    perks.candidates = fresh.candidates.filter((c) => c.name !== best.name)
+  }
+  if (processes > 0) perks.skills = { ...fresh.skills, autoDeliver: 1, autoAccept: 1 }
+  return perks
+}
+
 /** Con Entrega continua, un contrato completo se entrega solo (GDD §9) */
 function finishIfDone(state: GameState): GameState {
   const done = state.contract !== null && state.code >= state.contract.code
@@ -515,8 +540,9 @@ function reduce(state: GameState, action: GameAction): GameState {
       return {
         ...action.fresh,
         // Ventajas iniciales de Innovación
-        money: action.fresh.money + 2000 * investments.seedCapital,
-        rep: action.fresh.rep + 5 * investments.firstContacts,
+        ...startPerks(action.fresh, state),
+        money: action.fresh.money + SEED_CAPITAL * investments.seedCapital,
+        rep: action.fresh.rep + FIRST_CONTACTS_REP * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
         records: state.records,
         prestige: {
@@ -555,7 +581,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       if (!investment) return state
       const { investments, tokens } = state.prestige
       const level = investments[investment.id]
-      const cost = investmentCost(level)
+      const cost = investmentCost(investment, level)
       const locked = investment.requires && investments[investment.requires] === 0
       if (level >= investment.maxLevel || tokens < cost || locked) return state
       return {

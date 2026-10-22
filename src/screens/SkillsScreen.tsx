@@ -7,7 +7,7 @@ import { SKILLS, missingSkillRequirements, type Skill, type SkillId, type SkillL
 import { TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
 import { skillCost } from '../game/formulas'
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
-import type { Prestige } from '../game/prestige'
+import { FOUNDER_BONUS, founderBonus, type Prestige } from '../game/prestige'
 
 type SkillsScreenProps = {
   skills: SkillLevels
@@ -77,6 +77,10 @@ const INVESTMENT_LAYOUT: Record<InvestmentId, { col: number; row: number }> = {
   fastLearning: { col: 1, row: 1 },
   seedCapital: { col: 0, row: 2 },
   firstContacts: { col: 1, row: 2 },
+  portfolio: { col: 0, row: 3 },
+  license: { col: 1, row: 3 },
+  cofounder: { col: 0, row: 4 },
+  processes: { col: 1, row: 4 },
 }
 
 /** Pestañas de la pantalla: una por árbol */
@@ -139,7 +143,7 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
   // --- Prestigio ---
   const investmentNodes: TreeNode[] = INVESTMENTS.map((inv) => {
     const level = prestige.investments[inv.id]
-    const cost = investmentCost(level)
+    const cost = investmentCost(inv, level)
     const required = inv.requires && INVESTMENTS.find((i) => i.id === inv.requires)
     const missing = required && prestige.investments[required.id] === 0 ? `Requiere ${required.name}` : null
     return {
@@ -236,6 +240,12 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
           <>
             <p className="mb-3 font-mono text-xs text-muted">
               <span className="text-purple">{prestige.tokens} tokens</span> · estas mejoras sobreviven a cada venta
+            </p>
+            <p className="mb-4 max-w-xl rounded-xl border border-purple/40 bg-purple/10 px-3.5 py-2.5 text-sm">
+              🏛 <b>Experiencia de fundador:</b>{' '}
+              <b className="text-purple">+{Math.round((founderBonus(prestige) - 1) * 100)} %</b> de producción (clics y
+              equipo). Cada token que ganaste en tu carrera suma +{Math.round(FOUNDER_BONUS * 100)} %, aunque lo hayas
+              gastado.
             </p>
             <SkillTree
               columns={['base/', 'avanzado/']}
