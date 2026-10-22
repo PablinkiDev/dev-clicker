@@ -43,8 +43,9 @@ const PM_TIME_MAX = 1
 /** 📊 +0,2 de suerte (2 % más chances de lo bueno) por cada estrella de Data Scientist */
 export const DATA_LUCK_PER_STAR: number = 0.2
 
-/** 🧑‍🏫 +5 % a todo lo que hacen los demás, por cada estrella de Tech Lead */
-export const LEAD_PER_STAR: number = 0.05
+/** 🧑‍🏫 +3 % a todo lo que hacen los demás, por cada estrella de Tech Lead (como mucho +60 % en total) */
+export const LEAD_PER_STAR: number = 0.03
+const LEAD_MAX = 0.6
 
 /** Suma algo de los empleados de una profesión (por ejemplo, sus estrellas) */
 function sumRole(team: Employee[], role: RoleId, fn: (stars: number) => number): number {
@@ -56,7 +57,7 @@ export const internRate = (stars: number) => Math.round(INTERN_RATE * devRate(st
 
 /** 🧑‍🏫 Cuánto potencia el Tech Lead a los demás (1 si no hay) */
 export function leadMultiplier(team: Employee[]): number {
-  return 1 + sumRole(team, 'lead', (s) => LEAD_PER_STAR * s)
+  return 1 + Math.min(LEAD_MAX, sumRole(team, 'lead', (s) => LEAD_PER_STAR * s))
 }
 
 const pct = (n: number) => `${Math.round(n * 100)}%`

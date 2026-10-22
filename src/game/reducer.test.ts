@@ -448,7 +448,7 @@ describe('profesiones (G1)', () => {
   it('el Tech Lead potencia a los demás', () => {
     const dev = createCandidate('dev', [], 0, 3)
     const lead = createCandidate('lead', [dev], 3, 4)
-    expect(autoRate([dev, lead], 0)).toBeCloseTo(devRate(3) * 1.2)
+    expect(autoRate([dev, lead], 0)).toBeCloseTo(devRate(3) * 1.12)
   })
 
   it('el pasante suma o resta código sin pasarse', () => {

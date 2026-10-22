@@ -104,6 +104,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | G2 ✅ | 🎮 **5 minijuegos para no programadores:** 🐛 Aplastá bugs (topo, 20 s; metas 5/10/15; el 🦆 resta 2), 🔌 Conectá los servidores (3 racks de 3/4/5 cables, 30 s), 📦 Ordená el deploy (3 pipelines, un error tira ese deploy, 30 s), 🧠 Memoria de logos (6 pares, 45 s; ⭐ según errores), 💡 Simón dice del servidor (secuencias de 3/5/7). Los 3 de antes quedan marcados 🧑‍💻 para programadores. Panel de dev: lista para jugar cualquiera | M | 4–5 |
 | G3 ✅ | 🎲 **Más variedad:** eventos de 30 a 48 (11 ligados a profesiones, 5 a artefactos —incluye ganar 📦—, 2 generales; solo salen si tenés esa profesión/artefacto). 15 clientes nuevos (3 por etapa; Freelancer pasa de 11 a 14 contratos). Los 8 jefes con pedido propio. Logros de 50 a 70 (categoría nueva 🏺 Colección: artefactos, cajas y cartas; más jefes, profesiones, desafíos, IPO, apuestas y minijuegos). Simulación: el bot llega a la IPO con 47/70 | M | 3–4 |
 | G4 ✅ | 🎨 **Personalización:** 🏢 nombre y logo (emoji + color) de cada empresa: la primera arranca con un nombre gracioso al azar y se cambia en Empresa; desde la segunda se elige en la pantalla de empresa nueva (con el desafío). Se ve en Empresa, el explorador (o la barra de Nano), la venta, el historial y la IPO. 🧑‍💻 Perfil en Setup (se desbloquea con la primera contratación): avatar (piel, buzo, cabeza y cara; buzo negro/dorado, gorra, antenas, corona, anteojos de sol y bigote se ganan con logros), 13 títulos ganados con logros y 🐈🐕🦆 mascota que pasea por la pantalla (se acaricia) con 6 eventos propios. Logros Mascota feliz y Con facha (72) | M | 4–5 |
+| G5 ✅ | ⚖️ **Rebalanceo post-G:** el 🧑‍🏫 Tech Lead estaba roto (uno 5★ en lugar de un dev daba +33 % de producción y lo óptimo era llenar la oficina de leads): pasa a +3 %/★ con tope de +60 %. Ahora uno 5★ da +14 % y lo ideal son 3–4 leads. El resto (profesiones, desafíos, mascotas, artefactos) quedó en rango | S | 1 |
 
 ## Hito H — UI y pulido
 
@@ -183,6 +184,17 @@ Carrera completa: 12 ventas, los 6 desafíos en las ventas 2–7, cajas comprada
 | 2 clics/s mix | 1 h 33 | 47 min – 1 h 05 | 30–42 min | ~9 h 10 |
 
 Las runs tardías las frena la cantidad de contratos (30/70/120/180), no el dinero. Al llegar a la IPO: 11–14 de 16 artefactos y casi ningún legendario (queda colección para el modo leyenda).
+
+## 📊 Simulación post-Hito G (G5)
+
+Carrera completa (12 ventas, desafíos en las ventas 2–7), después del ajuste del Tech Lead:
+
+| Bot | 1.ª venta | Runs tardías | IPO |
+|---|---|---|---|
+| 5 clics/s (click / idle / mix) | 1 h 09 – 1 h 23 | 20–45 min | 6 h 25 – 7 h 56 |
+| 2 clics/s (click / idle / mix) | 1 h 43 – 2 h 39 | 25–60 min | 9 h 26 – 12 h |
+
+Al llegar a la IPO el bot tiene 47–52 de 72 logros y 12–14 de 16 artefactos.
 
 ## 📌 Decisiones
 
