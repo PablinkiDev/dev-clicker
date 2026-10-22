@@ -37,7 +37,7 @@ import { eventContextOf, nextEventDelay, pickEvent, rollOutcome, type GameEvent 
 import EditorShop from './components/EditorShop'
 import MacroShop from './components/MacroShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
-import { getEditor } from './data/editors'
+import { EDITORS, getEditor } from './data/editors'
 import { STAGES } from './data/stages'
 import { officeCapacity } from './data/offices'
 import { SKILLS, missingSkillRequirements } from './data/skills'
@@ -51,11 +51,17 @@ import CardPicker from './components/CardPicker'
 import ChallengePicker from './components/ChallengePicker'
 import IpoScreen from './components/IpoScreen'
 import MascotWalker from './components/MascotWalker'
+import PurchaseBurst from './components/PurchaseBurst'
+import InboxPanel from './components/InboxPanel'
+import CareerStats from './components/CareerStats'
+import { unreadCount } from './game/inbox'
+import { newsOf } from './game/news'
+import { tutorialStep } from './game/tutorial'
 import { getChallenge } from './data/challenges'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers } from './game/offers'
 import { offerContextOf } from './game/offerContext'
-import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
+import { DARK_MODE_PRICE, createInitialState, gameReducer, type GameState } from './game/reducer'
 import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
 import {
   internSurpriseChance,
@@ -81,6 +87,19 @@ const TICK_MS = 100
 
 /** Máximo de segundos que puede avanzar el juego de un saque (pestaña frenada o compu suspendida) */
 const MAX_ELAPSED = 120
+
+/** Cuántas cosas compraste (para el sonido y las chispas de compra) */
+const purchasesOf = (s: GameState) =>
+  Object.values(s.skills).reduce((a, b) => a + b, 0) +
+  Object.values(s.tech).reduce((a, b) => a + b, 0) +
+  Object.values(s.prestige.investments).reduce((a, b) => a + b, 0) +
+  s.team.length +
+  s.office +
+  s.records.replacements +
+  s.macro +
+  s.records.boxesBought +
+  EDITORS.findIndex((e) => e.id === s.editor) +
+  (s.darkMode.owned ? 1 : 0)
 
 function App() {
   // Todo el estado de la partida vive en un solo objeto; las reglas están en game/reducer.ts.
@@ -187,6 +206,8 @@ function App() {
       !missingRequirements(t, state.tech, state.stage) &&
       xp >= skillCost(t.baseCost, state.tech[t.id], t.minStage),
   ).length
+  // 🧭 Tutorial de la primera partida (C2): qué señalar ahora
+  const tutorial = tutorialStep(state, skillsAvailable + techsAvailable)
   const errors = log.filter((entry) => entry.kind === 'error').length
   const isUrgent = isRunning && timeLeft / (contract?.time ?? 1) < 0.3
 
@@ -232,20 +253,12 @@ function App() {
     const { records: r1, stats: s1 } = state
     // Importar o empezar de cero: silencio
     if (r1.clicks < r0.clicks) return
-    const owned = (s: typeof state) =>
-      Object.values(s.skills).reduce((a, b) => a + b, 0) +
-      Object.values(s.tech).reduce((a, b) => a + b, 0) +
-      Object.values(s.prestige.investments).reduce((a, b) => a + b, 0) +
-      s.team.length +
-      s.office +
-      s.records.replacements +
-      (s.darkMode.owned ? 1 : 0)
     if (r1.unlocked.length > r0.unlocked.length) playSfx('achievement')
     else if (state.stage > before.stage || state.prestige.sales > before.prestige.sales) playSfx('levelUp')
     else if (r1.contracts > r0.contracts) playSfx('deliver')
     else if (s1.contractsFailed > s0.contractsFailed) playSfx('fail')
     else if (r1.bugs > r0.bugs) playSfx('bug')
-    else if (owned(state) > owned(before) || state.editor !== before.editor) playSfx('buy')
+    else if (purchasesOf(state) > purchasesOf(before)) playSfx('buy')
     else if (r1.clicks > r0.clicks) playSfx('click')
   }, [state])
 
@@ -310,6 +323,20 @@ function App() {
 
   // ❓ Ayuda: botón en el panel de arriba o F1
   const [helpOpen, setHelpOpen] = useState(false)
+  // 🆕 Lo nuevo de cada pantalla (H4): se marca como visto al salir de ella
+  const news = newsOf(state)
+  const markSeen = useCallback((keys: string[]) => dispatch({ type: 'markSeen', keys }), [])
+  // Puntito en el menú: pantallas recién desbloqueadas o con algo nuevo adentro
+  const newsViews: View[] = [
+    ...(news.tech.length + news.personal.length + news.company.length + news.prestige.length > 0
+      ? (['skills'] as const)
+      : []),
+    ...(news.team.length > 0 ? (['team'] as const) : []),
+    ...(news.profile.length > 0 ? (['setup'] as const) : []),
+  ]
+  const dotViews = [...new Set([...freshViews, ...newsViews])].filter((v) => v !== currentView)
+  /** 🔔 Centro de notificaciones (H2) */
+  const [inboxOpen, setInboxOpen] = useState(false)
   useEffect(() => {
     const onF1 = (event: KeyboardEvent) => {
       if (event.key !== 'F1') return
@@ -700,7 +727,7 @@ function App() {
           <>
             <ActivityBar
               views={views}
-              fresh={freshViews}
+              fresh={dotViews}
               view={currentView}
               onChange={navigate}
               offersCount={offers.length}
@@ -736,7 +763,7 @@ function App() {
           {look.features.nav === 'menu' && (
             <MenuBar
               views={views}
-              fresh={freshViews}
+              fresh={dotViews}
               editor={look.id}
               view={currentView}
               onChange={navigate}
@@ -757,11 +784,17 @@ function App() {
             moneyEarned={state.stats.moneyEarned}
             nextPurchase={nextPurchase(state)}
             upgradesAvailable={skillsAvailable + techsAvailable}
+            showUpgradeTutorial={tutorial === 'upgrade' && currentView !== 'skills'}
             focus={focusInfo}
             modifiers={activeMods}
             goal={currentGoal(state)}
             onNavigate={navigate}
             onHelp={() => setHelpOpen(true)}
+            unread={unreadCount(state.inbox)}
+            onInbox={() => {
+              setInboxOpen(true)
+              dispatch({ type: 'readInbox' })
+            }}
           />
           {ideChrome && <EditorTabs views={views} view={currentView} contract={contract} onChange={navigate} />}
 
@@ -796,6 +829,7 @@ function App() {
               onAccept={acceptContract}
               autoAccept={state.skills.autoAccept > 0 ? state.autoAccept : null}
               onAutoAcceptChange={(on) => dispatch({ type: 'setAutoAccept', on })}
+              showTutorial={tutorial === 'offer'}
             />
           )}
           {currentView === 'team' && (
@@ -819,6 +853,8 @@ function App() {
               codeReview={skills.codeReview}
               onMove={() => dispatch({ type: 'moveOffice' })}
               profile={state.profile}
+              news={news.team}
+              onSeen={markSeen}
             />
           )}
           {currentView === 'company' && (
@@ -835,6 +871,7 @@ function App() {
               onAscend={ascend}
               onSell={sell}
               achievements={<AchievementList state={state} />}
+              careerStats={<CareerStats state={state} />}
               achievementsCount={`${state.records.unlocked.length}/${ACHIEVEMENTS.length}`}
               cards={state.cards}
               challenge={state.challenge}
@@ -869,6 +906,8 @@ function App() {
               onBuy={() => dispatch({ type: 'buyBox' })}
               profile={state.profile}
               unlocked={state.records.unlocked}
+              news={news.profile}
+              onSeen={markSeen}
               onProfile={(profile) => dispatch({ type: 'setProfile', profile })}
               showArtifacts={features.includes('artifacts')}
             />
@@ -899,6 +938,8 @@ function App() {
               onLearn={(tech) => dispatch({ type: 'learnTech', tech })}
               prestige={state.prestige}
               onInvest={(investment) => dispatch({ type: 'invest', investment })}
+              news={news}
+              onSeen={markSeen}
               tools={
                 <div className="flex flex-col gap-3">
                   <EditorShop
@@ -933,16 +974,22 @@ function App() {
             critPop={critPop}
             abilities={abilitySlots}
             onAbility={activateAbility}
+            tutorial={tutorial === 'click' || tutorial === 'deliver' ? tutorial : null}
           />
           {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
-          {look.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}
+          {/* En el celular la terminal no entra: lo importante está en las notificaciones 🔔 */}
+          {look.features.nav !== 'agent' && (
+            <div className="hidden md:contents">
+              <Terminal log={log} errors={errors} />
+            </div>
+          )}
           {look.features.nav === 'nano' && (
-            <NanoBar views={views} fresh={freshViews} view={currentView} onChange={navigate} />
+            <NanoBar views={views} fresh={dotViews} view={currentView} onChange={navigate} />
           )}
           {look.features.nav === 'agent' && (
             <AgentBar
               views={views}
-              fresh={freshViews}
+              fresh={dotViews}
               view={currentView}
               onChange={navigate}
               hasContract={contract !== null}
@@ -957,6 +1004,7 @@ function App() {
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
+      <PurchaseBurst purchases={purchasesOf(state)} />
       {state.profile.mascot && (
         <MascotWalker
           key={mascotSummon}
@@ -969,6 +1017,7 @@ function App() {
         />
       )}
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {inboxOpen && <InboxPanel inbox={state.inbox} onClose={() => setInboxOpen(false)} />}
       {ipoOpen && <IpoScreen state={state} onContinue={() => setIpoOpen(false)} />}
       {state.challengeChoice && (
         <ChallengePicker

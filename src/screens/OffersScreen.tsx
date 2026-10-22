@@ -1,3 +1,4 @@
+import TutorialBubble from '../components/TutorialBubble'
 import { LANG_ICON, TECH_ICON } from '../ui'
 import { SPECIAL_RULES } from '../game/offers'
 import { TECHS, payTier, specialtyBonus, type TechLevels } from '../data/techs'
@@ -21,6 +22,8 @@ type OffersScreenProps = {
   autoAccept: boolean | null
   onAutoAcceptChange: (on: boolean) => void
   onAccept: (offer: Contract) => void
+  /** 🧭 Tutorial: señalar la primera oferta (C2) */
+  showTutorial?: boolean
 }
 
 const DIFFICULTY_LABEL: Record<Difficulty, { text: string; className: string }> = {
@@ -41,6 +44,7 @@ function OffersScreen({
   onAccept,
   autoAccept,
   onAutoAcceptChange,
+  showTutorial = false,
 }: OffersScreenProps) {
   // Ordenamos una copia: nunca hay que modificar (mutar) las props ni el estado
   const sorted = [...offers].sort(
@@ -50,6 +54,9 @@ function OffersScreen({
       Number(!!b.special) - Number(!!a.special) ||
       DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
   )
+  // 🧭 Tutorial: el contrato guiado (o el más tranquilo)
+  const tutorialTarget =
+    sorted.find((o) => o.once) ?? sorted.find((o) => o.difficulty === 'easy' && !o.special && !o.boss) ?? sorted[0]
 
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
@@ -104,7 +111,13 @@ function OffersScreen({
                 : { text: 'Arriesgado', className: 'text-red' }
 
           return (
-            <li key={offer.uid}>
+            <li key={offer.uid} className="relative">
+              {showTutorial && offer.uid === tutorialTarget?.uid && (
+                <TutorialBubble
+                  text="👇 Empezá por acá: tocá este contrato"
+                  className="-top-11 left-1/2 -translate-x-1/2"
+                />
+              )}
               <button
                 type="button"
                 onClick={() => onAccept(offer)}

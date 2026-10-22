@@ -34,6 +34,8 @@ type CompanyScreenProps = {
   onSell: () => void
   /** Contenido de la pestaña Logros */
   achievements: ReactNode
+  /** 📊 Contenido de la pestaña Estadísticas (H3) */
+  careerStats: ReactNode
   achievementsCount: string
   /** 🃏 Especializaciones elegidas en esta empresa */
   cards: CardPick[]
@@ -61,6 +63,7 @@ function CompanyScreen({
   onAscend,
   onSell,
   achievements,
+  careerStats,
   achievementsCount,
   cards,
   challenge,
@@ -73,7 +76,7 @@ function CompanyScreen({
   /** Lo que se está editando del nombre y el logo (null = no se está editando) */
   const [draft, setDraft] = useState<CompanyIdentity | null>(null)
   const activeChallenge = getChallenge(challenge)
-  const [tab, setTab] = useState<'stages' | 'achievements'>('stages')
+  const [tab, setTab] = useState<'stages' | 'achievements' | 'stats'>('stages')
   const current = STAGES[stage]
   const next = STAGES[stage + 1]
   const ready = requirements !== null && requirements.every((r) => r.done)
@@ -140,6 +143,7 @@ function CompanyScreen({
           [
             ['stages', '▲ Etapas'],
             ['achievements', `🏆 Logros ${achievementsCount}`],
+            ['stats', '📊 Estadísticas'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -159,6 +163,8 @@ function CompanyScreen({
 
       {tab === 'achievements' ? (
         achievements
+      ) : tab === 'stats' ? (
+        careerStats
       ) : (
         <>
           {activeChallenge && (

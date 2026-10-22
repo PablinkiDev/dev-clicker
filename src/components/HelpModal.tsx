@@ -524,7 +524,7 @@ export function HelpButton({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       aria-label="Ayuda (F1)"
       title="Ayuda (F1)"
-      className="absolute top-1.5 right-1.5 z-10 grid size-6 cursor-pointer place-items-center rounded-full border border-cyan/50 bg-panel-2 font-mono text-xs font-extrabold text-cyan transition-colors hover:bg-cyan hover:text-bg"
+      className="absolute right-1.5 bottom-2.5 z-10 grid size-6 md:top-1.5 md:bottom-auto cursor-pointer place-items-center rounded-full border border-cyan/50 bg-panel-2 font-mono text-xs font-extrabold text-cyan transition-colors hover:bg-cyan hover:text-bg"
     >
       ?
     </button>

@@ -124,7 +124,8 @@ export function pickAutoOffer(offers: Contract[], autoRate: number): Contract | 
 
 /** Tablón inicial: el contrato guiado + ofertas para completar */
 export function createInitialOffers(tech: TechLevels): Contract[] {
-  const ctx: OfferContext = { tech, stage: 0, endless: 0, rep: 0, perSecond: ASSUMED_CLICKS_PER_SECOND }
+  // Sin contratos especiales en el primer tablón: el jugador nuevo arranca por algo tranquilo
+  const ctx: OfferContext = { tech, stage: 0, endless: 0, rep: 0, perSecond: ASSUMED_CLICKS_PER_SECOND, specialMult: 0 }
   return refillOffers([createOffer(GUIDED_CONTRACT, ctx)], {}, null, Date.now(), ctx)
 }
 

@@ -11,6 +11,7 @@ import { SKILLS } from '../data/skills'
 import { STAGES } from '../data/stages'
 import { TECHS } from '../data/techs'
 import type { GameState } from './reducer'
+import { INBOX_LIMIT, INITIAL_INBOX, type Inbox, type InboxItem } from './inbox'
 import type { Employee } from './team'
 
 /** Recorta un número a [min, max]; si no es un número válido, devuelve min */
@@ -73,6 +74,7 @@ export function sanitize(state: GameState): GameState {
     // 🎨 Nombre corto y solo opciones que existen (y que ya desbloqueaste)
     company: cleanCompany(state.company),
     profile: cleanProfile(state.profile, state.records.unlocked),
+    inbox: cleanInbox(state.inbox),
     records: {
       ...state.records,
       ...Object.fromEntries(
@@ -107,4 +109,23 @@ export function sanitize(state: GameState): GameState {
       ),
     },
   }
+}
+
+/** 🔔 Solo notificaciones bien formadas, con texto corto (una partida editada podría traer cualquier cosa) */
+function cleanInbox(inbox: Inbox | undefined): Inbox {
+  if (typeof inbox !== 'object' || inbox === null || !Array.isArray(inbox.items)) return INITIAL_INBOX
+  const kinds = ['good', 'bad', 'info', 'gold']
+  const items = inbox.items
+    .filter(
+      (n): n is InboxItem =>
+        typeof n === 'object' &&
+        n !== null &&
+        Number.isFinite(n.id) &&
+        typeof n.icon === 'string' &&
+        typeof n.text === 'string' &&
+        kinds.includes(n.kind),
+    )
+    .slice(-INBOX_LIMIT)
+    .map((n) => ({ ...n, icon: [...n.icon].slice(0, 4).join(''), text: n.text.slice(0, 160) }))
+  return { items, seen: clamp(inbox.seen, 0) }
 }

@@ -5,6 +5,8 @@ import { autoRate, candidateRoles, createCandidate, devRate } from './team'
 import { EVENTS, canHappen } from '../data/events'
 import { getBoss } from '../data/bosses'
 import { createBossOffer } from './offers'
+import { unreadCount } from './inbox'
+import { newsOf } from './news'
 import { ACHIEVEMENTS } from '../data/achievements'
 import {
   DEFAULT_COMPANY,
@@ -529,5 +531,33 @@ describe('personalización (G4)', () => {
     const ids = new Set(ACHIEVEMENTS.map((a) => a.id))
     for (const choice of [...HOODIES, ...HEAD_ITEMS, ...FACE_ITEMS, ...TITLES])
       expect(!choice.unlock || ids.has(choice.unlock)).toBe(true)
+  })
+})
+
+describe('notificaciones (H2)', () => {
+  it('anota los logros y la caja del proveedor, y al abrir quedan vistas', () => {
+    const s = run(withContract(), { type: 'program', crit: false, now: 0 })
+    expect(s.inbox.items.some((n) => n.text.includes('Hola mundo'))).toBe(true)
+    const read = gameReducer(s, { type: 'readInbox' })
+    expect(unreadCount(read.inbox)).toBe(0)
+  })
+
+  it('la bandeja sobrevive a la venta y anota la venta', () => {
+    const s = { ...createInitialState(), stage: 4, company: { name: 'Bugs & Cía.', emoji: '🐙', color: 'red' } }
+    const before = gameReducer(s, { type: 'readInbox' })
+    const after = gameReducer(before, { type: 'sell', fresh: createInitialState(), now: 1 })
+    expect(after.inbox.items.at(-1)?.text).toBeDefined()
+    expect(after.inbox.items.some((n) => n.text.startsWith('Vendiste Bugs & Cía.'))).toBe(true)
+  })
+})
+
+describe('lo nuevo (H4)', () => {
+  it('al empezar no hay nada "nuevo"; al aprender JavaScript aparecen sus hijos y se marcan al verlos', () => {
+    const s = createInitialState()
+    expect(Object.values(newsOf(s)).flat()).toEqual([])
+    const js = { ...s, stage: 2, tech: { ...s.tech, html: 1, css: 1, javascript: 3 } }
+    expect(newsOf(js).tech).toContain('tech:react')
+    const seen = gameReducer(js, { type: 'markSeen', keys: newsOf(js).tech })
+    expect(newsOf(seen).tech).toEqual([])
   })
 })

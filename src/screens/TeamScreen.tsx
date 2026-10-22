@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
 import Avatar from '../components/Avatar'
+import SeenOnLeave from '../components/SeenOnLeave'
 import { titleName, type Profile } from '../data/personalization'
 import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES, officeCapacity } from '../data/offices'
@@ -40,6 +41,9 @@ type TeamScreenProps = {
   onMove: () => void
   /** 🧑‍💻 Tu avatar y título (G4) */
   profile: Profile
+  /** 🆕 Profesiones nuevas entre los candidatos (H4) */
+  news: string[]
+  onSeen: (keys: string[]) => void
 }
 
 function TeamScreen({
@@ -57,6 +61,8 @@ function TeamScreen({
   rerollPrice,
   onMove,
   profile,
+  news,
+  onSeen,
 }: TeamScreenProps) {
   const current = OFFICES[office]
   const next = OFFICES[office + 1]
@@ -93,6 +99,7 @@ function TeamScreen({
 
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
+      <SeenOnLeave keys={news} onSeen={onSeen} />
       <ScreenHeader icon="👥" title={`Equipo · ${current.name}`}>
         Se paga <b className="text-text">una sola vez</b>, sin sueldos. Producen solo mientras haya un contrato activo.
         <span className="mt-1 block font-mono text-xs">
@@ -226,7 +233,7 @@ function TeamScreen({
           if (isSelected) label = '✕ Cancelar reemplazo'
           else if (isFull) label = `↺ Contratar reemplazando · ${formatMoney(price)}`
           return (
-            <EmployeeCard key={c.uid} employee={c}>
+            <EmployeeCard key={c.uid} employee={c} isNew={news.includes(`role:${c.role}`)}>
               <button
                 type="button"
                 onClick={() => handleHire(c)}

@@ -5,6 +5,8 @@ export type Records = {
   unlocked: string[]
   /** 🔓 Funcionalidades ya reveladas (data/features.ts) */
   features: string[]
+  /** 🆕 Lo desbloqueable que ya viste (H4): lo disponible que no está acá lleva "¡Nuevo!" */
+  seen: string[]
   clicks: number
   crits: number
   /** Líneas escritas en total (clics + equipo) */
@@ -41,6 +43,7 @@ export type Records = {
 export const INITIAL_RECORDS: Records = {
   unlocked: [],
   features: [],
+  seen: [],
   clicks: 0,
   crits: 0,
   lines: 0,

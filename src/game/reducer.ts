@@ -37,6 +37,8 @@ import {
 } from './team'
 import type { Contract } from './types'
 import { INITIAL_RECORDS, type Records } from './records'
+import { INITIAL_INBOX, notify, type Inbox } from './inbox'
+import { SEEN_LIMIT, allAvailable } from './news'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES } from '../data/features'
 import { getCard, type CardPick } from '../data/cards'
@@ -173,6 +175,8 @@ export type GameState = {
   company: CompanyIdentity
   /** 🧑‍💻 Tu avatar, título y mascota (G4): son tuyos, sobreviven a las ventas */
   profile: Profile
+  /** 🔔 Centro de notificaciones (H2): lo que pasó, para no perderse nada */
+  inbox: Inbox
   /** 🤖 Macro de teclado: nivel comprado (0 = no) y si está prendida */
   macro: number
   macroOn: boolean
@@ -233,6 +237,10 @@ export type GameAction =
   | { type: 'setProfile'; profile: Partial<Profile> }
   /** 🐈 Acariciaste a la mascota */
   | { type: 'pet' }
+  /** 🔔 Abriste el centro de notificaciones: todo queda visto */
+  | { type: 'readInbox' }
+  /** 🆕 Saliste de una pantalla: lo nuevo que había ahí ya lo viste */
+  | { type: 'markSeen'; keys: string[] }
   // 📦 Abrir una caja: qué artefacto salió se decide afuera (azar), con rollArtifact
   | { type: 'openBox'; artifact: string }
   | { type: 'buyBox' }
@@ -262,7 +270,7 @@ export type GameAction =
   | { type: 'playTime'; seconds: number; session?: number }
 
 export function createInitialState(): GameState {
-  return {
+  const state: GameState = {
     code: 0,
     money: 0,
     xp: 0,
@@ -303,8 +311,11 @@ export function createInitialState(): GameState {
     tampered: false,
     company: randomCompany(),
     profile: DEFAULT_PROFILE,
+    inbox: INITIAL_INBOX,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
+  // Lo que ya está disponible al empezar no es "nuevo"
+  return { ...state, records: { ...state.records, seen: allAvailable(state) } }
 }
 
 /**
@@ -689,6 +700,7 @@ function reduce(state: GameState, action: GameAction): GameState {
         challengeChoice: true,
         tampered: state.tampered, // la marca es de la carrera, no de la empresa
         profile: state.profile, // el avatar, el título y la mascota son tuyos
+        inbox: state.inbox, // las notificaciones son de la carrera
         prestige: {
           tokens: state.prestige.tokens + tokens,
           sales: state.prestige.sales + 1,
@@ -1008,6 +1020,18 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'setProfile':
       return { ...state, profile: cleanProfile({ ...state.profile, ...action.profile }, state.records.unlocked) }
 
+    case 'markSeen': {
+      const seen = new Set(state.records.seen)
+      const fresh = action.keys.filter((k) => !seen.has(k))
+      if (fresh.length === 0) return state
+      return { ...state, records: { ...state.records, seen: [...state.records.seen, ...fresh].slice(-SEEN_LIMIT) } }
+    }
+
+    case 'readInbox': {
+      const last = state.inbox.items.at(-1)?.id ?? 0
+      return last > state.inbox.seen ? { ...state, inbox: { ...state.inbox, seen: last } } : state
+    }
+
     case 'pet':
       return state.profile.mascot ? { ...state, records: { ...state.records, pets: state.records.pets + 1 } } : state
 
@@ -1186,5 +1210,5 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   const next = reduce(state, action)
   // 'reset' e importar arrancan otra carrera: no se mezclan con la anterior
   if (next === state || action.type === 'reset') return next
-  return unlockFeatures(unlockAchievements(state, next, action))
+  return notify(state, unlockFeatures(unlockAchievements(state, next, action)), action)
 }

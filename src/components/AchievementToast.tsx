@@ -30,7 +30,7 @@ function AchievementToast({ unlocked }: { unlocked: string[] }) {
       key={current.id}
       role="status"
       onClick={() => setQueue((q) => q.slice(1))}
-      className="fixed right-3 bottom-3 z-50 flex w-72 animate-slide-in cursor-pointer items-center gap-3 rounded-xl border border-yellow/40 bg-panel-2 p-3 shadow-[0_14px_40px_rgba(0,0,0,.45)] md:bottom-10"
+      className="fixed right-3 bottom-40 left-3 z-50 flex md:bottom-10 md:left-auto md:w-72 animate-slide-in cursor-pointer items-center gap-3 rounded-xl border border-yellow/40 bg-panel-2 p-3 shadow-[0_14px_40px_rgba(0,0,0,.45)]"
     >
       <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-yellow/15 text-2xl">{current.icon}</span>
       <span className="min-w-0">

@@ -1,3 +1,5 @@
+import NewBadge from './NewBadge'
+
 /** Un nodo del árbol: dónde va (columna y fila), qué hace y cómo está */
 export type TreeNode = {
   id: string
@@ -15,6 +17,8 @@ export type TreeNode = {
   missing: string | null
   /** Se puede comprar ahora mismo */
   affordable: boolean
+  /** 🆕 Recién desbloqueado y todavía no visto */
+  isNew?: boolean
 }
 
 /** Una línea entre dos nodos; active = el requisito ya se cumple */
@@ -119,9 +123,13 @@ function SkillTree({ nodes, edges, columns, onBuy }: SkillTreeProps) {
                   {n.icon}
                 </span>
                 <span className="min-w-0 flex-1 text-sm leading-tight font-bold">{n.name}</span>
-                <span className="shrink-0 font-mono text-[11px] text-muted">
-                  {n.level}/{n.maxLevel}
-                </span>
+                {n.isNew ? (
+                  <NewBadge className="shrink-0" />
+                ) : (
+                  <span className="shrink-0 font-mono text-[11px] text-muted">
+                    {n.level}/{n.maxLevel}
+                  </span>
+                )}
               </span>
               <span className="mt-1.5 line-clamp-3 text-[11.5px] leading-snug text-muted">{n.effect}</span>
               <span className="mt-auto flex gap-0.5 pt-2.5">

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { playSfx } from '../audio/audio'
 import ScreenHeader from '../components/ScreenHeader'
 import ProfileEditor from '../components/ProfileEditor'
+import SeenOnLeave from '../components/SeenOnLeave'
 import type { Profile } from '../data/personalization'
 import {
   ARTIFACTS,
@@ -27,6 +28,9 @@ type SetupScreenProps = {
   onProfile: (patch: Partial<Profile>) => void
   /** Los artefactos se ven recién cuando se desbloquean (la primera caja) */
   showArtifacts: boolean
+  /** 🆕 Accesorios y títulos recién ganados (H4) */
+  news: string[]
+  onSeen: (keys: string[]) => void
 }
 
 /** Lo que se está abriendo: la caja tiembla y después muestra el artefacto */
@@ -44,6 +48,8 @@ function SetupScreen({
   unlocked,
   onProfile,
   showArtifacts,
+  news,
+  onSeen,
 }: SetupScreenProps) {
   const [opening, setOpening] = useState<Opening | null>(null)
   const owned = ARTIFACTS.filter((a) => artifacts[a.id]).length
@@ -81,7 +87,8 @@ function SetupScreen({
         )}
       </ScreenHeader>
 
-      <ProfileEditor profile={profile} unlocked={unlocked} onChange={onProfile} />
+      <SeenOnLeave keys={news} onSeen={onSeen} />
+      <ProfileEditor profile={profile} unlocked={unlocked} onChange={onProfile} news={news} />
 
       {showArtifacts && (
         <>

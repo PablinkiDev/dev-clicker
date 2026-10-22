@@ -24,9 +24,14 @@ const NANO_KEYS: Record<View, string> = {
 /** Barra de atajos de Nano: va abajo de todo, como en la terminal */
 export function NanoBar({ view, onChange, views = VIEWS, fresh = [] }: Omit<EditorNavProps, 'editor'>) {
   return (
-    <nav className="flex shrink-0 flex-wrap gap-x-6 gap-y-1 border-t border-line bg-panel px-3.5 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))] font-mono text-xs">
+    <nav className="flex shrink-0 gap-x-4 overflow-x-auto border-t border-line bg-panel px-3.5 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))] font-mono text-xs whitespace-nowrap md:flex-wrap md:gap-x-6 md:gap-y-1 md:overflow-visible">
       {views.map((v) => (
-        <button key={v} type="button" onClick={() => onChange(v)} className="flex cursor-pointer items-center gap-1.5">
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className="flex shrink-0 cursor-pointer items-center gap-1.5"
+        >
           <b className={`px-1 ${v === view ? 'bg-green text-bg' : 'bg-text text-bg'}`}>{NANO_KEYS[v]}</b>
           {VIEW_LABEL[v]} {fresh.includes(v) && <span className="text-red">●</span>}
         </button>

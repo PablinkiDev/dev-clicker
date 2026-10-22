@@ -1,3 +1,4 @@
+import TutorialBubble from '../TutorialBubble'
 import { formatRate } from '../../game/format'
 type ActionDockProps = {
   hasContract: boolean
@@ -11,6 +12,8 @@ type ActionDockProps = {
   /** ⚡ Habilidades aprendidas (el Foco y las de F2), en el orden de sus teclas */
   abilities: AbilitySlot[]
   onAbility: (id: string) => void
+  /** 🧭 Tutorial (C2): qué botón señalar */
+  tutorial?: 'click' | 'deliver' | null
 }
 
 /** Una habilidad en la barra: lista, activa (con sus segundos) o recargándose */
@@ -43,6 +46,7 @@ function ActionDock({
   critPop,
   abilities,
   onAbility,
+  tutorial = null,
 }: ActionDockProps) {
   const canProgram = hasContract && !isComplete && isWorkView
 
@@ -69,6 +73,16 @@ function ActionDock({
           ESPACIO
         </kbd>
       </button>
+
+      {tutorial === 'click' && canProgram && (
+        <TutorialBubble
+          text="👇 Hacé clic acá (o apretá ESPACIO) para escribir código"
+          className="-top-12 left-[30%] -translate-x-1/2"
+        />
+      )}
+      {tutorial === 'deliver' && (
+        <TutorialBubble text="¡Listo! 👇 Entregalo con git push" className="-top-12 right-3 md:right-8" />
+      )}
 
       {critPop && (
         <span

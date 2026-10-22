@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ROLES } from '../data/roles'
 import { employeeEffect, type Employee } from '../game/team'
 import { ROLE_STYLE } from '../ui'
+import NewBadge from './NewBadge'
 
 export function Stars({ stars }: { stars: number }) {
   return (
@@ -16,10 +17,12 @@ type EmployeeCardProps = {
   employee: Employee
   /** Lo de abajo de la tarjeta: botón de contratar o estado de trabajo */
   children: ReactNode
+  /** 🆕 Profesión recién desbloqueada (H4) */
+  isNew?: boolean
 }
 
 /** Tarjeta de una persona: sirve para el equipo y para los candidatos */
-function EmployeeCard({ employee, children }: EmployeeCardProps) {
+function EmployeeCard({ employee, children, isNew = false }: EmployeeCardProps) {
   const role = ROLES[employee.role]
   const style = ROLE_STYLE[employee.role]
 
@@ -35,6 +38,7 @@ function EmployeeCard({ employee, children }: EmployeeCardProps) {
           <p className="font-extrabold">{employee.name}</p>
           <p className={`text-xs ${style.text}`}>
             {role.icon} {role.name}
+            {isNew && <NewBadge className="ml-1.5" />}
           </p>
         </div>
         <span className="ml-auto text-xs">

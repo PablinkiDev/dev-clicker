@@ -13,12 +13,15 @@ import {
   type Profile,
 } from '../data/personalization'
 import Avatar from './Avatar'
+import NewBadge from './NewBadge'
 
 type ProfileEditorProps = {
   profile: Profile
   /** Logros conseguidos (desbloquean accesorios, colores y títulos) */
   unlocked: string[]
   onChange: (patch: Partial<Profile>) => void
+  /** 🆕 Lo recién ganado (H4): "look:head:crown", "title:legend"… */
+  news?: string[]
 }
 
 /** Qué hace falta para desbloquearlo (los logros secretos no se cuentan) */
@@ -43,8 +46,10 @@ function Chip({
   title,
   onClick,
   children,
+  isNew = false,
 }: {
   selected: boolean
+  isNew?: boolean
   locked?: boolean
   title?: string
   onClick: () => void
@@ -63,11 +68,12 @@ function Chip({
     >
       {locked ? '🔒 ' : ''}
       {children}
+      {isNew && <NewBadge className="ml-1.5" />}
     </button>
   )
 }
 
-function ProfileEditor({ profile, unlocked, onChange }: ProfileEditorProps) {
+function ProfileEditor({ profile, unlocked, onChange, news = [] }: ProfileEditorProps) {
   const titles = TITLES.filter((t) => isUnlocked(t, unlocked))
   const lockedTitles = TITLES.length - titles.length
 
@@ -108,11 +114,14 @@ function ProfileEditor({ profile, unlocked, onChange }: ProfileEditorProps) {
                 disabled={locked}
                 onClick={() => onChange({ hoodie: h.id })}
                 style={{ background: h.hex }}
-                className={`grid size-7 cursor-pointer place-items-center rounded-full text-[11px] disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`relative grid size-7 cursor-pointer place-items-center rounded-full text-[11px] disabled:cursor-not-allowed disabled:opacity-40 ${
                   profile.hoodie === h.id ? 'ring-2 ring-text ring-offset-2 ring-offset-panel-2' : ''
                 }`}
               >
                 {locked ? '🔒' : ''}
+                {news.includes(`look:hoodie:${h.id}`) && (
+                  <i className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-yellow" aria-label="nuevo" />
+                )}
               </button>
             )
           })}
@@ -125,6 +134,7 @@ function ProfileEditor({ profile, unlocked, onChange }: ProfileEditorProps) {
               locked={!isUnlocked(item, unlocked)}
               title={isUnlocked(item, unlocked) ? undefined : lockHint(item)}
               onClick={() => onChange({ head: item.id })}
+              isNew={news.includes(`look:head:${item.id}`)}
             >
               {item.name}
             </Chip>
@@ -138,6 +148,7 @@ function ProfileEditor({ profile, unlocked, onChange }: ProfileEditorProps) {
               locked={!isUnlocked(item, unlocked)}
               title={isUnlocked(item, unlocked) ? undefined : lockHint(item)}
               onClick={() => onChange({ face: item.id })}
+              isNew={news.includes(`look:face:${item.id}`)}
             >
               {item.name}
             </Chip>
@@ -148,7 +159,12 @@ function ProfileEditor({ profile, unlocked, onChange }: ProfileEditorProps) {
             Ninguno
           </Chip>
           {titles.map((t) => (
-            <Chip key={t.id} selected={profile.title === t.id} onClick={() => onChange({ title: t.id })}>
+            <Chip
+              key={t.id}
+              selected={profile.title === t.id}
+              onClick={() => onChange({ title: t.id })}
+              isNew={news.includes(`title:${t.id}`)}
+            >
               {t.name}
             </Chip>
           ))}

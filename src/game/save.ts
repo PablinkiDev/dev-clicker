@@ -1,5 +1,7 @@
 // Guardado de la partida en localStorage, con versión y validación (GDD §14).
 import { DEFAULT_COMPANY, DEFAULT_PROFILE } from '../data/personalization'
+import { INITIAL_INBOX } from './inbox'
+import { SEEN_LIMIT, allAvailable } from './news'
 import { EDITORS } from '../data/editors'
 import { INITIAL_SKILLS } from '../data/skills'
 import { INITIAL_TECH, LANG_EXT } from '../data/techs'
@@ -54,6 +56,7 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   tampered: false,
   company: DEFAULT_COMPANY,
   profile: DEFAULT_PROFILE,
+  inbox: INITIAL_INBOX,
 }
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
@@ -85,9 +88,11 @@ export function parseGame(raw: string): GameState | null {
     if (!isSaveFile(file) || file.version !== SAVE_VERSION) return null
     const state = sanitize({ ...file.state, notice: null, log: [] })
     // Partidas de antes del revelado progresivo: todo lo que ya tenían queda visible, sin anunciarlo
-    if (state.records.features === null)
-      return { ...state, records: { ...state.records, features: featuresFor(state) } }
-    return state
+    let loaded = state
+    if (loaded.records.features === null)
+      loaded = { ...loaded, records: { ...loaded.records, features: featuresFor(loaded) } }
+    if (loaded.records.seen === null) loaded = { ...loaded, records: { ...loaded.records, seen: allAvailable(loaded) } }
+    return loaded
   } catch {
     return null
   }
@@ -391,6 +396,10 @@ function migrate(raw: unknown): unknown {
         // null = partida de antes del revelado progresivo: se calcula al final (sin anunciar nada)
         features: Array.isArray(records.features)
           ? records.features.filter((id): id is string => FEATURES.some((f) => f.id === id))
+          : null,
+        // null = partida de antes del "¡Nuevo!": arranca con todo lo disponible ya visto
+        seen: Array.isArray(records.seen)
+          ? records.seen.filter((key): key is string => typeof key === 'string').slice(-SEEN_LIMIT)
           : null,
       },
     }

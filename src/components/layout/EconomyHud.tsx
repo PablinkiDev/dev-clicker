@@ -4,6 +4,9 @@ import type { Goal, Purchase } from '../../game/goals'
 import { REP_LEVELS, nextRepThreshold, repLevel } from '../../game/reputation'
 import type { View } from '../../ui'
 import { HelpButton } from '../HelpModal'
+import GainPop from '../GainPop'
+import { InboxButton } from '../InboxPanel'
+import TutorialBubble from '../TutorialBubble'
 
 type EconomyHudProps = {
   money: number
@@ -27,6 +30,11 @@ type EconomyHudProps = {
   goal: Goal
   onNavigate: (view: View) => void
   onHelp: () => void
+  /** 🔔 Notificaciones sin ver y abrir el centro (H2) */
+  unread: number
+  onInbox: () => void
+  /** 🧭 Tutorial (C2): señalar la XP para la primera mejora */
+  showUpgradeTutorial?: boolean
 }
 
 /** Un bloque de la barra: se puede tocar para ir a su pantalla */
@@ -35,7 +43,7 @@ function Cell({ children, onClick, className = '' }: { children: ReactNode; onCl
     <button
       type="button"
       onClick={onClick}
-      className={`group relative min-w-0 cursor-pointer border-line px-3 py-2 text-left transition-colors hover:bg-panel-2 md:border-r md:px-4 ${className}`}
+      className={`group relative min-w-0 cursor-pointer border-line px-2 py-1.5 text-left transition-colors hover:bg-panel-2 md:border-r md:px-4 md:py-2 ${className}`}
     >
       {children}
     </button>
@@ -45,8 +53,11 @@ function Cell({ children, onClick, className = '' }: { children: ReactNode; onCl
 function Label({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <span className="flex items-baseline gap-2 whitespace-nowrap">
-      <span className="text-[10px] font-bold tracking-wider text-faint uppercase">{children}</span>
-      {aside}
+      <span className="truncate text-[9px] font-bold tracking-wider text-faint uppercase md:text-[10px]">
+        {children}
+      </span>
+      {/* En el celular no entra: se ve en la compu */}
+      <span className="hidden md:inline">{aside}</span>
     </span>
   )
 }
@@ -58,7 +69,7 @@ function Trend({ value, format }: { value: number | null; format: (n: number) =>
 }
 
 const Sub = ({ children }: { children: ReactNode }) => (
-  <span className="mt-0.5 block truncate font-mono text-[11px] text-muted">{children}</span>
+  <span className="mt-0.5 hidden truncate font-mono text-[11px] text-muted md:block">{children}</span>
 )
 
 const Bar = ({ ratio, className }: { ratio: number; className: string }) => (
@@ -82,11 +93,13 @@ function EconomyHud(props: EconomyHudProps) {
   const focus = props.focus
 
   return (
-    <section className="relative grid shrink-0 grid-cols-2 border-b border-line bg-panel pt-[env(safe-area-inset-top)] md:grid-cols-[repeat(4,minmax(0,1fr))_1.35fr]">
+    <section className="relative grid shrink-0 border-b border-line bg-panel pt-[env(safe-area-inset-top)] grid-cols-4 md:grid-cols-[repeat(4,minmax(0,1fr))_1.35fr]">
       <Cell onClick={() => onNavigate('team')}>
         <Label aside={<Trend value={props.moneyPerMinute} format={formatMoney} />}>Dinero</Label>
-        <span className="block font-mono text-lg font-extrabold tracking-tight text-yellow md:text-xl">
-          {formatMoney(money)}
+        <span className="block font-mono text-base font-extrabold tracking-tight md:text-lg text-yellow md:text-xl">
+          <GainPop value={money} format={formatMoney}>
+            {formatMoney(money)}
+          </GainPop>
         </span>
         <Sub>
           {nextPurchase ? (
@@ -122,8 +135,10 @@ function EconomyHud(props: EconomyHudProps) {
 
       <Cell onClick={() => onNavigate('skills')}>
         <Label aside={<Trend value={props.xpPerMinute} format={formatNumber} />}>Experiencia</Label>
-        <span className="flex items-center gap-1.5 font-mono text-lg font-extrabold tracking-tight text-purple md:text-xl">
-          {formatNumber(xp)}
+        <span className="flex items-center gap-1.5 font-mono text-base font-extrabold tracking-tight md:text-lg text-purple md:text-xl">
+          <GainPop value={xp} format={(n) => `${formatNumber(n)} XP`}>
+            {formatNumber(xp)}
+          </GainPop>
           {props.upgradesAvailable > 0 && (
             <span className="rounded-md bg-purple px-1.5 text-[10px] text-[#1b0f2b]">{props.upgradesAvailable}</span>
           )}
@@ -133,6 +148,13 @@ function EconomyHud(props: EconomyHudProps) {
             ? `${props.upgradesAvailable} ${props.upgradesAvailable === 1 ? 'mejora disponible' : 'mejoras disponibles'} →`
             : 'juntando para la próxima mejora'}
         </Sub>
+        {props.showUpgradeTutorial && (
+          <TutorialBubble
+            text="👆 Tenés XP para tu primera mejora: tocá acá"
+            pointing="up"
+            className="top-full left-3 mt-2"
+          />
+        )}
       </Cell>
 
       <Cell onClick={() => onNavigate('board')}>
@@ -145,7 +167,7 @@ function EconomyHud(props: EconomyHudProps) {
         >
           Reputación
         </Label>
-        <span className="block font-mono text-lg font-extrabold tracking-tight text-cyan md:text-xl">
+        <span className="block font-mono text-base font-extrabold tracking-tight md:text-lg text-cyan md:text-xl">
           {formatNumber(rep)} ★
         </span>
         <Bar ratio={repRatio} className="bg-cyan" />
@@ -155,7 +177,7 @@ function EconomyHud(props: EconomyHudProps) {
       <Cell onClick={() => onNavigate('team')}>
         <Label aside={<span className="font-mono text-[11px] text-muted">{critPercent}% crit</span>}>Producción</Label>
         <span
-          className={`block font-mono text-lg font-extrabold tracking-tight md:text-xl ${props.modifiers.some((m) => m.target === 'auto' && m.mult > 1) ? 'text-yellow' : 'text-green'}`}
+          className={`block font-mono text-base font-extrabold tracking-tight md:text-xl ${props.modifiers.some((m) => m.target === 'auto' && m.mult > 1) ? 'text-yellow' : 'text-green'}`}
         >
           {formatRate(auto)} <small className="text-xs text-muted">l/s</small>
         </span>
@@ -186,7 +208,7 @@ function EconomyHud(props: EconomyHudProps) {
 
       <Cell
         onClick={() => onNavigate('company')}
-        className={`col-span-2 border-t md:col-span-1 md:border-t-0 md:border-r-0 ${
+        className={`col-span-4 border-t pr-18 md:col-span-1 md:border-t-0 md:border-r-0 md:pr-4 ${
           goal.ready ? 'bg-linear-to-r from-green/10 to-transparent' : 'bg-linear-to-r from-yellow/6 to-transparent'
         }`}
       >
@@ -197,6 +219,7 @@ function EconomyHud(props: EconomyHudProps) {
         </span>
         <Bar ratio={goal.progress} className={goal.ready ? 'bg-green' : 'bg-yellow'} />
       </Cell>
+      <InboxButton unread={props.unread} onClick={props.onInbox} />
       <HelpButton onClick={props.onHelp} />
     </section>
   )

@@ -8,6 +8,8 @@ import { TECHS, missingRequirements, type TechId, type TechLevels } from '../dat
 import { skillCost } from '../game/formulas'
 import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investments'
 import { FOUNDER_BONUS, founderBonus, type Prestige } from '../game/prestige'
+import type { NewsPlace } from '../game/news'
+import SeenOnLeave from '../components/SeenOnLeave'
 
 type SkillsScreenProps = {
   /** 🔓 Funcionalidades reveladas: las pestañas que todavía no tocan no se muestran */
@@ -23,6 +25,9 @@ type SkillsScreenProps = {
   tools: ReactNode
   prestige: Prestige
   onInvest: (investment: InvestmentId) => void
+  /** 🆕 Lo nuevo de cada árbol, y avisar que ya se vio (H4) */
+  news: Record<NewsPlace, string[]>
+  onSeen: (keys: string[]) => void
 }
 
 /** Dónde va cada tecnología en el árbol: columna y fila (puede ser media fila, para centrar) */
@@ -104,6 +109,8 @@ function SkillsScreen({
   tools,
   prestige,
   onInvest,
+  news,
+  onSeen,
 }: SkillsScreenProps) {
   const [tab, setTab] = useState<Tab>('tech')
   const xpCost = (cost: number) => `${formatNumber(cost)} XP`
@@ -126,6 +133,7 @@ function SkillsScreen({
       cost: xpCost(cost),
       missing: requires(missing),
       affordable: !missing && level < t.maxLevel && xp >= cost,
+      isNew: news.tech.includes(`tech:${t.id}`),
     }
   })
   const techEdges: TreeEdge[] = TECHS.flatMap((t) =>
@@ -149,6 +157,7 @@ function SkillsScreen({
         cost: xpCost(cost),
         missing: requires(missing),
         affordable: !missing && level < sk.maxLevel && xp >= cost,
+        isNew: news[group].includes(`skill:${sk.id}`),
       }
     })
   const skillEdges = (group: Skill['group']): TreeEdge[] =>
@@ -175,6 +184,7 @@ function SkillsScreen({
       cost: `${cost} ${cost === 1 ? 'token' : 'tokens'}`,
       missing,
       affordable: !missing && level < inv.maxLevel && prestige.tokens >= cost,
+      isNew: news.prestige.includes(`inv:${inv.id}`),
     }
   })
   const investmentEdges: TreeEdge[] = INVESTMENTS.filter((inv) => inv.requires).map((inv) => ({
@@ -185,17 +195,18 @@ function SkillsScreen({
 
   const available = (nodes: TreeNode[]) => nodes.filter((n) => n.affordable).length
   const prestigeOpen = prestige.sales > 0 || prestige.tokens > 0
-  type TabInfo = { id: Tab; label: string; badge: number; locked?: boolean }
+  type TabInfo = { id: Tab; label: string; badge: number; locked?: boolean; fresh?: boolean }
   const allTabs: TabInfo[] = [
     { id: 'tools', label: '🧰 Herramientas', badge: 0 },
-    { id: 'tech', label: 'Tecnologías', badge: available(techNodes) },
-    { id: 'personal', label: 'Personal', badge: available(personalNodes) },
-    { id: 'company', label: 'Empresa', badge: available(companyNodes) },
+    { id: 'tech', label: 'Tecnologías', badge: available(techNodes), fresh: news.tech.length > 0 },
+    { id: 'personal', label: 'Personal', badge: available(personalNodes), fresh: news.personal.length > 0 },
+    { id: 'company', label: 'Empresa', badge: available(companyNodes), fresh: news.company.length > 0 },
     {
       id: 'prestige',
       label: prestigeOpen ? '🪙 Prestigio' : '🔒 Prestigio',
       badge: prestigeOpen ? available(investmentNodes) : 0,
       locked: !prestigeOpen,
+      fresh: news.prestige.length > 0,
     },
   ]
   const tabs = allTabs.filter(
@@ -227,9 +238,13 @@ function SkillsScreen({
           >
             {t.label}
             {t.badge > 0 && <span className="rounded-lg bg-purple px-1.5 text-[10px] text-[#1b0f2b]">{t.badge}</span>}
+            {t.fresh && tab !== t.id && <i className="size-2 rounded-full bg-yellow" aria-label="hay cosas nuevas" />}
           </button>
         ))}
       </div>
+
+      {/* 🆕 Al cambiar de pestaña o de pantalla, lo nuevo de esta pestaña queda visto */}
+      {tab !== 'tools' && <SeenOnLeave key={tab} keys={news[tab]} onSeen={onSeen} />}
 
       {tab === 'tools' && <div className="max-w-sm">{tools}</div>}
 
