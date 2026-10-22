@@ -56,6 +56,7 @@ export function sanitize(state: GameState): GameState {
     rerolls: Math.round(clamp(state.rerolls, 0, 50)),
     macro: Math.round(clamp(state.macro, 0, MACRO_LEVELS.length)),
     macroOn: state.macroOn !== false,
+    tampered: state.tampered === true,
     records: {
       ...state.records,
       ...Object.fromEntries(

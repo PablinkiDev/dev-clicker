@@ -38,10 +38,14 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   rerolls: 0,
   macro: 0,
   macroOn: true,
+  tampered: false,
 }
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */
-export const SAVE_VERSION: number = 18
+export const SAVE_VERSION: number = 19
+
+/** Desde esta versión el guardado de localStorage va firmado: un JSON plano nuevo es una edición a mano */
+const SIGNED_SINCE = 19
 
 type SaveFile = {
   version: number
@@ -132,9 +136,23 @@ export function importGame(text: string): { state: GameState; tampered: boolean 
   }
 }
 
+/**
+ * Lee el guardado de localStorage. Firmado (desde la v19) o JSON plano (partidas viejas).
+ * tampered = la firma no coincide, o es un JSON plano de una versión que ya debería venir firmada
+ */
+function readSave(raw: string): { state: GameState; tampered: boolean } | null {
+  const text = raw.trim()
+  if (text.startsWith(EXPORT_PREFIX)) return importGame(text)
+  const state = parseGame(text)
+  if (!state) return null
+  const version: unknown = JSON.parse(text).version
+  return { state, tampered: !isNumber(version) || version >= SIGNED_SINCE }
+}
+
 export function saveGame(state: GameState): void {
   try {
-    localStorage.setItem(SAVE_KEY, serializeGame(state))
+    // Mismo formato que la exportación: base64 + firma. Frena al curioso que edita localStorage
+    localStorage.setItem(SAVE_KEY, exportGame(state))
   } catch {
     // Sin espacio o almacenamiento bloqueado (modo privado): el juego sigue sin guardar
   }
@@ -145,12 +163,25 @@ export function loadGame(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY)
     if (!raw) return null
-    const state = parseGame(raw)
-    if (!state) {
+    const read = readSave(raw)
+    if (!read) {
       backup(raw)
       return null
     }
-    return { ...state, log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }] }
+    const { state, tampered } = read
+    // Una partida editada no se borra (un bug nuestro podría parecer una edición): se marca para siempre
+    const newlyTampered = tampered && !state.tampered
+    return {
+      ...state,
+      tampered: state.tampered || tampered,
+      notice: newlyTampered
+        ? {
+            kind: 'error',
+            text: 'git blame: detectamos cambios sin commitear en esta partida 👀 Te la cargamos igual.',
+          }
+        : null,
+      log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }],
+    }
   } catch {
     backup(localStorage.getItem(SAVE_KEY))
     return null
@@ -288,6 +319,11 @@ function migrate(raw: unknown): unknown {
   // v17 → v18: logros y récords (arrancan en cero; los defaults los completan abajo)
   if (file.version === 17) {
     file = { ...file, version: 18 }
+  }
+
+  // v18 → v19: el guardado se firma; las partidas existentes arrancan sin marca de edición
+  if (file.version === 18) {
+    file = { ...file, version: 19 }
   }
 
   // Siempre: completar claves nuevas que falten o que vengan rotas (por ejemplo, una partida guardada

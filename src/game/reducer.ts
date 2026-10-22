@@ -126,6 +126,8 @@ export type GameState = {
   contractClicks: number
   /** Búsquedas de candidatos seguidas sin contratar (cada una sale más cara) */
   rerolls: number
+  /** La partida se editó a mano (firma inválida): se marca para siempre, nunca se borra */
+  tampered: boolean
   /** 🤖 Macro de teclado: nivel comprado (0 = no) y si está prendida */
   macro: number
   macroOn: boolean
@@ -227,6 +229,7 @@ export function createInitialState(): GameState {
     rerolls: 0,
     macro: 0,
     macroOn: true,
+    tampered: false,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -547,6 +550,7 @@ function reduce(state: GameState, action: GameAction): GameState {
         rep: action.fresh.rep + FIRST_CONTACTS_REP * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
         records: state.records,
+        tampered: state.tampered, // la marca es de la carrera, no de la empresa
         prestige: {
           tokens: state.prestige.tokens + tokens,
           sales: state.prestige.sales + 1,

@@ -518,6 +518,7 @@ function App() {
       type: 'reset',
       state: {
         ...imported.state,
+        tampered: imported.state.tampered || imported.tampered,
         notice: imported.tampered
           ? {
               kind: 'error',

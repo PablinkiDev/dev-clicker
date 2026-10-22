@@ -398,6 +398,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     10,
   ),
   {
+    id: 'tampered',
+    category: 'secret',
+    icon: '🕵️',
+    name: 'sudo give money',
+    description: 'Editar la partida a mano. Las partidas trucadas saben feo',
+    secret: true,
+    check: ({ next }) => next.tampered,
+  },
+  {
     id: 'sawItFirst',
     category: 'secret',
     icon: '👀',

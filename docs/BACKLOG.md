@@ -128,7 +128,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | C10 | **Repensar el diseño de los árboles de Mejoras** (los nodos andan, pero el look no termina de convencer) | S | 1–2 |
 | C9 ✅ | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
 | C11 ✅ | **Ayuda ❓ (y F1):** modal con cómo jugar y una wiki de todo el juego (contratos, equipo, mejoras, etapas, prestigio, extras y atajos). Las tablas salen de los datos del juego | M | 1 |
-| C12 | **Guardado firmado y revisión de seguridad:** firmar también el guardado de localStorage, partida trucada = marcada + logro burlón (nunca se borra), tests con Vitest del reducer, el guardado y las migraciones, `npm audit` y headers de seguridad (CSP) en el deploy | M | 2–3 |
+| C12 ✅ | **Guardado firmado y revisión de seguridad:** el guardado de localStorage va firmado (v19); una partida editada se carga igual, queda marcada para siempre y da el logro secreto "sudo give money" (nunca se borra). 28 tests con Vitest (`npm test`) del reducer, el guardado y las migraciones. `npm audit`: 0 vulnerabilidades. *Pendiente para C6: headers de seguridad (CSP) en el deploy* | M | 2–3 |
 | C13 ✅ | **🛠 Panel de desarrollo** (solo `npm run dev`): etapa, dinero, XP, reputación, tokens, dinero ganado, velocidad del reloj ×1–×100, árboles al máximo, completar contrato y disparar eventos, minijuegos y bug dorado | M | 1 |
 
 **Total estimado para 1.0:** ~40 commits chicos.
