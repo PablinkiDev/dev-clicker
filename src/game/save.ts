@@ -11,6 +11,7 @@ import { INITIAL_FOCUS } from './focus'
 import { INITIAL_INVESTMENTS } from '../data/investments'
 import { INITIAL_RECORDS } from './records'
 import { ACHIEVEMENTS } from '../data/achievements'
+import { FEATURES, featuresFor } from '../data/features'
 
 const SAVE_KEY = 'dev-clicker:save'
 
@@ -68,7 +69,11 @@ export function parseGame(raw: string): GameState | null {
   try {
     const file = migrate(JSON.parse(raw))
     if (!isSaveFile(file) || file.version !== SAVE_VERSION) return null
-    return sanitize({ ...file.state, notice: null, log: [] })
+    const state = sanitize({ ...file.state, notice: null, log: [] })
+    // Partidas de antes del revelado progresivo: todo lo que ya tenían queda visible, sin anunciarlo
+    if (state.records.features === null)
+      return { ...state, records: { ...state.records, features: featuresFor(state) } }
+    return state
   } catch {
     return null
   }
@@ -346,6 +351,10 @@ function migrate(raw: unknown): unknown {
           ? [...new Set(records.unlocked.filter((id): id is string => typeof id === 'string' && known.has(id)))]
           : [],
         recentCrits: Array.isArray(records.recentCrits) ? records.recentCrits.filter(isNumber).slice(-20) : [],
+        // null = partida de antes del revelado progresivo: se calcula al final (sin anunciar nada)
+        features: Array.isArray(records.features)
+          ? records.features.filter((id): id is string => FEATURES.some((f) => f.id === id))
+          : null,
       },
     }
   }

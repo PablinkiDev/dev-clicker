@@ -12,6 +12,8 @@ type SidebarProps = {
   team: Employee[]
   /** Puestos de la oficina (con Home office) */
   capacity: number
+  /** El equipo todavía no se desbloqueó: no se muestra su carpeta */
+  showTeam: boolean
   money: number
   onNavigate: (view: View) => void
 }
@@ -42,7 +44,7 @@ function Folder({ children, extra }: { children: string; extra?: string }) {
 const FILE_ROW = 'flex h-6.5 w-full cursor-pointer items-center gap-1.5 rounded-md pr-2 pl-5.5 text-left text-[13px]'
 
 /** Explorador de archivos: el estado del juego visto como un proyecto */
-function Sidebar({ contract, offers, team, capacity, money, onNavigate }: SidebarProps) {
+function Sidebar({ contract, offers, team, capacity, showTeam, money, onNavigate }: SidebarProps) {
   const firstHire = employeePrice('dev', 1)
   const goal = Math.min(100, (money / firstHire) * 100)
 
@@ -79,30 +81,34 @@ function Sidebar({ contract, offers, team, capacity, money, onNavigate }: Sideba
           </button>
         ))}
 
-        <Folder extra={`${1 + team.length}/${1 + capacity}`}>equipo</Folder>
-        <button
-          type="button"
-          onClick={() => onNavigate('team')}
-          className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
-        >
-          <span className="w-4 text-center text-green">●</span>vos.exe
-        </button>
-        {team.map((e) => (
-          <button
-            key={e.uid}
-            type="button"
-            onClick={() => onNavigate('team')}
-            className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
-          >
-            <span className={`w-4 text-center ${ROLE_STYLE[e.role].text}`} title={ROLES[e.role].name}>
-              ●
-            </span>
-            <span className="truncate">
-              {e.role}-{e.name.toLowerCase()}.exe
-            </span>
-            <span className="ml-auto font-mono text-[11px] text-yellow">{'★'.repeat(e.stars)}</span>
-          </button>
-        ))}
+        {showTeam && (
+          <>
+            <Folder extra={`${1 + team.length}/${1 + capacity}`}>equipo</Folder>
+            <button
+              type="button"
+              onClick={() => onNavigate('team')}
+              className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
+            >
+              <span className="w-4 text-center text-green">●</span>vos.exe
+            </button>
+            {team.map((e) => (
+              <button
+                key={e.uid}
+                type="button"
+                onClick={() => onNavigate('team')}
+                className={`${FILE_ROW} text-[#b3bcd8] hover:bg-panel-2`}
+              >
+                <span className={`w-4 text-center ${ROLE_STYLE[e.role].text}`} title={ROLES[e.role].name}>
+                  ●
+                </span>
+                <span className="truncate">
+                  {e.role}-{e.name.toLowerCase()}.exe
+                </span>
+                <span className="ml-auto font-mono text-[11px] text-yellow">{'★'.repeat(e.stars)}</span>
+              </button>
+            ))}
+          </>
+        )}
       </div>
 
       {team.length === 0 && (

@@ -28,6 +28,7 @@ import {
 import type { Contract } from './types'
 import { INITIAL_RECORDS, type Records } from './records'
 import { ACHIEVEMENTS } from '../data/achievements'
+import { FEATURES } from '../data/features'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 import { MACRO_LEVELS } from '../data/macro'
 
@@ -845,9 +846,19 @@ function unlockAchievements(prev: GameState, next: GameState, action: GameAction
   return { ...next, log, records: { ...next.records, unlocked: [...next.records.unlocked, ...fresh.map((a) => a.id)] } }
 }
 
+/** 🔓 Revela las funcionalidades que se volvieron útiles (la interfaz las anuncia) */
+function unlockFeatures(next: GameState): GameState {
+  const known = new Set(next.records.features)
+  const fresh = FEATURES.filter((f) => !known.has(f.id) && f.check(next))
+  if (fresh.length === 0) return next
+  let log = next.log
+  for (const f of fresh) log = addLog(log, 'crit', `🔓 Nuevo: ${f.icon} ${f.name}`)
+  return { ...next, log, records: { ...next.records, features: [...next.records.features, ...fresh.map((f) => f.id)] } }
+}
+
 export function gameReducer(state: GameState, action: GameAction): GameState {
   const next = reduce(state, action)
   // 'reset' e importar arrancan otra carrera: no se mezclan con la anterior
   if (next === state || action.type === 'reset') return next
-  return unlockAchievements(state, next, action)
+  return unlockFeatures(unlockAchievements(state, next, action))
 }

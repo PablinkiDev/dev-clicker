@@ -10,6 +10,9 @@ type ActivityBarProps = {
   skillsAvailable: number
   /** Se puede ascender de etapa: muestra un globito con "!" */
   canAscend: boolean
+  views?: View[]
+  /** Pantallas con algo nuevo sin ver: llevan un ● */
+  fresh?: View[]
 }
 
 // Íconos en SVG con el estilo de VS Code (trazo, sin relleno)
@@ -52,7 +55,15 @@ const ICONS: Record<View, ReactNode> = {
 }
 
 /** Barra de actividad: a la izquierda en escritorio, abajo en el celular */
-function ActivityBar({ view, onChange, offersCount, skillsAvailable, canAscend }: ActivityBarProps) {
+function ActivityBar({
+  view,
+  onChange,
+  offersCount,
+  skillsAvailable,
+  canAscend,
+  views = VIEWS,
+  fresh = [],
+}: ActivityBarProps) {
   const badges: Partial<Record<View, number | string>> = {
     board: offersCount,
     skills: skillsAvailable,
@@ -61,9 +72,9 @@ function ActivityBar({ view, onChange, offersCount, skillsAvailable, canAscend }
 
   return (
     <nav className="order-last flex shrink-0 border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:order-first md:w-13 md:flex-col md:border-t-0 md:border-r md:pt-1.5 md:pb-0">
-      {VIEWS.map((v) => {
+      {views.map((v) => {
         const isActive = v === view
-        const badge = badges[v]
+        const badge = badges[v] || (fresh.includes(v) ? '●' : 0)
         return (
           <button
             key={v}

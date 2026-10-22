@@ -15,6 +15,7 @@ import GoldenBug from './components/GoldenBug'
 import { bugVisible, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
+import FeatureCard from './components/FeatureCard'
 import DevPanel from './components/DevPanel'
 import { HelpModal } from './components/HelpModal'
 import {
@@ -26,6 +27,7 @@ import {
   type AudioSettings,
 } from './audio/audio'
 import { MinigameInvite, MinigameModal } from './components/Minigame'
+import { FEATURES, isViewVisible } from './data/features'
 import { MINIGAMES, MINIGAME_FIRST_AT, nextMinigameDelay, type MinigameId } from './data/minigames'
 import AchievementList from './components/AchievementList'
 import { ACHIEVEMENTS } from './data/achievements'
@@ -55,7 +57,7 @@ import SettingsScreen from './screens/SettingsScreen'
 import TeamScreen from './screens/TeamScreen'
 import CompanyScreen from './screens/CompanyScreen'
 import { canAscend, companyValue, contractScale, isEndless, nextStageRequirements } from './game/stages'
-import type { View } from './ui'
+import { VIEWS, type View } from './ui'
 
 /** Cada cuántos milisegundos avanza el reloj (10 veces por segundo, GDD §11) */
 const TICK_MS = 100
@@ -155,7 +157,11 @@ function App() {
   // El juego sigue aunque la pestaña esté oculta (D4); con el juego cerrado, no avanza
   const isRunning = contract !== null && !isComplete
   // Si no hay contrato, la pantalla de código no tiene sentido: se muestra el tablón
-  const currentView: View = view === 'work' && !contract ? 'board' : view
+  // 🔓 Pantallas visibles: las que todavía no se desbloquearon no aparecen en ningún menú
+  const features = state.records.features
+  const views = VIEWS.filter((v) => isViewVisible(v, features))
+  const wanted: View = view === 'work' && !contract ? 'board' : view
+  const currentView: View = views.includes(wanted) ? wanted : 'board'
   const skillsAvailable = SKILLS.filter(
     (s) =>
       skills[s.id] < s.maxLevel &&
@@ -252,6 +258,27 @@ function App() {
 
     return () => clearInterval(id)
   }, [isRunning, devSpeed])
+
+  // 🔓 Funcionalidades nuevas: se anuncian de a una y marcan su pantalla con ● hasta visitarla
+  const seenFeatures = useRef(features)
+  const [featureQueue, setFeatureQueue] = useState<string[]>([])
+  const [freshViews, setFreshViews] = useState<View[]>([])
+  useEffect(() => {
+    const before = new Set(seenFeatures.current)
+    seenFeatures.current = features
+    // Si la lista se achicó (empezar de cero o importar), no hay nada que anunciar
+    const fresh = features.filter((id) => !before.has(id))
+    if (fresh.length === 0 || features.length < before.size) return
+    setFeatureQueue((q) => [...q, ...fresh])
+    const newViews = FEATURES.filter((f) => fresh.includes(f.id) && f.view).map((f) => f.view as View)
+    setFreshViews((v) => [...new Set([...v, ...newViews])])
+  }, [features])
+
+  /** Ir a una pantalla (y sacarle el ● de nuevo) */
+  function navigate(next: View) {
+    setView(next)
+    setFreshViews((v) => v.filter((x) => x !== next))
+  }
 
   // ❓ Ayuda: botón en el panel de arriba o F1
   const [helpOpen, setHelpOpen] = useState(false)
@@ -416,7 +443,7 @@ function App() {
   const [minigameRetry, setMinigameRetry] = useState(0)
   const triggerMinigame = useEffectEvent(() => {
     // Tampoco se pisa con un evento
-    if (state.stats.playTime < MINIGAME_FIRST_AT || event) {
+    if (state.stats.playTime < MINIGAME_FIRST_AT || event || !features.includes('minigames')) {
       setMinigameRetry((n) => n + 1)
       return
     }
@@ -570,8 +597,10 @@ function App() {
         {ideChrome && (
           <>
             <ActivityBar
+              views={views}
+              fresh={freshViews}
               view={currentView}
-              onChange={setView}
+              onChange={navigate}
               offersCount={offers.length}
               skillsAvailable={skillsAvailable}
               canAscend={canAscend(state)}
@@ -581,8 +610,9 @@ function App() {
               offers={offers}
               team={team}
               capacity={officeCapacity(state.office, skills.homeOffice)}
+              showTeam={views.includes('team')}
               money={money}
-              onNavigate={setView}
+              onNavigate={navigate}
             />
           </>
         )}
@@ -602,9 +632,11 @@ function App() {
             ))}
           {look.features.nav === 'menu' && (
             <MenuBar
+              views={views}
+              fresh={freshViews}
               editor={look.id}
               view={currentView}
-              onChange={setView}
+              onChange={navigate}
               darkMode={state.darkMode}
               darkModePrice={DARK_MODE_PRICE}
               onDarkMode={() => dispatch({ type: 'toggleDarkMode' })}
@@ -625,10 +657,10 @@ function App() {
             focus={focusInfo}
             modifiers={activeMods}
             goal={currentGoal(state)}
-            onNavigate={setView}
+            onNavigate={navigate}
             onHelp={() => setHelpOpen(true)}
           />
-          {ideChrome && <EditorTabs view={currentView} contract={contract} onChange={setView} />}
+          {ideChrome && <EditorTabs views={views} view={currentView} contract={contract} onChange={navigate} />}
 
           {currentView === 'work' && contract && (
             <div className="flex min-h-0 flex-1">
@@ -719,6 +751,7 @@ function App() {
           )}
           {currentView === 'skills' && (
             <SkillsScreen
+              features={features}
               skills={skills}
               tech={state.tech}
               stage={state.stage}
@@ -735,14 +768,16 @@ function App() {
                     stage={state.stage}
                     onBuy={() => dispatch({ type: 'buyEditor' })}
                   />
-                  <MacroShop
-                    level={state.macro}
-                    on={state.macroOn}
-                    money={money}
-                    stage={state.stage}
-                    onBuy={() => dispatch({ type: 'buyMacro' })}
-                    onToggle={(on) => dispatch({ type: 'setMacro', on })}
-                  />
+                  {features.includes('macro') && (
+                    <MacroShop
+                      level={state.macro}
+                      on={state.macroOn}
+                      money={money}
+                      stage={state.stage}
+                      onBuy={() => dispatch({ type: 'buyMacro' })}
+                      onToggle={(on) => dispatch({ type: 'setMacro', on })}
+                    />
+                  )}
                 </div>
               }
             />
@@ -765,11 +800,15 @@ function App() {
           />
           {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
           {look.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}
-          {look.features.nav === 'nano' && <NanoBar view={currentView} onChange={setView} />}
+          {look.features.nav === 'nano' && (
+            <NanoBar views={views} fresh={freshViews} view={currentView} onChange={navigate} />
+          )}
           {look.features.nav === 'agent' && (
             <AgentBar
+              views={views}
+              fresh={freshViews}
               view={currentView}
-              onChange={setView}
+              onChange={navigate}
               hasContract={contract !== null}
               isComplete={isComplete}
               elapsed={contract ? contract.time - timeLeft : 0}
@@ -783,6 +822,14 @@ function App() {
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {featureQueue.length > 0 && (
+        <FeatureCard
+          key={featureQueue[0]}
+          id={featureQueue[0]}
+          onView={navigate}
+          onClose={() => setFeatureQueue((q) => q.slice(1))}
+        />
+      )}
       {import.meta.env.DEV && (
         <DevPanel
           state={state}

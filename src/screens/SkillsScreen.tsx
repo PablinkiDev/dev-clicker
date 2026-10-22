@@ -10,6 +10,8 @@ import { INVESTMENTS, investmentCost, type InvestmentId } from '../data/investme
 import { FOUNDER_BONUS, founderBonus, type Prestige } from '../game/prestige'
 
 type SkillsScreenProps = {
+  /** 🔓 Funcionalidades reveladas: las pestañas que todavía no tocan no se muestran */
+  features: string[]
   skills: SkillLevels
   tech: TechLevels
   /** Etapa de la empresa: algunas tecnologías piden una mínima */
@@ -86,7 +88,18 @@ const INVESTMENT_LAYOUT: Record<InvestmentId, { col: number; row: number }> = {
 /** Pestañas de la pantalla: una por árbol */
 type Tab = 'tools' | 'tech' | 'personal' | 'company' | 'prestige'
 
-function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige, onInvest }: SkillsScreenProps) {
+function SkillsScreen({
+  features,
+  skills,
+  tech,
+  stage,
+  xp,
+  onBuy,
+  onLearn,
+  tools,
+  prestige,
+  onInvest,
+}: SkillsScreenProps) {
   const [tab, setTab] = useState<Tab>('tech')
   const xpCost = (cost: number) => `${formatNumber(cost)} XP`
   const requires = (missing: string | null) => missing && `Requiere ${missing}`
@@ -167,7 +180,8 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
 
   const available = (nodes: TreeNode[]) => nodes.filter((n) => n.affordable).length
   const prestigeOpen = prestige.sales > 0 || prestige.tokens > 0
-  const tabs: { id: Tab; label: string; badge: number; locked?: boolean }[] = [
+  type TabInfo = { id: Tab; label: string; badge: number; locked?: boolean }
+  const allTabs: TabInfo[] = [
     { id: 'tools', label: '🧰 Herramientas', badge: 0 },
     { id: 'tech', label: 'Tecnologías', badge: available(techNodes) },
     { id: 'personal', label: 'Personal', badge: available(personalNodes) },
@@ -179,6 +193,12 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
       locked: !prestigeOpen,
     },
   ]
+  const tabs = allTabs.filter(
+    (t) =>
+      (t.id !== 'tools' || features.includes('tools')) &&
+      (t.id !== 'company' || features.includes('companyTree')) &&
+      (t.id !== 'prestige' || features.includes('prestige')),
+  )
 
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">

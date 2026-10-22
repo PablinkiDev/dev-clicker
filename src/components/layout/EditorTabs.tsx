@@ -6,13 +6,15 @@ type EditorTabsProps = {
   view: View
   contract: Contract | null
   onChange: (view: View) => void
+  /** Pantallas visibles (las demás todavía no se desbloquearon) */
+  views: View[]
 }
 
 type Tab = { view: View; icon: string; iconClass: string; name: string; modified?: boolean }
 
 /** Pestañas del editor: el contrato en curso es un archivo abierto, el resto son "carpetas" */
-function EditorTabs({ view, contract, onChange }: EditorTabsProps) {
-  const tabs: Tab[] = [
+function EditorTabs({ view, contract, onChange, views }: EditorTabsProps) {
+  const allTabs: Tab[] = [
     ...(contract
       ? [
           {
@@ -29,6 +31,7 @@ function EditorTabs({ view, contract, onChange }: EditorTabsProps) {
     { view: 'company', icon: '▲', iconClass: 'text-yellow', name: 'empresa.json' },
     { view: 'skills', icon: '⑂', iconClass: 'text-green', name: 'mejoras.tree' },
   ]
+  const tabs = allTabs.filter((tab) => views.includes(tab.view))
 
   return (
     <div className="hidden h-9 shrink-0 overflow-x-auto border-b border-line bg-panel [scrollbar-width:none] md:flex">

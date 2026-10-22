@@ -3,6 +3,8 @@
 export type Records = {
   /** Logros desbloqueados, en el orden en que se consiguieron */
   unlocked: string[]
+  /** 🔓 Funcionalidades ya reveladas (data/features.ts) */
+  features: string[]
   clicks: number
   crits: number
   /** Líneas escritas en total (clics + equipo) */
@@ -24,6 +26,7 @@ export type Records = {
 
 export const INITIAL_RECORDS: Records = {
   unlocked: [],
+  features: [],
   clicks: 0,
   crits: 0,
   lines: 0,

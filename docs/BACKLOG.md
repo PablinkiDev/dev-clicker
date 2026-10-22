@@ -87,6 +87,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 
 | # | Historia | Prioridad | Tamaño |
 |---|----------|-----------|--------|
+| F0 ✅ | 🔓 **Revelado progresivo:** lo que no se desbloqueó no se ve (pantallas, pestañas de Mejoras, Macro, minijuegos). Al desbloquearse aparece una tarjeta "¡Nuevo!" que explica la mecánica en una línea y la pantalla queda con ● hasta visitarla. Se guarda para toda la carrera. Cubre parte de C2 (tutorial) | M | 2 |
 | F1 | 🃏 **Especializaciones:** al ascender, elegir 1 de 3 cartas (Manos rápidas / Automatizador / Equilibrado) | M | 3–4 |
 | F2 | ⚡ **Habilidades activas:** barra con Hackatón, Crunch, Pair programming y Café doble (atajos 1–5) | M | 3 |
 | F3 | 🏺 **Artefactos y "Tu setup":** cajas de suministros, ~20 artefactos con rarezas y niveles, pantalla del escritorio | M | 5–6 |

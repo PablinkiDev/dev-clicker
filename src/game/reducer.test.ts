@@ -139,3 +139,29 @@ describe('logros', () => {
     expect(s.records.unlocked).toContain('tampered')
   })
 })
+
+describe('revelado progresivo', () => {
+  it('una partida nueva arranca sin nada revelado', () => {
+    expect(createInitialState().records.features).toEqual([])
+  })
+
+  it('entregar el primer contrato revela Mejoras, una sola vez', () => {
+    let s = withContract()
+    s = gameReducer({ ...s, code: s.contract!.code }, { type: 'deliver' })
+    expect(s.records.features).toEqual(['upgrades'])
+    s = gameReducer(s, { type: 'playTime', seconds: 1 })
+    expect(s.records.features.filter((id) => id === 'upgrades')).toHaveLength(1)
+  })
+
+  it('lo revelado sobrevive a la venta', () => {
+    const s = createInitialState()
+    const before = {
+      ...s,
+      stage: 4,
+      stats: { ...s.stats, moneyEarned: 7e9 },
+      records: { ...s.records, features: ['upgrades', 'team', 'prestige'] },
+    }
+    const after = gameReducer(before, { type: 'sell', fresh: createInitialState(), now: 1 })
+    expect(after.records.features).toEqual(expect.arrayContaining(['upgrades', 'team', 'prestige']))
+  })
+})

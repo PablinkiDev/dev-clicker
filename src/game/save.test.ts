@@ -99,6 +99,16 @@ describe('reparaciones', () => {
   })
 })
 
+describe('revelado progresivo en partidas viejas', () => {
+  it('una partida de antes del revelado ve todo lo que ya tenía (sin anunciarlo)', () => {
+    const state = played() // etapa 2, con contratos y dinero
+    const records = omit(state.records, ['features'])
+    const loaded = parseGame(JSON.stringify({ version: 18, savedAt: 0, state: { ...state, records } }))
+    expect(loaded?.records.features).toEqual(expect.arrayContaining(['upgrades', 'companyTree', 'macro']))
+    expect(loaded?.records.features).not.toContain('prestige')
+  })
+})
+
 describe('exportar e importar', () => {
   it('un archivo exportado se importa sin marca de edición', () => {
     const imported = importGame(exportGame(played()))

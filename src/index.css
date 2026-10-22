@@ -30,6 +30,7 @@
   --animate-float-up: float-up 0.7s ease-out forwards;
   --animate-bug: bug-wander 3s ease-in-out infinite;
   --animate-slide-in: slide-in 0.35s ease-out;
+  --animate-slide-down: slide-down 0.35s ease-out;
 
   /* El bug dorado camina en zigzag y se sacude un poco */
   @keyframes bug-wander {
@@ -52,6 +53,14 @@
   @keyframes slide-in {
     from {
       transform: translateX(120%);
+      opacity: 0;
+    }
+  }
+
+  /* La tarjeta de "¡Nuevo!" baja desde arriba */
+  @keyframes slide-down {
+    from {
+      transform: translateY(-24px);
       opacity: 0;
     }
   }
