@@ -15,6 +15,7 @@ import GoldenBug from './components/GoldenBug'
 import { bugVisible, nextBugDelay } from './game/bug'
 import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
+import { HelpModal } from './components/HelpModal'
 import {
   applyAudioSettings,
   loadAudioSettings,
@@ -247,11 +248,23 @@ function App() {
     return () => clearInterval(id)
   }, [isRunning])
 
+  // ❓ Ayuda: botón en el panel de arriba o F1
+  const [helpOpen, setHelpOpen] = useState(false)
+  useEffect(() => {
+    const onF1 = (event: KeyboardEvent) => {
+      if (event.key !== 'F1') return
+      event.preventDefault() // que el navegador no abra su propia ayuda
+      setHelpOpen(true)
+    }
+    window.addEventListener('keydown', onF1)
+    return () => window.removeEventListener('keydown', onF1)
+  }, [])
+
   // Efecto 4: la barra espaciadora programa (o entrega, si el código ya está completo).
   // useEffectEvent: la función siempre ve los valores actuales, pero NO es una dependencia
   // del efecto, así que el listener se agrega una sola vez.
   const onSpace = useEffectEvent((event: KeyboardEvent) => {
-    if (event.code !== 'Space' || event.repeat || currentView !== 'work' || !contract) return
+    if (event.code !== 'Space' || event.repeat || currentView !== 'work' || !contract || helpOpen) return
     // Escribiendo en un campo (Typing race) o jugando un minijuego, la barra no programa
     if (event.target instanceof HTMLInputElement || minigame?.playing) return
     event.preventDefault() // que la página no haga scroll
@@ -573,6 +586,7 @@ function App() {
             modifiers={activeMods}
             goal={currentGoal(state)}
             onNavigate={setView}
+            onHelp={() => setHelpOpen(true)}
           />
           {ideChrome && <EditorTabs view={currentView} contract={contract} onChange={setView} />}
 
@@ -728,6 +742,7 @@ function App() {
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
     </div>
   )
 }

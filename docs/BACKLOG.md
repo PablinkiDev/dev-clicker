@@ -97,6 +97,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | C8 | Bug bash final y README actualizado | M | 1 |
 | C10 | **Repensar el diseño de los árboles de Mejoras** (los nodos andan, pero el look no termina de convencer) | S | 1–2 |
 | C9 ✅ | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
+| C11 ✅ | **Ayuda ❓ (y F1):** modal con cómo jugar y una wiki de todo el juego (contratos, equipo, mejoras, etapas, prestigio, extras y atajos). Las tablas salen de los datos del juego | M | 1 |
 
 **Total estimado para 1.0:** ~40 commits chicos.
 

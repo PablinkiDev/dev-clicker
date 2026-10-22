@@ -3,6 +3,7 @@ import { formatMoney, formatNumber, formatRate } from '../../game/format'
 import type { Goal, Purchase } from '../../game/goals'
 import { REP_LEVELS, nextRepThreshold, repLevel } from '../../game/reputation'
 import type { View } from '../../ui'
+import { HelpButton } from '../HelpModal'
 
 type EconomyHudProps = {
   money: number
@@ -25,6 +26,7 @@ type EconomyHudProps = {
   modifiers: { id: string; icon: string; target: 'auto' | 'click'; mult: number; seconds: number }[]
   goal: Goal
   onNavigate: (view: View) => void
+  onHelp: () => void
 }
 
 /** Un bloque de la barra: se puede tocar para ir a su pantalla */
@@ -80,7 +82,7 @@ function EconomyHud(props: EconomyHudProps) {
   const focus = props.focus
 
   return (
-    <section className="grid shrink-0 grid-cols-2 border-b border-line bg-panel pt-[env(safe-area-inset-top)] md:grid-cols-[repeat(4,minmax(0,1fr))_1.35fr]">
+    <section className="relative grid shrink-0 grid-cols-2 border-b border-line bg-panel pt-[env(safe-area-inset-top)] md:grid-cols-[repeat(4,minmax(0,1fr))_1.35fr]">
       <Cell onClick={() => onNavigate('team')}>
         <Label aside={<Trend value={props.moneyPerMinute} format={formatMoney} />}>Dinero</Label>
         <span className="block font-mono text-lg font-extrabold tracking-tight text-yellow md:text-xl">
@@ -169,7 +171,9 @@ function EconomyHud(props: EconomyHudProps) {
             <>
               {' · 🎯 '}
               {focus.active ? (
-                <span className="text-purple">×{focus.mult} {focus.seconds}s</span>
+                <span className="text-purple">
+                  ×{focus.mult} {focus.seconds}s
+                </span>
               ) : focus.seconds > 0 ? (
                 `${focus.seconds}s`
               ) : (
@@ -193,6 +197,7 @@ function EconomyHud(props: EconomyHudProps) {
         </span>
         <Bar ratio={goal.progress} className={goal.ready ? 'bg-green' : 'bg-yellow'} />
       </Cell>
+      <HelpButton onClick={props.onHelp} />
     </section>
   )
 }
