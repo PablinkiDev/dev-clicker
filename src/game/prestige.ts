@@ -15,6 +15,8 @@ export type SaleRecord = {
   endless: number
   /** Segundos jugados con esa empresa (las ventas viejas no lo tienen) */
   playTime?: number
+  /** 🏁 Desafío con el que se jugó esa empresa */
+  challenge?: string
 }
 
 /** Lo que sobrevive a una venta */

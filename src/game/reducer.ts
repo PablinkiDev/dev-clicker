@@ -32,6 +32,7 @@ import { FEATURES } from '../data/features'
 import { getCard, type CardPick } from '../data/cards'
 import { BOSS_EVERY, getBoss } from '../data/bosses'
 import { MAX_ARTIFACT_LEVEL, boxPrice, getArtifact } from '../data/artifacts'
+import { CHALLENGE_FIRST_BOXES, getChallenge } from '../data/challenges'
 import { bonuses } from './cards'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 import { MACRO_LEVELS } from '../data/macro'
@@ -121,6 +122,10 @@ export type GameState = {
   cards: CardPick[]
   /** Cartas ofrecidas al ascender, esperando que elijas una (null si no hay nada pendiente) */
   cardOffer: CardPick[] | null
+  /** 🏁 Desafío de esta empresa (F5): id en data/challenges.ts, o null */
+  challenge: string | null
+  /** Al empezar una empresa nueva después de vender: falta elegir desafío (o ninguno) */
+  challengeChoice: boolean
   /** 👹 Contratos que faltan para que aparezca el próximo cliente jefe (desde Estudio) */
   bossCountdown: number
   /** Clics seguidos (para el Combo) y hora del último clic tuyo (para las Horas extra) */
@@ -210,6 +215,8 @@ export type GameAction =
   // 📦 Abrir una caja: qué artefacto salió se decide afuera (azar), con rollArtifact
   | { type: 'openBox'; artifact: string }
   | { type: 'buyBox' }
+  // 🏁 Elegir el desafío de la empresa nueva (null = jugar sin desafío)
+  | { type: 'setChallenge'; id: string | null }
   // 👹 Llega un cliente jefe al tablón (la oferta se arma afuera: usa azar)
   | { type: 'spawnBoss'; offer: Contract }
   | { type: 'buyEditor' }
@@ -250,6 +257,8 @@ export function createInitialState(): GameState {
     cardOffer: null,
     combo: { count: 0, lastAt: 0 },
     bossCountdown: BOSS_EVERY,
+    challenge: null,
+    challengeChoice: false,
     modifiers: [],
     team: [],
     candidates: createInitialCandidates(),
@@ -629,8 +638,11 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'sell': {
       if (!isEndless(state.stage)) return state
       const value = companyValue(state.stats.moneyEarned, state.team)
+      // 🏁 Desafío completado: más tokens (y cajas extra la primera vez)
+      const challenge = getChallenge(state.challenge)
+      const firstTime = challenge !== undefined && !state.records.challengesDone.includes(challenge.id)
       // 💻 Laptop con stickers: tokens extra por venta
-      const tokens = tokensForValue(value) + bonuses(state).saleTokens
+      const tokens = Math.round(tokensForValue(value) * (1 + (challenge?.tokenBonus ?? 0))) + bonuses(state).saleTokens
       const { investments } = state.prestige
       return {
         ...action.fresh,
@@ -639,8 +651,14 @@ function reduce(state: GameState, action: GameAction): GameState {
         money: action.fresh.money + SEED_CAPITAL * investments.seedCapital,
         rep: action.fresh.rep + FIRST_CONTACTS_REP * investments.firstContacts,
         dim: state.dim, // la accesibilidad no es progreso: se conserva
-        // Cada venta trae una 📦 caja de suministros
-        records: { ...state.records, boxes: state.records.boxes + 1 },
+        // Cada venta trae una 📦 caja de suministros (y el desafío completado, más)
+        records: {
+          ...state.records,
+          boxes: state.records.boxes + 1 + (firstTime ? CHALLENGE_FIRST_BOXES : 0),
+          challengesDone: firstTime ? [...state.records.challengesDone, challenge.id] : state.records.challengesDone,
+        },
+        // La empresa nueva arranca preguntando si querés un desafío
+        challengeChoice: true,
         tampered: state.tampered, // la marca es de la carrera, no de la empresa
         prestige: {
           tokens: state.prestige.tokens + tokens,
@@ -657,6 +675,7 @@ function reduce(state: GameState, action: GameAction): GameState {
               teamSize: state.team.length,
               endless: state.endless,
               playTime: state.stats.playTime,
+              challenge: state.challenge ?? undefined,
             },
             ...state.prestige.history,
           ],
@@ -904,6 +923,7 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'buyEditor': {
       const next = nextEditor(state.editor)
       if (!next || state.money < next.price || state.stage < (next.minStage ?? 0)) return state
+      if (getChallenge(state.challenge)?.nanoOnly) return state // 🐧 Nano para siempre
       return {
         ...state,
         money: state.money - next.price,
@@ -924,6 +944,25 @@ function reduce(state: GameState, action: GameAction): GameState {
           state.log,
           'success',
           `📦 Mudanza a ${next.name} · ahora entran ${officeCapacity(state.office + 1, state.skills.homeOffice)} empleados`,
+        ),
+      }
+    }
+
+    case 'setChallenge': {
+      if (!state.challengeChoice) return state
+      const challenge = getChallenge(action.id)
+      return {
+        ...state,
+        challenge: challenge?.id ?? null,
+        challengeChoice: false,
+        // 🐧 Nano para siempre: aunque la Licencia vitalicia te haya dado otro editor
+        ...(challenge?.nanoOnly ? { editor: 'nano' as const, look: 'nano' as const } : {}),
+        log: addLog(
+          state.log,
+          challenge ? 'crit' : 'info',
+          challenge
+            ? `🏁 Desafío: ${challenge.icon} ${challenge.name} · ${challenge.rule}`
+            : 'Empresa nueva, sin desafío',
         ),
       }
     }
@@ -999,7 +1038,8 @@ function reduce(state: GameState, action: GameAction): GameState {
         stage: state.stage + 1,
         offers: action.offers,
         candidates: action.candidates,
-        cardOffer: action.cardOffer.length ? action.cardOffer : null,
+        // 🃏 Sin especializaciones: el desafío no ofrece cartas
+        cardOffer: action.cardOffer.length && !getChallenge(state.challenge)?.noCards ? action.cardOffer : null,
         notice: {
           kind: 'success',
           text: `${next.icon} ¡Ahora sos ${next.name}! Se desbloquea: ${next.unlocks.toLowerCase()}`,

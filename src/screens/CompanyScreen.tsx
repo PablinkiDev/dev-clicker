@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { STYLES, getCard, type CardPick } from '../data/cards'
+import { getChallenge } from '../data/challenges'
 import ScreenHeader from '../components/ScreenHeader'
 import SellCard from '../components/SellCard'
 import SalesHistory from '../components/SalesHistory'
@@ -32,6 +33,8 @@ type CompanyScreenProps = {
   achievementsCount: string
   /** 🃏 Especializaciones elegidas en esta empresa */
   cards: CardPick[]
+  /** 🏁 Desafío de esta empresa (o null) */
+  challenge: string | null
 }
 
 function CompanyScreen({
@@ -49,7 +52,9 @@ function CompanyScreen({
   achievements,
   achievementsCount,
   cards,
+  challenge,
 }: CompanyScreenProps) {
+  const activeChallenge = getChallenge(challenge)
   const [tab, setTab] = useState<'stages' | 'achievements'>('stages')
   const current = STAGES[stage]
   const next = STAGES[stage + 1]
@@ -93,6 +98,16 @@ function CompanyScreen({
         achievements
       ) : (
         <>
+          {activeChallenge && (
+            <p className="mb-4 max-w-3xl rounded-xl border border-orange/50 bg-orange/10 px-3.5 py-2.5 text-sm">
+              🏁{' '}
+              <b>
+                Desafío: {activeChallenge.icon} {activeChallenge.name}
+              </b>{' '}
+              · {activeChallenge.rule}.{' '}
+              <span className="text-purple">Al vender: +{Math.round(activeChallenge.tokenBonus * 100)} % tokens</span>
+            </p>
+          )}
           {cards.length > 0 && (
             <>
               <p className="mb-2.5 font-mono text-xs text-muted">build/ · tus especializaciones en esta empresa</p>

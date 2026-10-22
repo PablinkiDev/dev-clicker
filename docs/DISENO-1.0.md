@@ -123,14 +123,16 @@ Al empezar una empresa nueva (después de la primera venta), podés elegir un de
 
 | Desafío | Regla | Premio |
 |---|---|---|
-| 🐍 Monolingüe | solo contratos de un lenguaje al azar | +50 % de tokens |
-| 🏠 Garage | no podés mudarte de la habitación | +50 % de tokens |
-| 🙌 Sin manos | no podés hacer clic (macro sí) | +100 % de tokens |
-| 🧍 Lobo solitario | máximo 3 empleados | +75 % de tokens |
-| ⏱ Contrarreloj | plazos a la mitad | +75 % de tokens |
-| 💸 Bootstrapped | precios ×2 | +50 % de tokens |
+| 🙌 Manos atadas | tus clics escriben ×0,25 | +75 % de tokens |
+| 🦥 Equipo con sueño | el equipo produce ×0,5 | +75 % de tokens |
+| ⏱ Contrarreloj | plazos ×0,6 | +75 % de tokens |
+| 💸 Bootstrapped | los contratos pagan ×0,6 | +50 % de tokens |
+| 🐧 Nano para siempre | no podés cambiar de editor | +50 % de tokens |
+| 🃏 Sin especializaciones | no hay cartas al ascender | +50 % de tokens |
 
-- Completar cada desafío por primera vez da un **logro** y un **artefacto garantizado**.
+> Cambio al implementar: "Garage", "Lobo solitario" y "Sin manos" se reemplazaron porque trababan la partida (los requisitos de ascenso piden oficina y empleados, y sin clics no se puede arrancar).
+
+- Completar cada desafío por primera vez da **2 📦 cajas extra**, y hay logros por completar uno y todos.
 
 ### F6. 🦄 Final: la IPO
 

@@ -49,6 +49,8 @@ import { autoRateOf, clickRate, critChanceOf, critMultiplier, macroRateOf } from
 import { drawCards } from './data/cards'
 import { bonuses } from './game/cards'
 import CardPicker from './components/CardPicker'
+import ChallengePicker from './components/ChallengePicker'
+import { getChallenge } from './data/challenges'
 import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
@@ -808,6 +810,7 @@ function App() {
               achievements={<AchievementList state={state} />}
               achievementsCount={`${state.records.unlocked.length}/${ACHIEVEMENTS.length}`}
               cards={state.cards}
+              challenge={state.challenge}
             />
           )}
           {currentView === 'setup' && (
@@ -857,6 +860,7 @@ function App() {
                     editor={editor.id}
                     money={money}
                     stage={state.stage}
+                    nanoOnly={getChallenge(state.challenge)?.nanoOnly === true}
                     onBuy={() => dispatch({ type: 'buyEditor' })}
                   />
                   {features.includes('macro') && (
@@ -909,6 +913,15 @@ function App() {
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {state.challengeChoice && (
+        <ChallengePicker
+          done={state.records.challengesDone}
+          onPick={(id) => {
+            dispatch({ type: 'setChallenge', id })
+            if (id) playSfx('levelUp')
+          }}
+        />
+      )}
       {state.cardOffer && (
         <CardPicker
           offer={state.cardOffer}

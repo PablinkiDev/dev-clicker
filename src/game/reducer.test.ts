@@ -367,3 +367,43 @@ describe('artefactos y cajas', () => {
     expect(s.records.boxes).toBe(2)
   })
 })
+
+describe('desafíos de run', () => {
+  const sellable = (challenge: string | null): GameState => {
+    const s = createInitialState()
+    return { ...s, stage: 4, stats: { ...s.stats, moneyEarned: 7e9 }, challenge }
+  }
+  const sell = (s: GameState) => gameReducer(s, { type: 'sell', fresh: createInitialState(), now: 1 })
+
+  it('después de vender, la empresa nueva pregunta por un desafío', () => {
+    const after = sell(sellable(null))
+    expect(after.challengeChoice).toBe(true)
+    const chosen = gameReducer(after, { type: 'setChallenge', id: 'sleepyTeam' })
+    expect(chosen.challenge).toBe('sleepyTeam')
+    expect(chosen.challengeChoice).toBe(false)
+  })
+
+  it('sin la pregunta pendiente no se puede elegir', () => {
+    const s = createInitialState()
+    expect(gameReducer(s, { type: 'setChallenge', id: 'sleepyTeam' })).toBe(s)
+  })
+
+  it('vender con desafío da más tokens y cajas extra la primera vez', () => {
+    const normal = sell(sellable(null))
+    const challenged = sell(sellable('tiedHands'))
+    expect(challenged.prestige.tokens).toBeGreaterThan(normal.prestige.tokens)
+    expect(challenged.records.boxes).toBe(normal.records.boxes + 2)
+    expect(challenged.records.challengesDone).toEqual(['tiedHands'])
+  })
+
+  it('Nano para siempre no deja comprar editores', () => {
+    const s = { ...createInitialState(), money: 1e6, challenge: 'nanoForever' }
+    expect(gameReducer(s, { type: 'buyEditor' })).toBe(s)
+  })
+
+  it('Equipo con sueño baja la producción del equipo', async () => {
+    const { autoRateOf } = await import('./rates')
+    const s = { ...createInitialState(), team: [createCandidate('dev', [], 0, 3)] }
+    expect(autoRateOf({ ...s, challenge: 'sleepyTeam' }, 0)).toBeCloseTo(autoRateOf(s, 0) * 0.5)
+  })
+})

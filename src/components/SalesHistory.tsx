@@ -1,5 +1,6 @@
 import { formatDuration, formatMoney } from '../game/format'
 import type { SaleRecord } from '../game/prestige'
+import { getChallenge } from '../data/challenges'
 
 /** "⚡ 16 % más rápida que la anterior" (si las dos ventas tienen el tiempo jugado) */
 function Comparison({ current, previous }: { current?: number; previous?: number }) {
@@ -31,6 +32,12 @@ function SalesHistory({ history }: { history: SaleRecord[] }) {
             <p className="text-muted">
               Vendida por <b className="text-yellow">{formatMoney(sale.value)}</b> ·{' '}
               <b className="text-purple">+{sale.tokens} tokens</b>
+              {getChallenge(sale.challenge ?? null) && (
+                <span className="text-orange">
+                  {' '}
+                  · 🏁 {getChallenge(sale.challenge ?? null)?.icon} {getChallenge(sale.challenge ?? null)?.name}
+                </span>
+              )}
             </p>
             <p className="text-muted">
               {sale.contractsDone} contratos ({sale.contractsFailed} vencidos) · {sale.teamSize} empleados ·{' '}

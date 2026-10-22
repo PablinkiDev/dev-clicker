@@ -13,6 +13,7 @@ import { INITIAL_RECORDS } from './records'
 import { INITIAL_ABILITIES } from '../data/abilities'
 import { getBoss } from '../data/bosses'
 import { MAX_ARTIFACT_LEVEL, getArtifact } from '../data/artifacts'
+import { getChallenge } from '../data/challenges'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES, featuresFor } from '../data/features'
 
@@ -40,6 +41,8 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   cardOffer: null,
   combo: { count: 0, lastAt: 0 },
   bossCountdown: 10,
+  challenge: null,
+  challengeChoice: false,
   stats: INITIAL_STATS,
   prestige: INITIAL_PRESTIGE,
   records: INITIAL_RECORDS,
@@ -371,6 +374,9 @@ function migrate(raw: unknown): unknown {
           ? [...new Set(records.unlocked.filter((id): id is string => typeof id === 'string' && known.has(id)))]
           : [],
         recentCrits: Array.isArray(records.recentCrits) ? records.recentCrits.filter(isNumber).slice(-20) : [],
+        challengesDone: Array.isArray(records.challengesDone)
+          ? records.challengesDone.filter((id): id is string => typeof id === 'string' && !!getChallenge(id))
+          : [],
         // Solo artefactos que existen, con niveles de 1 a 10
         artifacts: isObject(records.artifacts)
           ? Object.fromEntries(

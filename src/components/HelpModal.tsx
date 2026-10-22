@@ -3,6 +3,7 @@
 // así la ayuda no queda vieja cuando se cambia un número.
 import { useEffect, useState, type ReactNode } from 'react'
 import { ABILITIES } from '../data/abilities'
+import { CHALLENGES, CHALLENGE_FIRST_BOXES } from '../data/challenges'
 import { ARTIFACTS, MAX_ARTIFACT_LEVEL, RARITIES } from '../data/artifacts'
 import { BOSSES, BOSS_EVERY, BOSS_SCALE } from '../data/bosses'
 import { CARDS, RARE_CHANCE, STYLES } from '../data/cards'
@@ -313,6 +314,15 @@ function Prestige() {
       <Table
         head={['Artefacto', 'Rareza', 'Efecto (Nv.1)']}
         rows={ARTIFACTS.map((a) => [`${a.icon} ${a.name}`, RARITIES[a.rarity].name, a.text(1)])}
+      />
+      <H>🏁 Desafíos de run</H>
+      <P>
+        Desde la segunda empresa, al arrancar podés elegir un desafío opcional. Si vendés la empresa con él, ganás más
+        tokens; la primera vez que completás cada uno, también {CHALLENGE_FIRST_BOXES} 📦 cajas extra.
+      </P>
+      <Table
+        head={['Desafío', 'Regla', 'Premio']}
+        rows={CHALLENGES.map((c) => [`${c.icon} ${c.name}`, c.rule, `+${Math.round(c.tokenBonus * 100)} % tokens`])}
       />
       <H>Árbol de prestigio</H>
       <P>Se paga con tokens; cada nivel cuesta el doble que el anterior. Nada de esto se pierde al vender.</P>

@@ -3,6 +3,7 @@
 import type { GameAction, GameState } from '../game/reducer'
 import { companyValue } from '../game/stages'
 import { OFFICES, officeCapacity } from './offices'
+import { CHALLENGES } from './challenges'
 
 export type AchievementCategory = 'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'games' | 'secret'
 
@@ -382,6 +383,24 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'seniorReviewer', category: 'games', icon: '🧐', name: 'Senior reviewer', description: 'Jugá 20 minijuegos' },
     (s) => s.records.minigames,
     20,
+  ),
+
+  // 🏁 Desafíos
+  counter(
+    { id: 'masochist', category: 'company', icon: '🏁', name: 'Masoquista', description: 'Completá un desafío de run' },
+    (s) => s.records.challengesDone.length,
+    1,
+  ),
+  counter(
+    {
+      id: 'professionalSuffering',
+      category: 'company',
+      icon: '🥵',
+      name: 'Sufrimiento profesional',
+      description: 'Completá todos los desafíos de run',
+    },
+    (s) => s.records.challengesDone.length,
+    CHALLENGES.length,
   ),
 
   // 🔒 Secretos

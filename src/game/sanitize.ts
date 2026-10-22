@@ -4,6 +4,7 @@
 import { INVESTMENTS } from '../data/investments'
 import { MACRO_LEVELS } from '../data/macro'
 import { getCard, type CardPick } from '../data/cards'
+import { getChallenge } from '../data/challenges'
 import { OFFICES, officeCapacity } from '../data/offices'
 import { SKILLS } from '../data/skills'
 import { STAGES } from '../data/stages'
@@ -66,6 +67,8 @@ export function sanitize(state: GameState): GameState {
     cardOffer: Array.isArray(state.cardOffer) && state.cardOffer.every(isCard) ? state.cardOffer : null,
     combo: { count: clamp(state.combo?.count, 0), lastAt: clamp(state.combo?.lastAt, 0) },
     bossCountdown: Math.round(clamp(state.bossCountdown, 0, 100)),
+    challenge: getChallenge(state.challenge) ? state.challenge : null,
+    challengeChoice: state.challengeChoice === true,
     records: {
       ...state.records,
       ...Object.fromEntries(

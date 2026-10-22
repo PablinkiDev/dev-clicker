@@ -1,6 +1,7 @@
 // Efectos combinados de las cartas (F1) y los artefactos (F3). Todos los bonus de esos sistemas pasan por acá.
 import { getArtifact } from '../data/artifacts'
 import { NO_EFFECTS, getCard, type CardEffects, type CardPick } from '../data/cards'
+import { getChallenge } from '../data/challenges'
 import type { GameState } from './reducer'
 
 /** Suma una lista de efectos: los multiplicadores ("…Mult") se multiplican, lo demás se suma */
@@ -21,8 +22,13 @@ export function cardEffects(cards: CardPick[]): CardEffects {
   return combineEffects(cards.map((pick) => getCard(pick.id)?.effects(pick.rare) ?? {}))
 }
 
-/** Todos los bonus de cartas y artefactos juntos: es lo que usan las fórmulas del juego */
-export function bonuses(state: Pick<GameState, 'cards' | 'records'>): CardEffects {
+/** Todos los bonus de cartas, artefactos y el desafío juntos: es lo que usan las fórmulas del juego */
+export function bonuses(state: Pick<GameState, 'cards' | 'records'> & { challenge?: string | null }): CardEffects {
   const artifacts = Object.entries(state.records.artifacts).map(([id, level]) => getArtifact(id)?.effects(level) ?? {})
-  return combineEffects([...state.cards.map((pick) => getCard(pick.id)?.effects(pick.rare) ?? {}), ...artifacts])
+  const challenge = getChallenge(state.challenge ?? null)?.effects ?? {}
+  return combineEffects([
+    ...state.cards.map((pick) => getCard(pick.id)?.effects(pick.rare) ?? {}),
+    ...artifacts,
+    challenge,
+  ])
 }
