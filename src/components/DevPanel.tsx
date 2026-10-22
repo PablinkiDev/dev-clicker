@@ -139,6 +139,12 @@ function DevPanel(props: DevPanelProps) {
             steps={[1e8, 1e10]}
             onSet={(moneyEarned) => onPatch({ stats: { ...state.stats, moneyEarned } })}
           />
+          <NumberRow
+            label="📄 Contratos entregados (para ascender)"
+            value={state.stats.contractsDone}
+            steps={[10, 100]}
+            onSet={(contractsDone) => onPatch({ stats: { ...state.stats, contractsDone } })}
+          />
 
           <div>
             <p className="mb-1 text-[11px] text-muted">Velocidad del reloj (contratos y equipo)</p>
@@ -160,6 +166,15 @@ function DevPanel(props: DevPanelProps) {
 
           <div className="grid grid-cols-2 gap-1">
             <Btn onClick={props.onMaxTrees}>🧠 Árboles al máximo</Btn>
+            <Btn
+              onClick={() => {
+                // Justo lo que pide la próxima etapa (si ya alcanza, no cambia nada)
+                const needed = STAGES[state.stage + 1]?.requires?.contractsDone ?? 0
+                onPatch({ stats: { ...state.stats, contractsDone: Math.max(state.stats.contractsDone, needed) } })
+              }}
+            >
+              📄 Contratos para ascender
+            </Btn>
             <Btn onClick={() => state.contract && onPatch({ code: state.contract.code })}>✅ Completar contrato</Btn>
             <Btn onClick={() => onPatch({ focus: { endsAt: 0, readyAt: 0 } })}>🎯 Recargar Foco</Btn>
             <Btn onClick={() => onPatch({ office: Math.min(OFFICES.length - 1, state.office + 1) })}>
