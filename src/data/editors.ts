@@ -19,6 +19,8 @@ export type Editor = {
   id: EditorId
   name: string
   price: number
+  /** Etapa mínima para instalarlo (índice en STAGES); si falta, desde el principio */
+  minStage?: number
   /** Líneas extra por clic que suma este editor */
   clickBonus: number
   /** Probabilidad extra de crítico (0.05 = +5 %) */
@@ -79,7 +81,8 @@ export const EDITORS: Editor[] = [
   {
     id: 'vscode',
     name: 'Visual Estudio Code',
-    price: 60000,
+    price: 600_000,
+    minStage: 1,
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 3,
@@ -90,7 +93,8 @@ export const EDITORS: Editor[] = [
   {
     id: 'cladex',
     name: 'Cladex Code',
-    price: 200000,
+    price: 5_000_000,
+    minStage: 2,
     clickBonus: 1,
     critBonus: 0.05,
     critMultiplier: 3,

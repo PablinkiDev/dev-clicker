@@ -23,6 +23,8 @@ export type Stage = {
   contractScale: number
   /** Ajuste extra de la paga (balance): en Freelancer se cobra menos, para que el primer empleado cueste */
   payScale?: number
+  /** Multiplicador de los precios de empleados y "Buscar otros" (E1): crecen con lo que ganás */
+  priceScale: number
 }
 
 // Números experimentales: etapa 2 sale del GDD y las demás escalan ×4–5. Se ajustan con la simulación.
@@ -35,6 +37,7 @@ export const STAGES: Stage[] = [
     requires: null,
     contractScale: 1,
     payScale: 0.4,
+    priceScale: 1,
   },
   {
     name: 'Estudio',
@@ -43,6 +46,7 @@ export const STAGES: Stage[] = [
     unlocks: 'Contratos más complejos y empleados de mejor calidad',
     requires: { moneyEarned: 400_000, office: 1, team: 3, contractsDone: 30 },
     contractScale: 2.5,
+    priceScale: 3,
   },
   {
     name: 'Startup',
@@ -51,6 +55,7 @@ export const STAGES: Stage[] = [
     unlocks: 'Contratos fullstack y tecnologías avanzadas',
     requires: { moneyEarned: 8_000_000, office: 1, team: 6, contractsDone: 70 },
     contractScale: 6,
+    priceScale: 15,
   },
   {
     name: 'Empresa tecnológica',
@@ -59,6 +64,7 @@ export const STAGES: Stage[] = [
     unlocks: 'Contratos empresariales y mejoras avanzadas',
     requires: { moneyEarned: 100_000_000, office: 2, team: 10, contractsDone: 120 },
     contractScale: 14,
+    priceScale: 80,
   },
   {
     name: 'Corporación',
@@ -67,5 +73,6 @@ export const STAGES: Stage[] = [
     unlocks: 'Modo infinito y la venta de la empresa',
     requires: { moneyEarned: 500_000_000, office: 2, team: 12, contractsDone: 180 },
     contractScale: 32,
+    priceScale: 400,
   },
 ]

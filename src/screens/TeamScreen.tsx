@@ -4,7 +4,7 @@ import EmployeeCard from '../components/EmployeeCard'
 import { OFFICES } from '../data/offices'
 import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
-import { REROLL_PRICE, employeePrice, maxStars, qaMultiplier, type Employee } from '../game/team'
+import { employeePrice, maxStars, qaMultiplier, type Employee } from '../game/team'
 
 type TeamScreenProps = {
   team: Employee[]
@@ -21,6 +21,8 @@ type TeamScreenProps = {
   /** replaceUid: a quién se reemplaza si la oficina está llena */
   onHire: (candidate: Employee, replaceUid?: string) => void
   onReroll: () => void
+  /** Precio de la próxima búsqueda de candidatos */
+  rerollPrice: number
   onMove: () => void
 }
 
@@ -34,6 +36,7 @@ function TeamScreen({
   isWorking,
   onHire,
   onReroll,
+  rerollPrice,
   onMove,
 }: TeamScreenProps) {
   const current = OFFICES[office]
@@ -47,7 +50,7 @@ function TeamScreen({
   // Si ese candidato ya no está en la lista (o hay lugar libre), no se está reemplazando a nadie.
   const [replacingUid, setReplacingUid] = useState<string | null>(null)
   const replacing = isFull ? (candidates.find((c) => c.uid === replacingUid) ?? null) : null
-  const replacingPrice = replacing ? employeePrice(replacing.role, replacing.stars) : 0
+  const replacingPrice = replacing ? employeePrice(replacing.role, replacing.stars, stage) : 0
 
   function handleHire(candidate: Employee) {
     if (!isFull) onHire(candidate)
@@ -169,10 +172,10 @@ function TeamScreen({
         <button
           type="button"
           onClick={onReroll}
-          disabled={money < REROLL_PRICE}
+          disabled={money < rerollPrice}
           className="cursor-pointer rounded-md border border-line-2 bg-panel-2 px-2.5 py-1 font-mono text-[11px] font-bold transition-colors hover:bg-panel-3 disabled:cursor-default disabled:text-faint"
         >
-          🔄 Buscar otros · {formatMoney(REROLL_PRICE)}
+          🔄 Buscar otros · {formatMoney(rerollPrice)}
         </button>
         <span className="ml-auto font-mono text-[11px] text-muted">
           hasta <b className="text-yellow">{'★'.repeat(maxStars(stage))}</b> como {STAGES[stage].name}
@@ -180,7 +183,7 @@ function TeamScreen({
       </div>
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(230px,1fr))]">
         {candidates.map((c) => {
-          const price = employeePrice(c.role, c.stars)
+          const price = employeePrice(c.role, c.stars, stage)
           const isSelected = replacing?.uid === c.uid
           let label = `Contratar · ${formatMoney(price)}`
           if (isSelected) label = '✕ Cancelar reemplazo'

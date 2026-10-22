@@ -45,7 +45,7 @@ let clock = 0 // segundos simulados desde el inicio
 let cycleStart = 0
 let clickDebt = 0
 let endlessSince: number | null = null
-let allBought = false
+let treeDoneAt = -1
 let nextBug = nextBugDelay() / 1000
 let nextMinigame = 300 + nextMinigameDelay() / 1000
 const events: string[] = []
@@ -84,7 +84,7 @@ function shop() {
     })
     dispatch({ type: 'ascend', offers, candidates: rerollCandidates(state.team, state.stage + 1) })
     log(
-      `▲ Etapa ${state.stage + 1}: ${STAGES[state.stage].name} · ganado ${formatMoney(state.stats.moneyEarned)} · ${state.stats.contractsDone} contratos`,
+      `▲ Etapa ${state.stage + 1}: ${STAGES[state.stage].name} · ganado ${formatMoney(state.stats.moneyEarned)} · xp ${Math.round(state.stats.xpEarned)} · ${state.stats.contractsDone} contratos`,
     )
   }
 
@@ -93,22 +93,25 @@ function shop() {
     const options = [
       ...TECHS.filter((t) => state.tech[t.id] < t.maxLevel && !missingRequirements(t, state.tech, state.stage)).map(
         (t) => ({
-          cost: skillCost(t.baseCost, state.tech[t.id]),
+          cost: skillCost(t.baseCost, state.tech[t.id], t.minStage),
           action: { type: 'learnTech', tech: t.id } as GameAction,
         }),
       ),
       ...SKILLS.filter(
         (sk) => state.skills[sk.id] < sk.maxLevel && !missingSkillRequirements(sk, state.skills, state.stage),
       ).map((sk) => ({
-        cost: skillCost(sk.baseCost, state.skills[sk.id]),
+        cost: skillCost(sk.baseCost, state.skills[sk.id], sk.minStage),
         action: { type: 'buySkill', skill: sk.id } as GameAction,
       })),
     ].sort((a, b) => a.cost - b.cost)
+    // ¿Ya está todo lo que permite esta etapa? (para ver si la XP alcanza justo o sobra)
+    const unlocked = (minStage = 0) => minStage <= state.stage
     const maxed =
-      TECHS.every((t) => state.tech[t.id] >= t.maxLevel) && SKILLS.every((sk) => state.skills[sk.id] >= sk.maxLevel)
-    if (maxed && !allBought) {
-      allBought = true
-      log('🎓 Todas las mejoras de XP compradas')
+      TECHS.every((t) => !unlocked(t.minStage) || state.tech[t.id] >= t.maxLevel) &&
+      SKILLS.every((sk) => !unlocked(sk.minStage) || state.skills[sk.id] >= sk.maxLevel)
+    if (maxed && treeDoneAt !== state.stage) {
+      treeDoneAt = state.stage
+      log(`🎓 Árbol completo para ${STAGES[state.stage].name}`)
     }
     if (!options.length || options[0].cost > state.xp) break
     dispatch(options[0].action)
@@ -127,7 +130,7 @@ function shop() {
     log(`📦 Mudanza a ${OFFICES[state.office].name}`)
   }
   const editor = nextEditor(state.editor)
-  if (editor && state.money >= editor.price * 1.5) {
+  if (editor && state.money >= editor.price * 1.5 && state.stage >= (editor.minStage ?? 0)) {
     dispatch({ type: 'buyEditor' })
     log(`🛠  Editor: ${editor.name}`)
   }
@@ -137,7 +140,7 @@ function shop() {
     (a, b) => Number(!hasDev && b.role === 'dev') - Number(!hasDev && a.role === 'dev') || b.stars - a.stars,
   )[0]
   if (best) {
-    const price = employeePrice(best.role, best.stars)
+    const price = employeePrice(best.role, best.stars, state.stage)
     const candidates = replaceCandidate(state.candidates, best, state.team, state.stage)
     if (state.team.length < OFFICES[state.office].capacity) {
       if (state.money >= price) {
@@ -176,7 +179,7 @@ function sellIfReady(): boolean {
     dispatch({ type: 'invest', investment: options[0].id })
   }
   endlessSince = null
-  allBought = false
+  treeDoneAt = -1
   return true
 }
 

@@ -18,8 +18,8 @@ import type { Effect } from '../data/events'
 import { FOCUS_COOLDOWN, INITIAL_FOCUS, focusDuration, focusMultiplier, isFocused, type Focus } from './focus'
 import { createInitialOffers, type Cooldowns } from './offers'
 import {
-  REROLL_PRICE,
   createInitialCandidates,
+  rerollPrice,
   employeeEffect,
   employeePrice,
   qaMultiplier,
@@ -120,6 +120,8 @@ export type GameState = {
   records: Records
   /** Clics hechos en el contrato en curso */
   contractClicks: number
+  /** Búsquedas de candidatos seguidas sin contratar (cada una sale más cara) */
+  rerolls: number
   /** Terminal: lo que fue pasando. No se guarda en localStorage */
   log: LogEntry[]
 }
@@ -210,6 +212,7 @@ export function createInitialState(): GameState {
     prestige: INITIAL_PRESTIGE,
     records: INITIAL_RECORDS,
     contractClicks: 0,
+    rerolls: 0,
     log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
   }
 }
@@ -444,7 +447,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       const tech = TECHS.find((t) => t.id === action.tech)
       if (!tech) return state
       const level = state.tech[tech.id]
-      const cost = skillCost(tech.baseCost, level)
+      const cost = skillCost(tech.baseCost, level, tech.minStage)
       if (level >= tech.maxLevel || state.xp < cost || missingRequirements(tech, state.tech, state.stage)) return state
       return {
         ...state,
@@ -464,7 +467,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       const skill = SKILLS.find((s) => s.id === action.skill)
       if (!skill) return state
       const level = state.skills[skill.id]
-      const cost = skillCost(skill.baseCost, level)
+      const cost = skillCost(skill.baseCost, level, skill.minStage)
       if (level >= skill.maxLevel || state.xp < cost || missingSkillRequirements(skill, state.skills, state.stage))
         return state
       return {
@@ -660,7 +663,7 @@ function reduce(state: GameState, action: GameAction): GameState {
 
     case 'buyEditor': {
       const next = nextEditor(state.editor)
-      if (!next || state.money < next.price) return state
+      if (!next || state.money < next.price || state.stage < (next.minStage ?? 0)) return state
       return {
         ...state,
         money: state.money - next.price,
@@ -700,7 +703,7 @@ function reduce(state: GameState, action: GameAction): GameState {
     case 'hire': {
       const candidate = state.candidates.find((c) => c.uid === action.uid)
       if (!candidate) return state
-      const price = employeePrice(candidate.role, candidate.stars)
+      const price = employeePrice(candidate.role, candidate.stars, state.stage)
       if (state.money < price) return state
 
       let team = state.team
@@ -724,6 +727,7 @@ function reduce(state: GameState, action: GameAction): GameState {
         money: state.money - price,
         team: [...team, candidate],
         candidates: action.candidates,
+        rerolls: 0,
         records: { ...state.records, replacements: state.records.replacements + replaced },
         log: addLog(
           log,
@@ -734,10 +738,12 @@ function reduce(state: GameState, action: GameAction): GameState {
     }
 
     case 'rerollCandidates': {
-      if (state.money < REROLL_PRICE) return state
+      const price = rerollPrice(state.stage, state.rerolls)
+      if (state.money < price) return state
       return {
         ...state,
-        money: state.money - REROLL_PRICE,
+        money: state.money - price,
+        rerolls: state.rerolls + 1,
         candidates: action.candidates,
         log: addLog(state.log, 'info', 'Publicaste otra búsqueda en LinkedIn · llegaron candidatos nuevos'),
       }

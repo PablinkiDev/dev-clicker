@@ -41,7 +41,7 @@ import { focusMultiplier, isFocused } from './game/focus'
 import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
-import { replaceCandidate, rerollCandidates, type Employee } from './game/team'
+import { replaceCandidate, rerollCandidates, rerollPrice, type Employee } from './game/team'
 import type { Contract } from './game/types'
 import OffersScreen from './screens/OffersScreen'
 import SkillsScreen from './screens/SkillsScreen'
@@ -154,13 +154,13 @@ function App() {
     (s) =>
       skills[s.id] < s.maxLevel &&
       !missingSkillRequirements(s, skills, state.stage) &&
-      xp >= skillCost(s.baseCost, skills[s.id]),
+      xp >= skillCost(s.baseCost, skills[s.id], s.minStage),
   ).length
   const techsAvailable = TECHS.filter(
     (t) =>
       state.tech[t.id] < t.maxLevel &&
       !missingRequirements(t, state.tech, state.stage) &&
-      xp >= skillCost(t.baseCost, state.tech[t.id]),
+      xp >= skillCost(t.baseCost, state.tech[t.id], t.minStage),
   ).length
   const errors = log.filter((entry) => entry.kind === 'error').length
   const isUrgent = isRunning && timeLeft / (contract?.time ?? 1) < 0.3
@@ -606,6 +606,7 @@ function App() {
               isWorking={isRunning}
               onHire={hire}
               onReroll={() => dispatch({ type: 'rerollCandidates', candidates: rerollCandidates(team, state.stage) })}
+              rerollPrice={rerollPrice(state.stage, state.rerolls)}
               onMove={() => dispatch({ type: 'moveOffice' })}
             />
           )}
@@ -651,7 +652,14 @@ function App() {
               onLearn={(tech) => dispatch({ type: 'learnTech', tech })}
               prestige={state.prestige}
               onInvest={(investment) => dispatch({ type: 'invest', investment })}
-              tools={<EditorShop editor={editor.id} money={money} onBuy={() => dispatch({ type: 'buyEditor' })} />}
+              tools={
+                <EditorShop
+                  editor={editor.id}
+                  money={money}
+                  stage={state.stage}
+                  onBuy={() => dispatch({ type: 'buyEditor' })}
+                />
+              }
             />
           )}
 

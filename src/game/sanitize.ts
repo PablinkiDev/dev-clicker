@@ -50,6 +50,7 @@ export function sanitize(state: GameState): GameState {
       badEvents: Math.round(clamp(state.stats.badEvents, 0)),
     },
     contractClicks: Math.round(clamp(state.contractClicks, 0)),
+    rerolls: Math.round(clamp(state.rerolls, 0, 50)),
     records: {
       ...state.records,
       ...Object.fromEntries(

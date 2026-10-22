@@ -35,6 +35,7 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   prestige: INITIAL_PRESTIGE,
   records: INITIAL_RECORDS,
   contractClicks: 0,
+  rerolls: 0,
 }
 
 /** Subir este número cuando cambie la forma de GameState, y migrar los guardados viejos */

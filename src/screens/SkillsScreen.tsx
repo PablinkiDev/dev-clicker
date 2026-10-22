@@ -84,7 +84,7 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
   // --- Tecnologías ---
   const techNodes: TreeNode[] = TECHS.map((t) => {
     const level = tech[t.id]
-    const cost = skillCost(t.baseCost, level)
+    const cost = skillCost(t.baseCost, level, t.minStage)
     const missing = missingRequirements(t, tech, stage)
     return {
       id: t.id,
@@ -108,7 +108,7 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
   const skillNodes = (group: Skill['group']): TreeNode[] =>
     SKILLS.filter((sk) => sk.group === group).map((sk) => {
       const level = skills[sk.id]
-      const cost = skillCost(sk.baseCost, level)
+      const cost = skillCost(sk.baseCost, level, sk.minStage)
       const missing = missingSkillRequirements(sk, skills, stage)
       return {
         id: sk.id,

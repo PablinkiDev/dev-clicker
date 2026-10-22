@@ -32,6 +32,9 @@ export type Cooldowns = Record<string, number>
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'mid', 'hard']
 
+/** Cuánto crece la XP cuando un contrato se agranda por tu producción (el dinero crece 1:1) */
+const XP_FIT = 0.4
+
 /** Qué parte del plazo debería ocupar cada dificultad, con tu producción actual (D11) */
 const TARGET_SHARE: Record<Difficulty, number> = { easy: 0.3, mid: 0.45, hard: 0.6 }
 
@@ -65,7 +68,8 @@ function createOffer(
     time,
     reward: {
       money: Math.round((template.reward.money * factor * scale * tier * (STAGES[stage].payScale ?? 1)) / 5) * 5,
-      xp: Math.round(template.reward.xp * factor * tier * Math.pow(scale, 0.75)),
+      // La XP crece con la etapa, pero poco con el agrandado por producción (E2): si no, sobra
+      xp: Math.round(template.reward.xp * factor * tier * Math.pow(base, 0.75) * Math.pow(fit, XP_FIT)),
       rep: template.reward.rep,
     },
   }

@@ -11,9 +11,15 @@ export function linesPerClick(fastTypingLevel: number, editorBonus: number): num
  * ceil(costo_base × 1,5^(nivel−1)), donde "nivel" es el que se va a comprar.
  * Como acá recibimos el nivel actual, el que se compra es currentLevel + 1.
  */
-export function skillCost(baseCost: number, currentLevel: number): number {
-  return Math.ceil(baseCost * Math.pow(1.5, currentLevel))
+export function skillCost(baseCost: number, currentLevel: number, minStage = 0): number {
+  return Math.ceil(baseCost * XP_STAGE_COST[minStage] * Math.pow(1.5, currentLevel))
 }
+
+/**
+ * Recargo de las mejoras según la etapa en que se desbloquean (E2): así el árbol de cada etapa
+ * se termina cerca del ascenso, en vez de comprarse entero apenas llegás
+ */
+export const XP_STAGE_COST: number[] = [1, 1.8, 1.8, 2, 4]
 
 /** Probabilidad base de crítico */
 const BASE_CRIT_CHANCE: number = 0.05

@@ -70,6 +70,19 @@ La 1.0 se atrasa a propósito: primero que enganche.
 | D12 ✅ | **Más mejoras personales:** 8 nodos por etapa (Atajos, Gestión del tiempo, Ojo de halcón, Negociador, Crítico devastador, Memoria muscular, Flow state, Suerte de programador) | M | 1–2 |
 | D11 ✅ | **Rebalanceo:** equipo con experiencia por etapa, ofertas dimensionadas a tu producción, requisitos y tokens nuevos | M | 1–2 |
 
+## Hito E — Profundidad (después de la primera partida de prueba)
+
+Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejoras se compraban apenas se desbloqueaban y el segundo ciclo (56 min) no se sintió más fuerte. **Nueva meta: primer prestigio en 1–1,5 h.**
+
+| # | Historia | Prioridad | Tamaño |
+|---|----------|-----------|--------|
+| E1 ✅ | **Precios que escalan:** empleados y "Buscar otros" ×etapa (1/3/15/80/400), la búsqueda se encarece ×1,5 cada vez hasta contratar, VS Code desde Estudio ($600 K) y Cladex desde Startup ($5 M), oficina corporativa $5 M | M | 1 |
+| E2 ✅ | **Economía de XP:** la XP crece solo ^0,4 con el agrandado por producción y las mejoras cuestan ×1 / ×1,8 / ×1,8 / ×2 / ×4 según su etapa. Cada árbol se completa hacia el final de su etapa (75–100 %) | M | 1 |
+| E3 | **Árbol Empresa:** ~6 nodos nuevos (Code review obligatorio, Kubernetes, Headhunter, Home office, Marketing, Inversores) | M | 2 |
+| E4 | **🤖 Macro de teclado:** clics automáticos (1–2 por segundo) con interruptor, desde Startup. No cuentan para los logros de clics | S | 1 |
+| E5 | **Prestigio que se siente:** +10 % de producción por token ganado en toda la carrera, rama de ventajas de arranque (Portfolio, Licencia vitalicia, Socio fundador, Procesos heredados), mejoras de +50 % con 10 niveles, comparación de tiempos en el historial | M | 2–3 |
+| E6 | **Rebalanceo** a 1–1,5 h, con un segundo ciclo claramente más rápido | M | 1 |
+
 ## Hito C — Listo para amigos (1.0)
 
 | # | Historia | Prioridad | Tamaño |

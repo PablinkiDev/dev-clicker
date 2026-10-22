@@ -17,9 +17,9 @@ export function nextPurchase(state: GameState): Purchase | null {
   const office = OFFICES[state.office + 1]
   if (office && state.stage >= office.minStage) options.push({ name: office.name, price: office.price })
   const editor = nextEditor(state.editor)
-  if (editor) options.push({ name: editor.name, price: editor.price })
+  if (editor && state.stage >= (editor.minStage ?? 0)) options.push({ name: editor.name, price: editor.price })
   if (state.team.length < OFFICES[state.office].capacity && state.candidates.length) {
-    const cheapest = Math.min(...state.candidates.map((c) => employeePrice(c.role, c.stars)))
+    const cheapest = Math.min(...state.candidates.map((c) => employeePrice(c.role, c.stars, state.stage)))
     options.push({ name: 'un empleado', price: cheapest })
   }
   return options.sort((a, b) => a.price - b.price)[0] ?? null

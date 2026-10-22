@@ -33,7 +33,7 @@ export const OFFICES: Office[] = [
     name: 'Oficina corporativa',
     icon: '🏙️',
     capacity: 12,
-    price: 600000,
+    price: 5_000_000,
     minStage: 2,
     description: 'Mesa de ping-pong que nadie usa.',
   },

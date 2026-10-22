@@ -1,5 +1,6 @@
 // Equipo: empleados con estrellas, sus fórmulas y la generación de candidatos.
 import { NAMES, ROLES, type RoleId } from '../data/roles'
+import { STAGES } from '../data/stages'
 
 export type Employee = {
   uid: string
@@ -10,9 +11,12 @@ export type Employee = {
   quirk: string
 }
 
-/** Precio: crece más rápido que las estrellas (una de 3★ cuesta ~6 veces una de 1★) */
-export function employeePrice(role: RoleId, stars: number): number {
-  return Math.round((ROLES[role].basePrice * Math.pow(stars, 1.6)) / 100) * 100
+/**
+ * Precio: crece más rápido que las estrellas (una de 3★ cuesta ~6 veces una de 1★) y con la etapa:
+ * en una empresa grande, los sueldos también lo son. Sin etapa, el precio base (para el valor de la empresa)
+ */
+export function employeePrice(role: RoleId, stars: number, stage = 0): number {
+  return Math.round((ROLES[role].basePrice * Math.pow(stars, 1.6) * STAGES[stage].priceScale) / 100) * 100
 }
 
 /** Líneas por segundo de un Desarrollador: 1★ → 2, 2★ → 5,3, 3★ → 9,3 */
@@ -106,8 +110,16 @@ export function createInitialCandidates(team: Employee[] = []): Employee[] {
   return result
 }
 
-/** Precio de "Buscar otros": una lista nueva de candidatos */
+/** Precio base de "Buscar otros": una lista nueva de candidatos */
 export const REROLL_PRICE: number = 100
+
+/** Cuánto se encarece cada búsqueda seguida (vuelve al precio base al contratar a alguien) */
+export const REROLL_GROWTH: number = 1.5
+
+/** Precio de la próxima búsqueda: crece con la etapa y con cada búsqueda sin contratar */
+export function rerollPrice(stage: number, rerolls: number): number {
+  return Math.round((REROLL_PRICE * STAGES[stage].priceScale * Math.pow(REROLL_GROWTH, rerolls)) / 10) * 10
+}
 
 /** Lista nueva de candidatos, todos al azar (el dev 1★ asegurado es solo para el arranque) */
 export function rerollCandidates(team: Employee[], stage: number): Employee[] {
