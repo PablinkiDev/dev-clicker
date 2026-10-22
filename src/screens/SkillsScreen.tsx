@@ -57,10 +57,16 @@ const SKILL_LAYOUT: Record<SkillId, { col: number; row: number }> = {
   negotiator: { col: 2, row: 3 },
   flowState: { col: 3, row: 2 },
   lucky: { col: 3, row: 3 },
-  teamwork: { col: 0, row: 0 },
-  knowledge: { col: 0, row: 1 },
+  teamwork: { col: 0, row: 0.5 },
+  knowledge: { col: 0, row: 2 },
+  marketing: { col: 0, row: 3 },
   autoDeliver: { col: 1, row: 0 },
+  kubernetes: { col: 1, row: 1 },
+  codeReview: { col: 1, row: 2 },
+  headhunter: { col: 1, row: 3 },
   autoAccept: { col: 2, row: 0 },
+  homeOffice: { col: 2, row: 1 },
+  investors: { col: 2, row: 3 },
 }
 
 /** Prestigio: una fila por rama (Productividad, Rentabilidad, Innovación) */
@@ -218,7 +224,7 @@ function SkillsScreen({ skills, tech, stage, xp, onBuy, onLearn, tools, prestige
 
       {tab === 'company' && (
         <SkillTree
-          columns={['equipo/', 'automatización/', '']}
+          columns={['equipo/', 'operaciones/', 'escala/']}
           nodes={companyNodes}
           edges={skillEdges('company')}
           onBuy={(id) => onBuy(id as SkillId)}

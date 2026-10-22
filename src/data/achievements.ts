@@ -2,7 +2,7 @@
 // Cada logro mira el estado de antes y de después de una acción: si se cumple, se desbloquea.
 import type { GameAction, GameState } from '../game/reducer'
 import { companyValue } from '../game/stages'
-import { OFFICES } from './offices'
+import { OFFICES, officeCapacity } from './offices'
 
 export type AchievementCategory = 'code' | 'contracts' | 'team' | 'company' | 'tools' | 'luck' | 'games' | 'secret'
 
@@ -43,7 +43,8 @@ function counter(
 
 /** ¿Esta acción entregó un contrato? */
 const delivered = ({ prev, next }: AchievementCheck) => next.records.contracts > prev.records.contracts
-const corporateFull = (s: GameState) => s.office === OFFICES.length - 1 && s.team.length >= OFFICES[s.office].capacity
+const corporateFull = (s: GameState) =>
+  s.office === OFFICES.length - 1 && s.team.length >= officeCapacity(s.office, s.skills.homeOffice)
 
 export const ACHIEVEMENTS: Achievement[] = [
   // ⌨️ Programar

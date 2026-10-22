@@ -1,4 +1,3 @@
-import { OFFICES } from '../../data/offices'
 import { ROLES } from '../../data/roles'
 import { employeePrice, type Employee } from '../../game/team'
 import { LANG_ICON, ROLE_STYLE } from '../../ui'
@@ -11,7 +10,8 @@ type SidebarProps = {
   contract: Contract | null
   offers: Contract[]
   team: Employee[]
-  office: number
+  /** Puestos de la oficina (con Home office) */
+  capacity: number
   money: number
   onNavigate: (view: View) => void
 }
@@ -42,7 +42,7 @@ function Folder({ children, extra }: { children: string; extra?: string }) {
 const FILE_ROW = 'flex h-6.5 w-full cursor-pointer items-center gap-1.5 rounded-md pr-2 pl-5.5 text-left text-[13px]'
 
 /** Explorador de archivos: el estado del juego visto como un proyecto */
-function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarProps) {
+function Sidebar({ contract, offers, team, capacity, money, onNavigate }: SidebarProps) {
   const firstHire = employeePrice('dev', 1)
   const goal = Math.min(100, (money / firstHire) * 100)
 
@@ -79,7 +79,7 @@ function Sidebar({ contract, offers, team, office, money, onNavigate }: SidebarP
           </button>
         ))}
 
-        <Folder extra={`${1 + team.length}/${1 + OFFICES[office].capacity}`}>equipo</Folder>
+        <Folder extra={`${1 + team.length}/${1 + capacity}`}>equipo</Folder>
         <button
           type="button"
           onClick={() => onNavigate('team')}

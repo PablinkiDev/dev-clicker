@@ -31,6 +31,7 @@ import { nextEventDelay, pickEvent, rollOutcome, type GameEvent } from './data/e
 import EditorShop from './components/EditorShop'
 import { AgentBar, MenuBar, NanoBar } from './components/layout/EditorNav'
 import { getEditor } from './data/editors'
+import { officeCapacity } from './data/offices'
 import { SKILLS, missingSkillRequirements } from './data/skills'
 import { TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
@@ -302,7 +303,7 @@ function App() {
       stage: state.stage + 1,
     })
     // Y llegan candidatos nuevos, con las estrellas que permite la etapa nueva
-    dispatch({ type: 'ascend', offers, candidates: rerollCandidates(team, state.stage + 1) })
+    dispatch({ type: 'ascend', offers, candidates: rerollCandidates(team, state.stage + 1, skills.headhunter) })
   }
 
   function sell() {
@@ -344,7 +345,7 @@ function App() {
     const t = Date.now()
     setNow(t)
     const candidates = effects.some((x) => x.kind === 'candidates')
-      ? rerollCandidates(team, Math.min(4, state.stage + 1)) // mejores que lo normal
+      ? rerollCandidates(team, Math.min(4, state.stage + 1), skills.headhunter) // mejores que lo normal
       : undefined
     dispatch({ type: 'applyEvent', text, icon: e.icon, effects, now: t, candidates, tone: e.tone, bet })
   }
@@ -513,7 +514,7 @@ function App() {
               contract={contract}
               offers={offers}
               team={team}
-              office={state.office}
+              capacity={officeCapacity(state.office, skills.homeOffice)}
               money={money}
               onNavigate={setView}
             />
@@ -605,8 +606,15 @@ function App() {
               autoRate={auto}
               isWorking={isRunning}
               onHire={hire}
-              onReroll={() => dispatch({ type: 'rerollCandidates', candidates: rerollCandidates(team, state.stage) })}
+              onReroll={() =>
+                dispatch({
+                  type: 'rerollCandidates',
+                  candidates: rerollCandidates(team, state.stage, skills.headhunter),
+                })
+              }
               rerollPrice={rerollPrice(state.stage, state.rerolls)}
+              homeOffice={skills.homeOffice}
+              codeReview={skills.codeReview}
               onMove={() => dispatch({ type: 'moveOffice' })}
             />
           )}

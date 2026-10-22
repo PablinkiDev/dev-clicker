@@ -18,6 +18,12 @@ export type SkillId =
   | 'knowledge'
   | 'autoDeliver'
   | 'autoAccept'
+  | 'marketing'
+  | 'codeReview'
+  | 'kubernetes'
+  | 'headhunter'
+  | 'homeOffice'
+  | 'investors'
 
 export type Skill = {
   id: SkillId
@@ -207,6 +213,72 @@ export const SKILLS: Skill[] = [
     requires: [['autoDeliver', 1]],
     minStage: 2,
   },
+  // --- Árbol Empresa ampliado (E3) ---
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    icon: '📣',
+    effect: '+1 ★ de reputación por contrato entregado, por nivel',
+    baseCost: 400,
+    maxLevel: 3,
+    group: 'company',
+    minStage: 1,
+  },
+  {
+    id: 'codeReview',
+    name: 'Code review obligatorio',
+    icon: '🔍',
+    effect: 'Tus QA dan +25 % más de XP por nivel ("LGTM" ya no alcanza)',
+    baseCost: 600,
+    maxLevel: 4,
+    group: 'company',
+    requires: [['knowledge', 2]],
+    minStage: 1,
+  },
+  {
+    id: 'kubernetes',
+    name: 'Kubernetes',
+    icon: '☸️',
+    effect: 'Tus DevOps rinden +20 % más por nivel (nadie entiende el YAML, pero anda)',
+    baseCost: 3000,
+    maxLevel: 5,
+    group: 'company',
+    requires: [['teamwork', 3]],
+    minStage: 2,
+  },
+  {
+    id: 'headhunter',
+    name: 'Headhunter',
+    icon: '🎯',
+    effect: 'En cada búsqueda, un candidato más por nivel viene con +1 ★',
+    baseCost: 4000,
+    maxLevel: 3,
+    group: 'company',
+    requires: [['marketing', 1]],
+    minStage: 2,
+  },
+  {
+    id: 'homeOffice',
+    name: 'Home office',
+    icon: '🏡',
+    effect: '+2 puestos en tu oficina por nivel (la mitad trabaja desde la cama)',
+    baseCost: 20000,
+    maxLevel: 2,
+    group: 'company',
+    requires: [['kubernetes', 1]],
+    minStage: 3,
+  },
+  {
+    id: 'investors',
+    name: 'Inversores',
+    icon: '💰',
+    effect: 'El dinero que tenés rinde 0,5 % por minuto por nivel (no cuenta como ganado)',
+    baseCost: 25000,
+    maxLevel: 4,
+    group: 'company',
+    requires: [['headhunter', 1]],
+    minStage: 3,
+  },
 ]
 
 export type SkillLevels = Record<SkillId, number>
@@ -220,6 +292,12 @@ export const INITIAL_SKILLS: SkillLevels = {
   knowledge: 0,
   autoDeliver: 0,
   autoAccept: 0,
+  marketing: 0,
+  codeReview: 0,
+  kubernetes: 0,
+  headhunter: 0,
+  homeOffice: 0,
+  investors: 0,
   shortcuts: 0,
   timeManagement: 0,
   hawkEye: 0,

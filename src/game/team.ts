@@ -43,14 +43,16 @@ export function employeeEffect(role: RoleId, stars: number): string {
 }
 
 /** Producción automática total: (desarrolladores + editor) × bonus de DevOps */
-export function autoRate(team: Employee[], editorBonus: number): number {
+/** kubernetes: nivel de la mejora (+20 % al bonus de cada DevOps por nivel) */
+export function autoRate(team: Employee[], editorBonus: number, kubernetes = 0): number {
   const base = sumRole(team, 'dev', devRate) + editorBonus
-  return base * (1 + sumRole(team, 'ops', (s) => OPS_AUTO_PER_STAR * s))
+  return base * (1 + sumRole(team, 'ops', (s) => OPS_AUTO_PER_STAR * s) * (1 + 0.2 * kubernetes))
 }
 
 /** Multiplicador de XP que aporta QA */
-export function qaMultiplier(team: Employee[]): number {
-  return 1 + sumRole(team, 'qa', (s) => QA_XP_PER_STAR * s)
+/** codeReview: nivel de la mejora (+25 % al bonus de cada QA por nivel) */
+export function qaMultiplier(team: Employee[], codeReview = 0): number {
+  return 1 + sumRole(team, 'qa', (s) => QA_XP_PER_STAR * s) * (1 + 0.25 * codeReview)
 }
 
 // --- Candidatos ---------------------------------------------------------------
@@ -122,11 +124,13 @@ export function rerollPrice(stage: number, rerolls: number): number {
 }
 
 /** Lista nueva de candidatos, todos al azar (el dev 1★ asegurado es solo para el arranque) */
-export function rerollCandidates(team: Employee[], stage: number): Employee[] {
+export function rerollCandidates(team: Employee[], stage: number, headhunter = 0): Employee[] {
   const result: Employee[] = []
   for (const role of ['dev', 'qa', 'ops', 'dev'] as const)
     result.push(createCandidate(role, [...team, ...result], stage))
-  return result
+  // Headhunter: los primeros candidatos vienen con una estrella más (sin pasar el máximo de la etapa)
+  const top = maxStars(stage)
+  return result.map((c, i) => (i < headhunter ? { ...c, stars: Math.min(top, c.stars + 1) } : c))
 }
 
 /** Al contratar a alguien, su lugar en la lista lo ocupa un candidato nuevo de la misma profesión */

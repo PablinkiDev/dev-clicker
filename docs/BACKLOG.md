@@ -78,7 +78,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 |---|----------|-----------|--------|
 | E1 ✅ | **Precios que escalan:** empleados y "Buscar otros" ×etapa (1/3/15/80/400), la búsqueda se encarece ×1,5 cada vez hasta contratar, VS Code desde Estudio ($600 K) y Cladex desde Startup ($5 M), oficina corporativa $5 M | M | 1 |
 | E2 ✅ | **Economía de XP:** la XP crece solo ^0,4 con el agrandado por producción y las mejoras cuestan ×1 / ×1,8 / ×1,8 / ×2 / ×4 según su etapa. Cada árbol se completa hacia el final de su etapa (75–100 %) | M | 1 |
-| E3 | **Árbol Empresa:** ~6 nodos nuevos (Code review obligatorio, Kubernetes, Headhunter, Home office, Marketing, Inversores) | M | 2 |
+| E3 ✅ | **Árbol Empresa:** de 4 a 10 nodos: Marketing (+★ por contrato), Code review obligatorio (+QA), Kubernetes (+DevOps), Headhunter (candidatos +1★), Home office (+2 puestos) e Inversores (interés sobre el dinero en mano) | M | 2 |
 | E4 | **🤖 Macro de teclado:** clics automáticos (1–2 por segundo) con interruptor, desde Startup. No cuentan para los logros de clics | S | 1 |
 | E5 | **Prestigio que se siente:** +10 % de producción por token ganado en toda la carrera, rama de ventajas de arranque (Portfolio, Licencia vitalicia, Socio fundador, Procesos heredados), mejoras de +50 % con 10 niveles, comparación de tiempos en el historial | M | 2–3 |
 | E6 | **Rebalanceo** a 1–1,5 h, con un segundo ciclo claramente más rápido | M | 1 |

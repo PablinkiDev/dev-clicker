@@ -12,6 +12,11 @@ export type Office = {
   description: string
 }
 
+/** Puestos de una oficina con Home office (+2 por nivel) */
+export function officeCapacity(office: number, homeOffice = 0): number {
+  return OFFICES[office].capacity + 2 * homeOffice
+}
+
 export const OFFICES: Office[] = [
   {
     name: 'Habitación',

@@ -59,7 +59,7 @@ export function autoRateOf(state: GameState, now?: number): number {
   return (
     seniority *
     modifierMultiplier(state.modifiers, 'auto', now) *
-    autoRate(state.team, getEditor(state.editor).autoBonus) *
+    autoRate(state.team, getEditor(state.editor).autoBonus, state.skills.kubernetes) *
     contractSpecialty(state) *
     (1 + 0.05 * state.skills.teamwork) *
     (1 + 0.1 * state.tech.git) *

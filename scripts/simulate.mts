@@ -6,7 +6,7 @@
 //   npx tsx scripts/simulate.mts --cycles 1
 import { nextEditor } from '../src/data/editors'
 import { INVESTMENTS, investmentCost } from '../src/data/investments'
-import { OFFICES } from '../src/data/offices'
+import { OFFICES, officeCapacity } from '../src/data/offices'
 import { SKILLS, missingSkillRequirements } from '../src/data/skills'
 import { STAGES } from '../src/data/stages'
 import { TECHS, missingRequirements } from '../src/data/techs'
@@ -82,7 +82,11 @@ function shop() {
       ...ctx(),
       stage: state.stage + 1,
     })
-    dispatch({ type: 'ascend', offers, candidates: rerollCandidates(state.team, state.stage + 1) })
+    dispatch({
+      type: 'ascend',
+      offers,
+      candidates: rerollCandidates(state.team, state.stage + 1, state.skills.headhunter),
+    })
     log(
       `▲ Etapa ${state.stage + 1}: ${STAGES[state.stage].name} · ganado ${formatMoney(state.stats.moneyEarned)} · xp ${Math.round(state.stats.xpEarned)} · ${state.stats.contractsDone} contratos`,
     )
@@ -122,7 +126,7 @@ function shop() {
   const nextOffice = OFFICES[state.office + 1]
   if (
     nextOffice &&
-    state.team.length >= office.capacity &&
+    state.team.length >= officeCapacity(state.office, state.skills.homeOffice) &&
     state.money >= nextOffice.price &&
     state.stage >= nextOffice.minStage
   ) {
@@ -142,7 +146,7 @@ function shop() {
   if (best) {
     const price = employeePrice(best.role, best.stars, state.stage)
     const candidates = replaceCandidate(state.candidates, best, state.team, state.stage)
-    if (state.team.length < OFFICES[state.office].capacity) {
+    if (state.team.length < officeCapacity(state.office, state.skills.homeOffice)) {
       if (state.money >= price) {
         dispatch({ type: 'hire', uid: best.uid, candidates })
         if (state.team.length === 1) log(`👤 Primer empleado (${best.role} ${best.stars}★)`)

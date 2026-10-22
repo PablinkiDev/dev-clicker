@@ -1,7 +1,7 @@
 // Qué conviene hacer ahora: lo usa el panel de economía para mostrar "próximo paso" y "objetivo".
 // Funciones puras: reciben el estado y devuelven textos y números, sin tocar React.
 import { nextEditor } from '../data/editors'
-import { OFFICES } from '../data/offices'
+import { OFFICES, officeCapacity } from '../data/offices'
 import { STAGES } from '../data/stages'
 import { formatMoney } from './format'
 import { milestoneValue, BASE_TOKENS, tokensForValue } from './prestige'
@@ -18,7 +18,7 @@ export function nextPurchase(state: GameState): Purchase | null {
   if (office && state.stage >= office.minStage) options.push({ name: office.name, price: office.price })
   const editor = nextEditor(state.editor)
   if (editor && state.stage >= (editor.minStage ?? 0)) options.push({ name: editor.name, price: editor.price })
-  if (state.team.length < OFFICES[state.office].capacity && state.candidates.length) {
+  if (state.team.length < officeCapacity(state.office, state.skills.homeOffice) && state.candidates.length) {
     const cheapest = Math.min(...state.candidates.map((c) => employeePrice(c.role, c.stars, state.stage)))
     options.push({ name: 'un empleado', price: cheapest })
   }

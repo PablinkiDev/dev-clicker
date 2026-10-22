@@ -5,7 +5,7 @@ import { FAILURE_REP_LOSS, addCode, failureMoneyLoss, failureXp, skillCost, xpMu
 import { INITIAL_SKILLS, SKILLS, missingSkillRequirements, type SkillId, type SkillLevels } from '../data/skills'
 import { EDITORS, nextEditor, type EditorId } from '../data/editors'
 import { INITIAL_TECH, LANG_TECH, TECHS, missingRequirements, type TechId, type TechLevels } from '../data/techs'
-import { OFFICES } from '../data/offices'
+import { OFFICES, officeCapacity } from '../data/offices'
 import { formatMoney, formatNumber, formatRate } from './format'
 import { STAGES } from '../data/stages'
 import { canAscend, companyValue, isEndless } from './stages'
@@ -68,6 +68,9 @@ export const INITIAL_STATS: Stats = {
   specialsDone: 0,
   badEvents: 0,
 }
+
+/** Inversores: interés por minuto, por nivel */
+const INTEREST_PER_MINUTE = 0.005
 
 /** Precio del modo oscuro (un chiste del juego; la accesibilidad es gratis) */
 export const DARK_MODE_PRICE = 60
@@ -299,7 +302,7 @@ function deliverContract(state: GameState): GameState {
     reward.xp *
       xpMultiplier(state.skills.logicalThinking) *
       (1 + 0.05 * state.skills.knowledge) *
-      qaMultiplier(state.team) *
+      qaMultiplier(state.team, state.skills.codeReview) *
       investmentBonus(investments.fastLearning),
   )
   // +10 % de dinero por cada nivel de la tecnología del contrato por encima del 1 (GDD §7)
@@ -314,7 +317,7 @@ function deliverContract(state: GameState): GameState {
     ...state,
     money: state.money + money,
     xp: state.xp + xp,
-    rep: state.rep + reward.rep,
+    rep: state.rep + reward.rep + state.skills.marketing,
     code: 0, // el código no se acumula entre contratos (GDD §3)
     contract: null,
     endless: isEndless(state.stage) ? state.endless + 1 : state.endless,
@@ -332,12 +335,12 @@ function deliverContract(state: GameState): GameState {
     },
     notice: {
       kind: 'success',
-      text: `${contract.client} pagó: +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep} ★`,
+      text: `${contract.client} pagó: +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep + state.skills.marketing} ★`,
     },
     log: addLog(
       state.log,
       'success',
-      `git push origin main → deploy exitoso 🚀 +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep} ★`,
+      `git push origin main → deploy exitoso 🚀 +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep + state.skills.marketing} ★`,
     ),
   }
 }
@@ -394,6 +397,12 @@ function reduce(state: GameState, action: GameAction): GameState {
       return deliverContract(state)
 
     case 'tick': {
+      // Inversores: el dinero en mano rinde intereses (no cuenta como ganado con contratos)
+      if (state.skills.investors > 0)
+        state = {
+          ...state,
+          money: state.money * (1 + (INTEREST_PER_MINUTE * state.skills.investors * action.elapsed) / 60),
+        }
       const { contract } = state
       if (!contract || state.code >= contract.code) return state
 
@@ -680,7 +689,11 @@ function reduce(state: GameState, action: GameAction): GameState {
         ...state,
         money: state.money - next.price,
         office: state.office + 1,
-        log: addLog(state.log, 'success', `📦 Mudanza a ${next.name} · ahora entran ${next.capacity} empleados`),
+        log: addLog(
+          state.log,
+          'success',
+          `📦 Mudanza a ${next.name} · ahora entran ${officeCapacity(state.office + 1, state.skills.homeOffice)} empleados`,
+        ),
       }
     }
 
@@ -709,7 +722,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       let team = state.team
       let log = state.log
       let replaced = 0
-      if (team.length >= OFFICES[state.office].capacity) {
+      if (team.length >= officeCapacity(state.office, state.skills.homeOffice)) {
         // Oficina llena: solo se puede contratar reemplazando a alguien (GDD §5)
         const leaving = team.find((e) => e.uid === action.replaceUid)
         if (!leaving) return state

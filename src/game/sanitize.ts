@@ -2,7 +2,7 @@
 // La validación de save.ts revisa los TIPOS; acá se revisan los RANGOS: un número bien escrito
 // pero absurdo (un dev de 50★, JavaScript Nv.99) se recorta al máximo posible en vez de romper el juego.
 import { INVESTMENTS } from '../data/investments'
-import { OFFICES } from '../data/offices'
+import { OFFICES, officeCapacity } from '../data/offices'
 import { SKILLS } from '../data/skills'
 import { STAGES } from '../data/stages'
 import { TECHS } from '../data/techs'
@@ -38,7 +38,9 @@ export function sanitize(state: GameState): GameState {
     skills: clampLevels(state.skills, SKILLS),
     tech: clampLevels(state.tech, TECHS),
     // Si hay más empleados de los que entran en la oficina, se quedan los primeros
-    team: state.team.slice(0, OFFICES[office].capacity).map(clampEmployee),
+    team: state.team
+      .slice(0, officeCapacity(office, Math.min(2, Math.max(0, Math.round(state.skills.homeOffice) || 0))))
+      .map(clampEmployee),
     candidates: state.candidates.map(clampEmployee),
     stats: {
       moneyEarned: clamp(state.stats.moneyEarned, 0),

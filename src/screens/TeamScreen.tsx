@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
 import EmployeeCard from '../components/EmployeeCard'
-import { OFFICES } from '../data/offices'
+import { OFFICES, officeCapacity } from '../data/offices'
 import { STAGES } from '../data/stages'
 import { formatMoney } from '../game/format'
 import { employeePrice, maxStars, qaMultiplier, type Employee } from '../game/team'
@@ -21,6 +21,9 @@ type TeamScreenProps = {
   /** replaceUid: a quién se reemplaza si la oficina está llena */
   onHire: (candidate: Employee, replaceUid?: string) => void
   onReroll: () => void
+  /** Niveles de Home office (+puestos) y Code review obligatorio (+QA) */
+  homeOffice: number
+  codeReview: number
   /** Precio de la próxima búsqueda de candidatos */
   rerollPrice: number
   onMove: () => void
@@ -36,15 +39,18 @@ function TeamScreen({
   isWorking,
   onHire,
   onReroll,
+  homeOffice,
+  codeReview,
   rerollPrice,
   onMove,
 }: TeamScreenProps) {
   const current = OFFICES[office]
   const next = OFFICES[office + 1]
-  const isFull = team.length >= current.capacity
+  const capacity = officeCapacity(office, homeOffice)
+  const isFull = team.length >= capacity
   const nextLocked = next !== undefined && stage < next.minStage
-  const seats = 1 + current.capacity
-  const qaPercent = Math.round((qaMultiplier(team) - 1) * 100)
+  const seats = 1 + capacity
+  const qaPercent = Math.round((qaMultiplier(team, codeReview) - 1) * 100)
 
   // Estado solo de esta pantalla: el candidato elegido mientras se busca a quién reemplazar.
   // Si ese candidato ya no está en la lista (o hay lugar libre), no se está reemplazando a nadie.
@@ -109,7 +115,7 @@ function TeamScreen({
               {next.icon} {next.name}
             </p>
             <p className="text-xs text-muted">
-              {next.capacity} empleados · {next.description} El equipo se muda con vos.
+              {officeCapacity(office + 1, homeOffice)} empleados · {next.description} El equipo se muda con vos.
             </p>
             <button
               type="button"
