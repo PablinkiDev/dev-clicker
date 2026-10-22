@@ -23,6 +23,7 @@ import { nextBugDelay } from '../src/game/bug'
 import { nextMinigameDelay } from '../src/data/minigames'
 import { MACRO_LEVELS, macroCps } from '../src/data/macro'
 import { ABILITIES } from '../src/data/abilities'
+import { createBossOffer } from '../src/game/offers'
 import { drawCards, getCard, type CardStyle } from '../src/data/cards'
 import { critChanceOf, macroRateOf } from '../src/game/rates'
 import { cardEffects } from '../src/game/cards'
@@ -182,6 +183,11 @@ function shop() {
       }
     }
   }
+  // 👹 Jefes: aparecen igual que en App (el bot los toma si le conviene)
+  if (state.stage >= 1 && state.bossCountdown <= 0 && !state.offers.some((o) => o.boss) && !state.contract?.boss) {
+    const offer = createBossOffer(ctx())
+    if (offer) dispatch({ type: 'spawnBoss', offer })
+  }
   // ⚡ Habilidades activas: las usa apenas están listas (el Café, cuando la Hackatón se está recargando)
   for (const ability of ABILITIES) {
     if (state.skills[ability.skill] === 0 || nowMs() < state.abilities[ability.id].readyAt || !state.contract) continue
@@ -291,4 +297,5 @@ console.log(
 )
 console.log(`Tiempo total simulado: ${formatDuration(clock)}`)
 console.log(`Concentración usada: ${counters.focus} veces`)
+console.log(`Jefes derrotados: ${state.records.bosses} · cajas: ${state.records.boxes}`)
 console.log(`Logros: ${state.records.unlocked.length} → ${state.records.unlocked.join(', ')}`)

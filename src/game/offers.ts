@@ -6,6 +6,7 @@ import { boardSize, repLevel, repScale } from './reputation'
 import { STAGES } from '../data/stages'
 import { contractScale } from './stages'
 import type { Contract, ContractTemplate, Difficulty, SpecialRule } from './types'
+import { BOSS_SCALE, bossesFor } from '../data/bosses'
 
 /** Todo lo que define cómo son las ofertas nuevas */
 export type OfferContext = {
@@ -98,8 +99,8 @@ export function canTake(template: ContractTemplate, tech: TechLevels, stage: num
  */
 export function pickAutoOffer(offers: Contract[], autoRate: number): Contract | null {
   if (autoRate <= 0) return null
-  // Los especiales nunca se aceptan solos: son una decisión del jugador
-  const viable = offers.filter((o) => !o.special && o.code / autoRate <= o.time * 0.8)
+  // Los especiales y los jefes nunca se aceptan solos: son una decisión del jugador
+  const viable = offers.filter((o) => !o.special && !o.boss && o.code / autoRate <= o.time * 0.8)
   return viable.reduce<Contract | null>((best, o) => (!best || o.reward.money > best.reward.money ? o : best), null)
 }
 
@@ -200,8 +201,10 @@ const isViable = (offer: Contract, perSecond: number) => offer.code / perSecond 
  * Así la partida nunca queda sin opciones, aunque te hayas quedado atrás.
  */
 function ensureViable(offers: Contract[], perSecond: number): Contract[] {
-  if (perSecond <= 0 || offers.some((o) => isViable(o, perSecond))) return offers
-  const easiest = offers.reduce((best, o) => (o.code / o.time < best.code / best.time ? o : best))
+  // El jefe no cuenta: es un desafío aparte, no la oferta "posible" del tablón
+  const normal = offers.filter((o) => !o.boss)
+  if (perSecond <= 0 || normal.length === 0 || normal.some((o) => isViable(o, perSecond))) return offers
+  const easiest = normal.reduce((best, o) => (o.code / o.time < best.code / best.time ? o : best))
   const factor = (perSecond * easiest.time * 0.7) / easiest.code
   const shrunk: Contract = {
     ...easiest,
@@ -213,4 +216,35 @@ function ensureViable(offers: Contract[], perSecond: number): Contract[] {
     },
   }
   return offers.map((o) => (o === easiest ? shrunk : o))
+}
+
+// --- 👹 Clientes jefe (F4) -------------------------------------------------------------
+
+/**
+ * Arma la oferta de un jefe: una plantilla difícil de la etapa, agrandada (más código, algo más de
+ * plazo y premios ×10), con su condición. Usa azar: se llama afuera del reducer.
+ */
+export function createBossOffer(ctx: OfferContext): Contract | null {
+  const templates = CONTRACT_TEMPLATES.filter((t) => !t.once && canTake(t, ctx.tech, ctx.stage))
+  const hard = templates.filter((t) => t.difficulty === 'hard')
+  const pool = hard.length ? hard : templates
+  if (pool.length === 0) return null
+  const boss = pickRandom(bossesFor(ctx.stage))
+  const base = createOffer(pickRandom(pool), ctx)
+  const rule = boss.rule ? SPECIAL_RULES[boss.rule] : null
+  return {
+    ...base,
+    uid: crypto.randomUUID(),
+    boss: boss.id,
+    special: boss.rule,
+    client: boss.name,
+    quote: boss.quote,
+    code: Math.max(1, Math.round(base.code * BOSS_SCALE.code * (rule?.code ?? 1))),
+    time: Math.max(15, Math.round(base.time * BOSS_SCALE.time * (rule?.time ?? 1))),
+    reward: {
+      money: Math.round((base.reward.money * BOSS_SCALE.money) / 5) * 5,
+      xp: Math.round(base.reward.xp * BOSS_SCALE.xp),
+      rep: base.reward.rep * BOSS_SCALE.rep,
+    },
+  }
 }

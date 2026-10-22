@@ -44,6 +44,11 @@ function ContractCard({ contract, code, timeLeft }: ContractCardProps) {
           +{formatNumber(contract.reward.xp)} XP
         </span>
         <span className="rounded border border-cyan/30 px-2 py-0.5 text-cyan">+{contract.reward.rep} ★</span>
+        {contract.boss && (
+          <span className="rounded border border-red/60 bg-red/10 px-2 py-0.5 font-bold text-red">
+            👹 Cliente jefe · 📦 caja
+          </span>
+        )}
         {contract.special && (
           <span
             className="rounded border border-yellow/60 bg-yellow/10 px-2 py-0.5 font-bold text-yellow"

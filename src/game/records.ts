@@ -18,6 +18,10 @@ export type Records = {
   bugs: number
   /** Minijuegos jugados (D9) */
   minigames: number
+  /** 👹 Clientes jefe derrotados */
+  bosses: number
+  /** 📦 Cajas de suministros sin abrir (F3) */
+  boxes: number
   /** Eventos buenos seguidos */
   goodStreak: number
   /** Hora de los últimos críticos (para "Modo máquina") */
@@ -36,6 +40,8 @@ export const INITIAL_RECORDS: Records = {
   betsWon: 0,
   bugs: 0,
   minigames: 0,
+  bosses: 0,
+  boxes: 0,
   goodStreak: 0,
   recentCrits: [],
 }

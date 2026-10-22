@@ -43,4 +43,6 @@ export type Contract = ContractTemplate & {
   uid: string
   /** Contrato especial (D7): paga mucho más, con una condición rara */
   special?: SpecialRule
+  /** 👹 Cliente jefe (F4): id en data/bosses.ts */
+  boss?: string
 }

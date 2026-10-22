@@ -46,6 +46,7 @@ function OffersScreen({
   const sorted = [...offers].sort(
     // Los especiales primero; después de fácil a difícil
     (a, b) =>
+      Number(!!b.boss) - Number(!!a.boss) ||
       Number(!!b.special) - Number(!!a.special) ||
       DIFFICULTY_ORDER.indexOf(a.difficulty) - DIFFICULTY_ORDER.indexOf(b.difficulty),
   )
@@ -109,11 +110,19 @@ function OffersScreen({
                 onClick={() => onAccept(offer)}
                 disabled={activeFile !== null}
                 className={`h-full w-full cursor-pointer rounded-xl border p-3.5 text-left transition enabled:hover:-translate-y-0.5 disabled:cursor-default disabled:opacity-60 ${
-                  special
-                    ? 'border-yellow/70 bg-linear-to-b from-yellow/12 to-panel-2 shadow-[0_0_0_3px_rgba(255,203,107,.12)] enabled:hover:border-yellow'
-                    : 'border-line bg-panel-2 enabled:hover:border-cyan/50'
+                  offer.boss
+                    ? 'border-2 border-red/70 bg-linear-to-b from-red/15 to-panel-2 shadow-[0_0_24px_rgba(255,110,127,.25)] enabled:hover:border-red'
+                    : special
+                      ? 'border-yellow/70 bg-linear-to-b from-yellow/12 to-panel-2 shadow-[0_0_0_3px_rgba(255,203,107,.12)] enabled:hover:border-yellow'
+                      : 'border-line bg-panel-2 enabled:hover:border-cyan/50'
                 }`}
               >
+                {offer.boss && (
+                  <p className="mb-1.5 font-mono text-[11px] font-bold text-red">
+                    👹 CLIENTE JEFE · paga ×10 + 📦 caja
+                    <span className="block font-normal text-muted">Si se vence, solo perdés la oportunidad</span>
+                  </p>
+                )}
                 {special && (
                   <p className="mb-1.5 font-mono text-[11px] font-bold text-yellow" title={special.detail}>
                     ⭐ Contrato especial · {special.name}

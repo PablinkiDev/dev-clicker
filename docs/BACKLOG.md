@@ -91,7 +91,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | F1 ✅ | 🃏 **Especializaciones:** al ascender se elige 1 de 3 cartas (una por estilo, 10 % rara). 15 cartas: 🖱 Manos rápidas (pianista, críticos, combo, recarga), 🤖 Automatizador (Scrum, Horas extra, plazos, Macro turbo, Crunch sin culpa), ⚖️ Equilibrado (pair, café, cliente fiel, mentoría, todo terreno). Se ven en Empresa → build/. Simulación: cada build gana con su estilo (clicker ~1 h 06 a 5 clics/s; idle mejor para el jugador tranquilo) | M | 3–4 |
 | F2 ✅ | ⚡ **Habilidades activas:** barra al lado de Programar con Foco (1), 🏃 Hackatón (2), 🔥 Crunch (3), 👯 Pair programming (4) y ☕ Café doble (5). Se aprenden en el árbol personal (Nv.1–3), con tarjeta "¡Nuevo!". *Balance pendiente: en la simulación aceleran ~30 % el primer ciclo* | M | 3 |
 | F3 | 🏺 **Artefactos y "Tu setup":** cajas de suministros, ~20 artefactos con rarezas y niveles, pantalla del escritorio | M | 5–6 |
-| F4 | 👹 **Clientes jefe:** cada ~10 contratos, oferta enorme con condición; premio: caja | M | 2–3 |
+| F4 ✅ | 👹 **Clientes jefe:** desde Estudio, cada 10 contratos llega un jefe al tablón (8 jefes con nombre y frase, algunos con condición): 2× código, 1,5× plazo, paga ×10, XP ×4 y 📦 1 caja. Perder no tiene multa. La Captación automática no los toma. Simulación: 4–5 jefes por run | M | 2–3 |
 | F5 | 🏁 **Desafíos de run:** reglas opcionales con más tokens | S | 2–3 |
 | F6 | 🦄 **IPO:** final del juego, pantalla de carrera y modo leyenda | M | 2 |
 

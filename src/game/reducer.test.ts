@@ -266,3 +266,48 @@ describe('especializaciones (cartas)', () => {
     expect(gameReducer(s, { type: 'sell', fresh: createInitialState(), now: 1 }).cards).toEqual([])
   })
 })
+
+describe('clientes jefe', () => {
+  function bossOffer(base: GameState) {
+    const offer = base.offers[0]
+    return { ...offer, uid: 'jefe', boss: 'facebookAunt', reward: { ...offer.reward, money: 10_000 } }
+  }
+
+  it('cada contrato normal desde Estudio acerca al jefe', () => {
+    const base = withContract()
+    const s = { ...base, stage: 1, code: base.contract!.code }
+    expect(gameReducer(s, { type: 'deliver' }).bossCountdown).toBe(s.bossCountdown - 1)
+  })
+
+  it('en Freelancer no hay jefes', () => {
+    const s = createInitialState()
+    expect(gameReducer(s, { type: 'spawnBoss', offer: bossOffer(s) })).toBe(s)
+  })
+
+  it('aparece en el tablón y reinicia la cuenta', () => {
+    const s = { ...createInitialState(), stage: 1, bossCountdown: 0 }
+    const after = gameReducer(s, { type: 'spawnBoss', offer: bossOffer(s) })
+    expect(after.offers[0].boss).toBe('facebookAunt')
+    expect(after.bossCountdown).toBe(10)
+    // Nunca dos jefes a la vez
+    expect(gameReducer(after, { type: 'spawnBoss', offer: bossOffer(s) })).toBe(after)
+  })
+
+  it('ganarle da una caja', () => {
+    const s0 = { ...createInitialState(), stage: 1 }
+    const offer = bossOffer(s0)
+    let s = gameReducer(s0, { type: 'accept', offer, offers: s0.offers.slice(1), cooldowns: {} })
+    s = gameReducer({ ...s, code: offer.code }, { type: 'deliver' })
+    expect(s.records.bosses).toBe(1)
+    expect(s.records.boxes).toBe(1)
+  })
+
+  it('perder contra un jefe no cobra multa', () => {
+    const s0 = { ...createInitialState(), stage: 1, money: 1000 }
+    const offer = bossOffer(s0)
+    const s = gameReducer(s0, { type: 'accept', offer, offers: s0.offers.slice(1), cooldowns: {} })
+    const after = gameReducer(s, { type: 'tick', elapsed: s.timeLeft + 1 })
+    expect(after.contract).toBeNull()
+    expect(after.money).toBe(1000)
+  })
+})

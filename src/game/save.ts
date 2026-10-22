@@ -11,6 +11,7 @@ import { INITIAL_FOCUS } from './focus'
 import { INITIAL_INVESTMENTS } from '../data/investments'
 import { INITIAL_RECORDS } from './records'
 import { INITIAL_ABILITIES } from '../data/abilities'
+import { getBoss } from '../data/bosses'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES, featuresFor } from '../data/features'
 
@@ -37,6 +38,7 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   cards: [],
   cardOffer: null,
   combo: { count: 0, lastAt: 0 },
+  bossCountdown: 10,
   stats: INITIAL_STATS,
   prestige: INITIAL_PRESTIGE,
   records: INITIAL_RECORDS,
@@ -429,6 +431,7 @@ function isContract(value: unknown): boolean {
       value.special === 'clicksOnly' ||
       value.special === 'rush' ||
       value.special === 'giant') &&
+    (value.boss === undefined || (typeof value.boss === 'string' && getBoss(value.boss) !== undefined)) &&
     (value.stack === undefined ||
       (Array.isArray(value.stack) && value.stack.every((id) => typeof id === 'string' && id in INITIAL_TECH)))
   )

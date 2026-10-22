@@ -4,7 +4,16 @@ import type { GameState } from '../game/reducer'
 import type { View } from '../ui'
 
 export type FeatureId =
-  'upgrades' | 'tools' | 'team' | 'company' | 'companyTree' | 'minigames' | 'macro' | 'abilities' | 'prestige'
+  | 'upgrades'
+  | 'tools'
+  | 'team'
+  | 'company'
+  | 'companyTree'
+  | 'minigames'
+  | 'macro'
+  | 'abilities'
+  | 'bosses'
+  | 'prestige'
 
 export type Feature = {
   id: FeatureId
@@ -80,6 +89,14 @@ export const FEATURES: Feature[] = [
     name: 'Habilidades activas',
     text: 'Aprendiste tu primera habilidad activa. Usala con su botón, al lado de Programar, o con las teclas 1 a 5.',
     check: (s) => s.skills.hackathon > 0 || s.skills.crunch > 0 || s.skills.pairProgramming > 0,
+  },
+  {
+    id: 'bosses',
+    icon: '👹',
+    name: 'Clientes jefe',
+    text: 'Cada 10 contratos llega un cliente enorme con reloj estricto. Si le ganás, paga ×10 y te da una 📦 caja de suministros. Si perdés, no pasa nada.',
+    view: 'board',
+    check: (s) => s.offers.some((o) => o.boss) || s.contract?.boss !== undefined || s.records.bosses > 0,
   },
   {
     id: 'prestige',

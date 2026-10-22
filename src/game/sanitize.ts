@@ -65,6 +65,7 @@ export function sanitize(state: GameState): GameState {
     cards: Array.isArray(state.cards) ? state.cards.filter(isCard) : [],
     cardOffer: Array.isArray(state.cardOffer) && state.cardOffer.every(isCard) ? state.cardOffer : null,
     combo: { count: clamp(state.combo?.count, 0), lastAt: clamp(state.combo?.lastAt, 0) },
+    bossCountdown: Math.round(clamp(state.bossCountdown, 0, 100)),
     records: {
       ...state.records,
       ...Object.fromEntries(
@@ -79,6 +80,8 @@ export function sanitize(state: GameState): GameState {
             'betsWon',
             'bugs',
             'minigames',
+            'bosses',
+            'boxes',
             'goodStreak',
           ] as const
         ).map((key) => [key, clamp(state.records[key], 0)]),

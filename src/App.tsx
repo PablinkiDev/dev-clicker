@@ -50,7 +50,7 @@ import { drawCards } from './data/cards'
 import { cardEffects } from './game/cards'
 import CardPicker from './components/CardPicker'
 import { focusMultiplier, isFocused } from './game/focus'
-import { CLIENT_COOLDOWN_MS, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
+import { CLIENT_COOLDOWN_MS, createBossOffer, pickAutoOffer, refillOffers, type OfferContext } from './game/offers'
 import { DARK_MODE_PRICE, createInitialState, gameReducer } from './game/reducer'
 import { clearSave, exportGame, importGame, loadGame, saveGame } from './game/save'
 import { replaceCandidate, rerollCandidates, rerollPrice, type Employee } from './game/team'
@@ -286,6 +286,16 @@ function App() {
     setView(next)
     setFreshViews((v) => v.filter((x) => x !== next))
   }
+
+  // 👹 Cliente jefe: cuando la cuenta llega a cero, aparece en el tablón (la oferta usa azar: se arma acá)
+  const bossDue = state.stage >= 1 && state.bossCountdown <= 0 && !offers.some((o) => o.boss) && !contract?.boss
+  const spawnBoss = useEffectEvent(() => {
+    const offer = createBossOffer(offerContext)
+    if (offer) dispatch({ type: 'spawnBoss', offer })
+  })
+  useEffect(() => {
+    if (bossDue) spawnBoss()
+  }, [bossDue])
 
   // ❓ Ayuda: botón en el panel de arriba o F1
   const [helpOpen, setHelpOpen] = useState(false)

@@ -3,6 +3,7 @@
 // así la ayuda no queda vieja cuando se cambia un número.
 import { useEffect, useState, type ReactNode } from 'react'
 import { ABILITIES } from '../data/abilities'
+import { BOSSES, BOSS_EVERY, BOSS_SCALE } from '../data/bosses'
 import { CARDS, RARE_CHANCE, STYLES } from '../data/cards'
 import { ACHIEVEMENTS, CATEGORIES } from '../data/achievements'
 import { EDITORS } from '../data/editors'
@@ -332,6 +333,21 @@ function Extras() {
           a.key,
           a.describe(1),
           `${Math.round(a.cooldown(1) / 60)} min`,
+        ])}
+      />
+      <H>👹 Clientes jefe</H>
+      <P>
+        Desde Estudio, cada {BOSS_EVERY} contratos llega al tablón un cliente jefe: un contrato enorme (
+        {BOSS_SCALE.code}× el código) con reloj estricto y, a veces, una condición. Si le ganás, paga ×
+        {BOSS_SCALE.money} y te da una <B>📦 caja de suministros</B>. Si se vence, solo perdés la oportunidad. La
+        Captación automática nunca los toma.
+      </P>
+      <Table
+        head={['Jefe', 'Desde', 'Condición']}
+        rows={BOSSES.map((b) => [
+          `${b.icon} ${b.name}`,
+          stageName(b.minStage),
+          b.rule ? SPECIAL_RULES[b.rule].name : '—',
         ])}
       />
       <H>🐛 Bug dorado</H>

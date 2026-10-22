@@ -30,6 +30,7 @@ import { INITIAL_RECORDS, type Records } from './records'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES } from '../data/features'
 import { getCard, type CardPick } from '../data/cards'
+import { BOSS_EVERY, getBoss } from '../data/bosses'
 import { cardEffects } from './cards'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 import { MACRO_LEVELS } from '../data/macro'
@@ -119,6 +120,8 @@ export type GameState = {
   cards: CardPick[]
   /** Cartas ofrecidas al ascender, esperando que elijas una (null si no hay nada pendiente) */
   cardOffer: CardPick[] | null
+  /** 👹 Contratos que faltan para que aparezca el próximo cliente jefe (desde Estudio) */
+  bossCountdown: number
   /** Clics seguidos (para el Combo) y hora del último clic tuyo (para las Horas extra) */
   combo: { count: number; lastAt: number }
   /** Multiplicadores temporales activos: el 🐛 bug dorado y los eventos */
@@ -203,6 +206,8 @@ export type GameAction =
   // y se ofrecen 3 cartas de especialización (también al azar)
   | { type: 'ascend'; offers: Contract[]; candidates: Employee[]; cardOffer: CardPick[] }
   | { type: 'pickCard'; index: number }
+  // 👹 Llega un cliente jefe al tablón (la oferta se arma afuera: usa azar)
+  | { type: 'spawnBoss'; offer: Contract }
   | { type: 'buyEditor' }
   | { type: 'setLook'; look: EditorId }
   | { type: 'toggleDarkMode' }
@@ -240,6 +245,7 @@ export function createInitialState(): GameState {
     cards: [],
     cardOffer: null,
     combo: { count: 0, lastAt: 0 },
+    bossCountdown: BOSS_EVERY,
     modifiers: [],
     team: [],
     candidates: createInitialCandidates(),
@@ -397,21 +403,27 @@ function deliverContract(state: GameState): GameState {
     code: 0, // el código no se acumula entre contratos (GDD §3)
     contract: null,
     endless: isEndless(state.stage) ? state.endless + 1 : state.endless,
+    // 👹 Cada contrato normal desde Estudio acerca al próximo jefe
+    bossCountdown: !contract.boss && state.stage >= 1 ? state.bossCountdown - 1 : state.bossCountdown,
     stats: {
       ...state.stats,
       moneyEarned: state.stats.moneyEarned + money,
       xpEarned: state.stats.xpEarned + xp,
       contractsDone: state.stats.contractsDone + 1,
-      specialsDone: state.stats.specialsDone + (contract.special ? 1 : 0),
+      specialsDone: state.stats.specialsDone + (contract.special && !contract.boss ? 1 : 0),
     },
     records: {
       ...state.records,
       contracts: state.records.contracts + 1,
-      specials: state.records.specials + (contract.special ? 1 : 0),
+      specials: state.records.specials + (contract.special && !contract.boss ? 1 : 0),
+      bosses: state.records.bosses + (contract.boss ? 1 : 0),
+      boxes: state.records.boxes + (contract.boss ? 1 : 0),
     },
     notice: {
       kind: 'success',
-      text: `${contract.client} pagó: +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep + state.skills.marketing} ★`,
+      text: contract.boss
+        ? `👹 ¡Le ganaste a ${contract.client}! +${formatMoney(money)} · +${formatNumber(xp)} XP · 📦 +1 caja de suministros`
+        : `${contract.client} pagó: +${formatMoney(money)} · +${formatNumber(xp)} XP · +${reward.rep + state.skills.marketing} ★`,
     },
     log: addLog(
       state.log,
@@ -519,7 +531,30 @@ function reduce(state: GameState, action: GameAction): GameState {
       const timeLeft = Math.max(0, state.timeLeft - action.elapsed)
       if (timeLeft > 0) return { ...state, code, timeLeft, records }
 
-      // 3. Se venció el plazo (GDD §4): pérdidas leves y un poco de XP
+      // 3. Se venció el plazo. Contra un jefe solo se pierde la oportunidad (y se aprende algo)
+      if (contract.boss) {
+        const gainedXp = failureXp(contract.reward.xp)
+        return {
+          ...state,
+          records,
+          xp: state.xp + gainedXp,
+          code: 0,
+          contract: null,
+          timeLeft: 0,
+          stats: {
+            ...state.stats,
+            contractsFailed: state.stats.contractsFailed + 1,
+            xpEarned: state.stats.xpEarned + gainedXp,
+          },
+          notice: {
+            kind: 'error',
+            text: `👹 ${contract.client} se fue sin pagar. Esta vez ganó el jefe. +${formatNumber(gainedXp)} XP por intentarlo`,
+          },
+          log: addLog(state.log, 'error', `✗ El jefe ganó esta vez (${Math.floor(code)}/${contract.code})`),
+        }
+      }
+
+      // Contrato normal (GDD §4): pérdidas leves y un poco de XP
       const lostMoney = failureMoneyLoss(state.money)
       const gainedXp = failureXp(contract.reward.xp)
       return {
@@ -870,6 +905,17 @@ function reduce(state: GameState, action: GameAction): GameState {
           'success',
           `📦 Mudanza a ${next.name} · ahora entran ${officeCapacity(state.office + 1, state.skills.homeOffice)} empleados`,
         ),
+      }
+    }
+
+    case 'spawnBoss': {
+      if (state.stage < 1 || state.offers.some((o) => o.boss) || state.contract?.boss) return state
+      const boss = getBoss(action.offer.boss ?? '')
+      return {
+        ...state,
+        offers: [action.offer, ...state.offers],
+        bossCountdown: BOSS_EVERY,
+        log: addLog(state.log, 'crit', `👹 Llegó un cliente jefe: ${boss?.icon ?? ''} ${action.offer.client}`),
       }
     }
 
