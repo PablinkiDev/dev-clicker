@@ -11,12 +11,19 @@ export type Modifier = {
   mult: number
   /** Hasta cuándo dura (timestamp en ms) */
   endsAt: number
+  /** Desde cuándo cuenta (si falta, desde que se crea): el cansancio del Crunch arranca después */
+  startsAt?: number
 }
 
 /** Producto de los modificadores activos de un tipo. Sin hora (la simulación), no cuenta ninguno */
 export function modifierMultiplier(modifiers: Modifier[], target: ModifierTarget, now: number | undefined): number {
   if (now === undefined) return 1
-  return modifiers.filter((m) => m.target === target && now < m.endsAt).reduce((total, m) => total * m.mult, 1)
+  return modifiers.filter((m) => m.target === target && isActive(m, now)).reduce((total, m) => total * m.mult, 1)
+}
+
+/** ¿Está corriendo ahora? (empezó y no terminó) */
+export function isActive(m: Modifier, now: number): boolean {
+  return now >= (m.startsAt ?? 0) && now < m.endsAt
 }
 
 /** Saca los que ya terminaron (para que la lista no crezca para siempre) */

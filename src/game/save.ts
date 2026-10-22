@@ -10,6 +10,7 @@ import { INITIAL_PRESTIGE } from './prestige'
 import { INITIAL_FOCUS } from './focus'
 import { INITIAL_INVESTMENTS } from '../data/investments'
 import { INITIAL_RECORDS } from './records'
+import { INITIAL_ABILITIES } from '../data/abilities'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES, featuresFor } from '../data/features'
 
@@ -32,6 +33,7 @@ const FIELD_DEFAULTS: Partial<GameState> = {
   autoAccept: true,
   modifiers: [],
   focus: INITIAL_FOCUS,
+  abilities: INITIAL_ABILITIES,
   stats: INITIAL_STATS,
   prestige: INITIAL_PRESTIGE,
   records: INITIAL_RECORDS,
@@ -339,6 +341,18 @@ function migrate(raw: unknown): unknown {
   if (isObject(state.stats)) state = { ...state, stats: fixNumbers(INITIAL_STATS, state.stats) }
   if (isObject(state.skills)) state = { ...state, skills: fixNumbers(INITIAL_SKILLS, state.skills) }
   if (isObject(state.focus)) state = { ...state, focus: fixNumbers(INITIAL_FOCUS, state.focus) }
+  if (isObject(state.abilities)) {
+    const abilities = state.abilities
+    state = {
+      ...state,
+      abilities: Object.fromEntries(
+        Object.entries(INITIAL_ABILITIES).map(([id, initial]) => {
+          const timer = abilities[id]
+          return [id, isObject(timer) ? fixNumbers(initial, timer) : initial]
+        }),
+      ),
+    }
+  }
   if (isObject(state.records)) {
     const records = state.records
     const known = new Set(ACHIEVEMENTS.map((a) => a.id))

@@ -165,3 +165,51 @@ describe('revelado progresivo', () => {
     expect(after.records.features).toEqual(expect.arrayContaining(['upgrades', 'team', 'prestige']))
   })
 })
+
+describe('habilidades activas', () => {
+  const learned = (s: GameState): GameState => ({
+    ...s,
+    skills: { ...s.skills, focus: 1, hackathon: 1, crunch: 1, pairProgramming: 1, doubleCoffee: 1 },
+  })
+
+  it('sin aprenderla no se puede usar', () => {
+    const s = withContract()
+    expect(gameReducer(s, { type: 'ability', id: 'hackathon', now: 0 })).toBe(s)
+  })
+
+  it('Hackatón multiplica los clics y queda en recarga', () => {
+    const s = learned(withContract())
+    const normal = gameReducer(s, { type: 'program', crit: false, now: 1000 }).code
+    const boosted = run(s, { type: 'ability', id: 'hackathon', now: 0 }, { type: 'program', crit: false, now: 1000 })
+    expect(boosted.code).toBeCloseTo(normal * 5)
+    // En recarga: usarla de nuevo no hace nada
+    expect(gameReducer(boosted, { type: 'ability', id: 'hackathon', now: 2000 })).toBe(boosted)
+  })
+
+  it('Crunch: el equipo rinde más y después se cansa', () => {
+    const s = learned(withContract())
+    const after = gameReducer(s, { type: 'ability', id: 'crunch', now: 0 })
+    const peak = after.modifiers.find((m) => m.icon === '🔥')
+    const tired = after.modifiers.find((m) => m.icon === '😴')
+    expect(peak?.mult).toBe(3)
+    expect(tired?.startsAt).toBe(peak?.endsAt)
+    expect(tired!.mult).toBeLessThan(1)
+  })
+
+  it('Pair programming suma producción del equipo a cada clic', () => {
+    const base = learned(withContract())
+    const s = { ...base, team: [createCandidate('dev', [], 0, 3)] }
+    const normal = gameReducer(s, { type: 'program', crit: false, now: 1000 }).code
+    const paired = run(s, { type: 'ability', id: 'pair', now: 0 }, { type: 'program', crit: false, now: 1000 }).code
+    expect(paired).toBeGreaterThan(normal)
+  })
+
+  it('Café doble recarga las demás habilidades y el Foco', () => {
+    let s = learned(withContract())
+    s = run(s, { type: 'focus', now: 0 }, { type: 'ability', id: 'hackathon', now: 0 })
+    expect(s.abilities.hackathon.readyAt).toBeGreaterThan(60_000)
+    s = gameReducer(s, { type: 'ability', id: 'coffee', now: 60_000 })
+    expect(s.abilities.hackathon.readyAt).toBeLessThanOrEqual(60_000)
+    expect(s.focus.readyAt).toBeLessThanOrEqual(60_000)
+  })
+})

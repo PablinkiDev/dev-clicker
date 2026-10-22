@@ -31,6 +31,17 @@ import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES } from '../data/features'
 import { MINIGAME_REWARD_SECONDS, minigameReward } from '../data/minigames'
 import { MACRO_LEVELS } from '../data/macro'
+import {
+  ABILITIES,
+  CRUNCH_MULT,
+  CRUNCH_SECONDS,
+  HACKATHON_MULT,
+  INITIAL_ABILITIES,
+  crunchTired,
+  pairSeconds,
+  type AbilityId,
+  type AbilityTimers,
+} from '../data/abilities'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
 export type Notice = {
@@ -100,6 +111,8 @@ export type GameState = {
   autoAccept: boolean
   /** Concentración: cuándo termina y cuándo se recarga */
   focus: Focus
+  /** ⚡ Habilidades activas (F2): cuándo termina cada una y cuándo se recarga */
+  abilities: AbilityTimers
   /** Multiplicadores temporales activos: el 🐛 bug dorado y los eventos */
   modifiers: Modifier[]
   /** Empleados contratados (sin contarte a vos) */
@@ -151,6 +164,7 @@ export type GameAction =
   | { type: 'buyMacro' }
   | { type: 'setMacro'; on: boolean }
   | { type: 'focus'; now: number }
+  | { type: 'ability'; id: AbilityId; now: number }
   | { type: 'deliver' }
   // now: la hora, para el 🐛 bug dorado (opcional: la simulación no lo usa)
   | { type: 'tick'; elapsed: number; now?: number }
@@ -212,6 +226,7 @@ export function createInitialState(): GameState {
     dim: false,
     autoAccept: true,
     focus: INITIAL_FOCUS,
+    abilities: INITIAL_ABILITIES,
     modifiers: [],
     team: [],
     candidates: createInitialCandidates(),
@@ -411,7 +426,12 @@ function reduce(state: GameState, action: GameAction): GameState {
       if (!contract || state.code >= contract.code) return state
       const focus = isFocused(state.focus, action.now) ? focusMultiplier(state.skills.flowState) : 1
       const crit = action.crit && !action.macro
-      const lines = clickRate(state, action.now) * focus * (crit ? critMultiplier(state) : 1)
+      // Pair programming: cada clic tuyo suma también unos segundos de lo que produce el equipo
+      const pair =
+        !action.macro && action.now < state.abilities.pair.endsAt
+          ? autoRateOf(state, action.now) * pairSeconds(state.skills.pairProgramming)
+          : 0
+      const lines = clickRate(state, action.now) * focus * (crit ? critMultiplier(state) : 1) + pair
       const code = addCode(state.code, lines, contract.code)
       let log = state.log
       if (crit) log = addLog(log, 'crit', `⚡ Crítico: +${formatRate(lines)} líneas sin un solo typo. Sospechoso.`)
@@ -651,6 +671,57 @@ function reduce(state: GameState, action: GameAction): GameState {
           `🎯 Concentración: auriculares puestos, Slack cerrado. ×${focusMultiplier(state.skills.flowState)} por ${focusDuration(level)} s`,
         ),
       }
+    }
+
+    case 'ability': {
+      const ability = ABILITIES.find((a) => a.id === action.id)
+      const level = ability ? state.skills[ability.skill] : 0
+      if (!ability || level === 0 || action.now < state.abilities[ability.id].readyAt) return state
+      const { now } = action
+      const timer = { endsAt: now + ability.duration(level) * 1000, readyAt: now + ability.cooldown(level) * 1000 }
+      let next: GameState = {
+        ...state,
+        modifiers: activeModifiers(state.modifiers, now),
+        abilities: { ...state.abilities, [ability.id]: timer },
+      }
+      if (ability.id === 'hackathon')
+        next.modifiers = [
+          ...next.modifiers,
+          { id: `hackathon-${now}`, icon: '🏃', target: 'click', mult: HACKATHON_MULT, endsAt: timer.endsAt },
+        ]
+      if (ability.id === 'crunch') {
+        const peak = now + CRUNCH_SECONDS * 1000
+        next.modifiers = [
+          ...next.modifiers,
+          { id: `crunch-${now}`, icon: '🔥', target: 'auto', mult: CRUNCH_MULT, endsAt: peak },
+          {
+            id: `tired-${now}`,
+            icon: '😴',
+            target: 'auto',
+            mult: crunchTired(level),
+            startsAt: peak,
+            endsAt: timer.endsAt,
+          },
+        ]
+      }
+      if (ability.id === 'coffee') {
+        // Todas las demás (y el Foco) quedan listas ya: lo que esté activo sigue activo
+        const ready = (t: { endsAt: number; readyAt: number }) => ({
+          ...t,
+          readyAt: Math.min(t.readyAt, Math.max(now, t.endsAt)),
+        })
+        next = {
+          ...next,
+          focus: ready(next.focus),
+          abilities: {
+            hackathon: ready(next.abilities.hackathon),
+            crunch: ready(next.abilities.crunch),
+            pair: ready(next.abilities.pair),
+            coffee: timer,
+          },
+        }
+      }
+      return { ...next, log: addLog(next.log, 'crit', `${ability.icon} ${ability.name}: ${ability.describe(level)}`) }
     }
 
     case 'catchBug':

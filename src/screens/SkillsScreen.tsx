@@ -59,6 +59,11 @@ const SKILL_LAYOUT: Record<SkillId, { col: number; row: number }> = {
   negotiator: { col: 2, row: 3 },
   flowState: { col: 3, row: 2 },
   lucky: { col: 3, row: 3 },
+  // Habilidades activas (F2), abajo de todo
+  hackathon: { col: 2, row: 4 },
+  doubleCoffee: { col: 2, row: 5 },
+  crunch: { col: 3, row: 4 },
+  pairProgramming: { col: 3, row: 5 },
   teamwork: { col: 0, row: 0.5 },
   knowledge: { col: 0, row: 2 },
   marketing: { col: 0, row: 3 },

@@ -2,6 +2,7 @@
 // Las listas (editores, tecnologías, mejoras, etapas…) se arman con los datos del juego,
 // así la ayuda no queda vieja cuando se cambia un número.
 import { useEffect, useState, type ReactNode } from 'react'
+import { ABILITIES } from '../data/abilities'
 import { ACHIEVEMENTS, CATEGORIES } from '../data/achievements'
 import { EDITORS } from '../data/editors'
 import { EVENTS } from '../data/events'
@@ -300,6 +301,20 @@ function Extras() {
         Una habilidad del árbol personal. Tocá el botón Foco para escribir ×{FOCUS_MULTIPLIER} por clic durante{' '}
         {focusDuration(1)} s (más con cada nivel). Se recarga en {FOCUS_COOLDOWN / 60} minutos.
       </P>
+      <H>⚡ Habilidades activas</H>
+      <P>
+        Se aprenden en el árbol personal y aparecen en la barra al lado de Programar. Se usan con su botón o con las
+        teclas 1 a 5 (el 1 es el Foco). Subirles el nivel las mejora.
+      </P>
+      <Table
+        head={['Habilidad', 'Tecla', 'Efecto (Nv.1)', 'Recarga']}
+        rows={ABILITIES.map((a) => [
+          `${a.icon} ${a.name}`,
+          a.key,
+          a.describe(1),
+          `${Math.round(a.cooldown(1) / 60)} min`,
+        ])}
+      />
       <H>🐛 Bug dorado</H>
       <P>
         Cada pocos minutos un bug dorado camina por la pantalla. Si lo atrapás, tu equipo produce ×{BUG_MULTIPLIER}{' '}
@@ -335,6 +350,7 @@ function Shortcuts() {
         head={['Tecla', 'Qué hace']}
         rows={[
           ['Espacio', 'Programar (o entregar, si el código está completo) en la pantalla de código'],
+          ['1 a 5', 'Usar una habilidad: 1 Foco, 2 Hackatón, 3 Crunch, 4 Pair programming, 5 Café doble'],
           ['F1', 'Abrir esta ayuda'],
           ['Esc', 'Cerrar esta ayuda'],
         ]}

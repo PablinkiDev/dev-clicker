@@ -22,6 +22,7 @@ import { getEditor } from '../src/data/editors'
 import { nextBugDelay } from '../src/game/bug'
 import { nextMinigameDelay } from '../src/data/minigames'
 import { MACRO_LEVELS, macroCps } from '../src/data/macro'
+import { ABILITIES } from '../src/data/abilities'
 
 // --- Parámetros -------------------------------------------------------------------
 const arg = (name: string, fallback: number) => {
@@ -164,6 +165,12 @@ function shop() {
         dispatch({ type: 'hire', uid: best.uid, replaceUid: worst.uid, candidates })
       }
     }
+  }
+  // ⚡ Habilidades activas: las usa apenas están listas (el Café, cuando la Hackatón se está recargando)
+  for (const ability of ABILITIES) {
+    if (state.skills[ability.skill] === 0 || nowMs() < state.abilities[ability.id].readyAt || !state.contract) continue
+    if (ability.id === 'coffee' && nowMs() >= state.abilities.hackathon.readyAt) continue
+    dispatch({ type: 'ability', id: ability.id, now: nowMs() })
   }
   if (state.skills.focus > 0 && nowMs() >= state.focus.readyAt) {
     dispatch({ type: 'focus', now: nowMs() })

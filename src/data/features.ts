@@ -3,7 +3,8 @@
 import type { GameState } from '../game/reducer'
 import type { View } from '../ui'
 
-export type FeatureId = 'upgrades' | 'tools' | 'team' | 'company' | 'companyTree' | 'minigames' | 'macro' | 'prestige'
+export type FeatureId =
+  'upgrades' | 'tools' | 'team' | 'company' | 'companyTree' | 'minigames' | 'macro' | 'abilities' | 'prestige'
 
 export type Feature = {
   id: FeatureId
@@ -72,6 +73,13 @@ export const FEATURES: Feature[] = [
     text: 'Una herramienta que hace clic sola mientras trabajás. Está en Mejoras → Herramientas.',
     view: 'skills',
     check: (s) => s.stage >= 2,
+  },
+  {
+    id: 'abilities',
+    icon: '⚡',
+    name: 'Habilidades activas',
+    text: 'Aprendiste tu primera habilidad activa. Usala con su botón, al lado de Programar, o con las teclas 1 a 5.',
+    check: (s) => s.skills.hackathon > 0 || s.skills.crunch > 0 || s.skills.pairProgramming > 0,
   },
   {
     id: 'prestige',

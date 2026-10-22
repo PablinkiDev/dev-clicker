@@ -8,9 +8,28 @@ type ActionDockProps = {
   onDeliver: () => void
   /** Último crítico, para el "+N" flotante: el id cambia en cada crítico y reinicia la animación */
   critPop: { id: number; lines: number } | null
-  /** Concentración: null si no se aprendió; si no, si está activa y los segundos que le quedan (o de recarga) */
-  focus: { active: boolean; mult: number; seconds: number } | null
-  onFocus: () => void
+  /** ⚡ Habilidades aprendidas (el Foco y las de F2), en el orden de sus teclas */
+  abilities: AbilitySlot[]
+  onAbility: (id: string) => void
+}
+
+/** Una habilidad en la barra: lista, activa (con sus segundos) o recargándose */
+export type AbilitySlot = {
+  id: string
+  icon: string
+  name: string
+  key: string
+  /** Texto corto para el botón cuando está lista ("Foco") */
+  label: string
+  description: string
+  status: 'ready' | 'active' | 'cooldown'
+  seconds: number
+}
+
+const SLOT_STYLE: Record<AbilitySlot['status'], string> = {
+  ready: 'border border-purple/50 bg-purple/10 text-purple hover:bg-purple/20',
+  active: 'border border-yellow/60 bg-yellow/15 text-yellow',
+  cooldown: 'cursor-default border border-line-2 bg-panel-2 text-faint',
 }
 
 /** Botones principales: Programar y git push */
@@ -22,8 +41,8 @@ function ActionDock({
   onProgram,
   onDeliver,
   critPop,
-  focus,
-  onFocus,
+  abilities,
+  onAbility,
 }: ActionDockProps) {
   const canProgram = hasContract && !isComplete && isWorkView
 
@@ -34,7 +53,7 @@ function ActionDock({
 
   return (
     <div
-      className={`relative grid shrink-0 ${focus ? 'grid-cols-[1fr_auto_auto]' : 'grid-cols-[1fr_auto]'} gap-2.5 border-t border-line bg-panel px-2.5 pt-2.5 pb-3 md:gap-3 md:px-4.5 md:pt-3 md:pb-3.5`}
+      className={`relative grid shrink-0 grid-cols-[1fr_auto] ${abilities.length ? 'md:grid-cols-[1fr_auto_auto]' : ''} gap-2.5 border-t border-line bg-panel px-2.5 pt-2.5 pb-3 md:gap-3 md:px-4.5 md:pt-3 md:pb-3.5`}
     >
       <button
         type="button"
@@ -60,23 +79,24 @@ function ActionDock({
         </span>
       )}
 
-      {focus && (
-        <button
-          type="button"
-          onClick={onFocus}
-          disabled={focus.seconds > 0}
-          title={`Concentración: ×${focus.mult} líneas por clic`}
-          className={`flex h-16 cursor-pointer flex-col items-center justify-center rounded-2xl px-3 font-mono text-[11px] font-bold md:h-18 md:px-4 ${
-            focus.active
-              ? 'border border-purple/60 bg-purple/20 text-purple'
-              : focus.seconds > 0
-                ? 'cursor-default border border-line-2 bg-panel-2 text-faint'
-                : 'border border-purple/50 bg-purple/10 text-purple hover:bg-purple/20'
-          }`}
-        >
-          <span className="text-xl">🎯</span>
-          {focus.active ? `×${focus.mult} · ${focus.seconds}s` : focus.seconds > 0 ? `${focus.seconds}s` : 'Foco'}
-        </button>
+      {abilities.length > 0 && (
+        // En el celular va en su propia fila, arriba; en la compu, entre Programar y git push
+        <div className="order-first col-span-2 flex justify-center gap-1.5 md:order-none md:col-span-1">
+          {abilities.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => onAbility(a.id)}
+              disabled={a.status !== 'ready'}
+              title={`${a.name} (tecla ${a.key}): ${a.description}`}
+              className={`relative flex h-11 w-14 cursor-pointer flex-col items-center justify-center rounded-xl font-mono text-[10px] font-bold md:h-18 md:w-16 md:rounded-2xl ${SLOT_STYLE[a.status]}`}
+            >
+              <span className="text-base md:text-xl">{a.icon}</span>
+              {a.status === 'ready' ? a.label : `${a.seconds}s`}
+              <kbd className="absolute top-0.5 right-1 hidden text-[9px] opacity-60 md:block">{a.key}</kbd>
+            </button>
+          ))}
+        </div>
       )}
 
       <button

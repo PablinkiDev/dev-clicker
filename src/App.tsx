@@ -2,7 +2,9 @@ import { useCallback, useEffect, useEffectEvent, useReducer, useRef, useState } 
 import ContractCard from './components/ContractCard'
 import CodeView from './components/editor/CodeView'
 import Minimap from './components/editor/Minimap'
-import ActionDock from './components/layout/ActionDock'
+import ActionDock, { type AbilitySlot } from './components/layout/ActionDock'
+import { ABILITIES, type AbilityId } from './data/abilities'
+import { isActive } from './game/modifiers'
 import ActivityBar from './components/layout/ActivityBar'
 import EconomyHud from './components/layout/EconomyHud'
 import EditorTabs from './components/layout/EditorTabs'
@@ -98,7 +100,10 @@ function App() {
   // Reloj de la Concentración: solo hace falta mientras está activa o recargándose
   const [now, setNow] = useState(() => Date.now())
   // También corre mientras hay modificadores activos (bug dorado, eventos), para mostrar sus segundos
-  const focusBusy = now < state.focus.readyAt || state.modifiers.some((m) => now < m.endsAt)
+  const focusBusy =
+    now < state.focus.readyAt ||
+    state.modifiers.some((m) => now < m.endsAt) ||
+    Object.values(state.abilities).some((a) => now < a.readyAt)
   useEffect(() => {
     if (!focusBusy) return
     const id = setInterval(() => setNow(Date.now()), 250)
@@ -142,7 +147,7 @@ function App() {
   const perClick = clickRate(state, now) * (focusing ? focusMultiplier(skills.flowState) : 1)
   const auto = autoRateOf(state, now)
   const activeMods = state.modifiers
-    .filter((m) => now < m.endsAt)
+    .filter((m) => isActive(m, now))
     .map((m) => ({ ...m, seconds: Math.ceil((m.endsAt - now) / 1000) }))
   // Con qué se generan las ofertas nuevas: tecnologías, etapa, modo infinito y reputación
   const offerContext: OfferContext = {
@@ -511,6 +516,54 @@ function App() {
     setEvent(e)
   }
 
+  // ⚡ Barra de habilidades: el Foco (tecla 1) y las habilidades activas aprendidas (teclas 2–5)
+  const abilitySlots: AbilitySlot[] = []
+  if (focusInfo)
+    abilitySlots.push({
+      id: 'focus',
+      icon: '🎯',
+      name: 'Concentración',
+      key: '1',
+      label: 'Foco',
+      description: `×${focusInfo.mult} líneas por clic`,
+      status: focusInfo.active ? 'active' : focusInfo.seconds > 0 ? 'cooldown' : 'ready',
+      seconds: Math.max(0, focusInfo.seconds),
+    })
+  for (const a of ABILITIES) {
+    const level = skills[a.skill]
+    if (level === 0) continue
+    const timer = state.abilities[a.id]
+    const status = now < timer.endsAt ? 'active' : now < timer.readyAt ? 'cooldown' : 'ready'
+    abilitySlots.push({
+      id: a.id,
+      icon: a.icon,
+      name: a.name,
+      key: a.key,
+      label: a.name.split(' ')[0],
+      description: a.describe(level),
+      status,
+      seconds: Math.ceil(((status === 'active' ? timer.endsAt : timer.readyAt) - now) / 1000),
+    })
+  }
+
+  function activateAbility(id: string) {
+    const t = Date.now()
+    setNow(t)
+    if (id === 'focus') dispatch({ type: 'focus', now: t })
+    else dispatch({ type: 'ability', id: id as AbilityId, now: t })
+  }
+
+  // Teclas 1–5 para las habilidades (no mientras escribís en un campo ni con la ayuda abierta)
+  const onAbilityKey = useEffectEvent((event: KeyboardEvent) => {
+    if (event.repeat || helpOpen || minigame?.playing || event.target instanceof HTMLInputElement) return
+    const slot = abilitySlots.find((a) => a.key === event.key)
+    if (slot && slot.status === 'ready') activateAbility(slot.id)
+  })
+  useEffect(() => {
+    window.addEventListener('keydown', onAbilityKey)
+    return () => window.removeEventListener('keydown', onAbilityKey)
+  }, [])
+
   function program() {
     // El azar se resuelve acá, en el evento; el reducer solo aplica el resultado
     const crit = Math.random() < critChance(skills.criticalCode, editor.critBonus)
@@ -791,12 +844,8 @@ function App() {
             onProgram={program}
             onDeliver={deliver}
             critPop={critPop}
-            focus={focusInfo}
-            onFocus={() => {
-              const t = Date.now()
-              setNow(t)
-              dispatch({ type: 'focus', now: t })
-            }}
+            abilities={abilitySlots}
+            onAbility={activateAbility}
           />
           {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
           {look.features.nav !== 'agent' && <Terminal log={log} errors={errors} />}

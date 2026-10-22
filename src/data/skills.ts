@@ -14,6 +14,10 @@ export type SkillId =
   | 'muscleMemory'
   | 'flowState'
   | 'lucky'
+  | 'hackathon'
+  | 'crunch'
+  | 'pairProgramming'
+  | 'doubleCoffee'
   | 'teamwork'
   | 'knowledge'
   | 'autoDeliver'
@@ -213,6 +217,54 @@ export const SKILLS: Skill[] = [
     requires: [['autoDeliver', 1]],
     minStage: 2,
   },
+  // --- Habilidades activas (F2): se usan con botones o teclas; el nivel las mejora ---
+  {
+    id: 'hackathon',
+    name: 'Hackatón',
+    icon: '🏃',
+    effect: 'Habilidad activa (tecla 2): clics ×5 durante 10 s (+5 s por nivel). Recarga: 5 min',
+    baseCost: 2000,
+    maxLevel: 3,
+    group: 'personal',
+    requires: [['focus', 2]],
+    minStage: 1,
+  },
+  {
+    id: 'crunch',
+    name: 'Crunch',
+    icon: '🔥',
+    effect:
+      'Habilidad activa (tecla 3): equipo ×3 durante 30 s, después se cansa 30 s (menos con cada nivel). Recarga: 4 min',
+    baseCost: 9000,
+    maxLevel: 3,
+    group: 'personal',
+    requires: [['hackathon', 1]],
+    minStage: 2,
+  },
+  {
+    id: 'pairProgramming',
+    name: 'Pair programming',
+    icon: '👯',
+    effect:
+      'Habilidad activa (tecla 4): durante 20 s, cada clic suma 1 s de producción del equipo (+0,5 s por nivel). Recarga: 3 min',
+    baseCost: 9000,
+    maxLevel: 3,
+    group: 'personal',
+    requires: [['hackathon', 1]],
+    minStage: 2,
+  },
+  {
+    id: 'doubleCoffee',
+    name: 'Café doble',
+    icon: '☕',
+    effect:
+      'Habilidad activa (tecla 5): recarga al instante todas las demás y el Foco. Recarga: 10 min (−2 min por nivel)',
+    baseCost: 35000,
+    maxLevel: 3,
+    group: 'personal',
+    requires: [['focus', 4]],
+    minStage: 3,
+  },
   // --- Árbol Empresa ampliado (E3) ---
   {
     id: 'marketing',
@@ -306,6 +358,10 @@ export const INITIAL_SKILLS: SkillLevels = {
   muscleMemory: 0,
   flowState: 0,
   lucky: 0,
+  hackathon: 0,
+  crunch: 0,
+  pairProgramming: 0,
+  doubleCoffee: 0,
 }
 
 /** Lo que falta para comprar una habilidad, como texto ("Escritura veloz Nv.1 y etapa Estudio"), o null */
