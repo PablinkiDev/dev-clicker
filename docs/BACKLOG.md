@@ -114,7 +114,8 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | H2 ✅ | 🔔 **Centro de notificaciones:** campanita con contador de nuevas; panel con logros, ascensos, ventas, jefes, cajas, artefactos, eventos, pasantes, minijuegos y contratos vencidos (últimas 60, se guardan y sobreviven a las ventas) | S | 1–2 |
 | H3 ✅ | 📊 **Estadísticas:** pestaña nueva en Empresa con los totales de la carrera y dos gráficos de barras (duración y tokens de cada empresa vendida, con detalle al pasar el mouse) | C | 2 |
 | H4 ✅ | 🆕 **"¡Nuevo!":** en mejoras recién disponibles (con puntito en su pestaña), profesiones nuevas entre los candidatos y accesorios/títulos ganados; puntito en el menú de esa pantalla. Se marca visto al salir. Las partidas viejas arrancan sin nada "nuevo" | S | 1 |
-| H5 | Molestias de UI (lista pendiente de Agustín) | M | ? |
+| H5 | Molestias de UI (lista de Agustín, se va completando) | M | ? |
+| H5.1 ✅ | 🏢 **Empresa a pantalla completa:** franja arriba (empresa, línea de etapas, pestañas) y tres columnas: dónde estás (etapa y tu run) · qué sigue (requisitos o venta) · tu carrera (IPO y últimas 3 ventas). Modo infinito y venta en una sola tarjeta. Historial completo en 📊. En el celular se apila con "qué sigue" primero. Sin cajas estiradas: se suman "Tu empresa hoy", "Qué trae [etapa]", "Logros cerca" y "Tus bonus permanentes" | M | 1 |
 
 ## Hito C — Listo para amigos (1.0)
 

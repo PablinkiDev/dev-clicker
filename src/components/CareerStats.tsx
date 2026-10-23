@@ -5,6 +5,7 @@ import { ACHIEVEMENTS } from '../data/achievements'
 import { formatDuration, formatMoney, formatNumber } from '../game/format'
 import { careerPlayTime, tokensEarned, type SaleRecord } from '../game/prestige'
 import type { GameState } from '../game/reducer'
+import SalesHistory from './SalesHistory'
 
 type BarDatum = { label: string; value: number; detail: string }
 
@@ -148,6 +149,7 @@ function CareerStats({ state }: { state: GameState }) {
           />
         </div>
       )}
+      <SalesHistory history={prestige.history} />
     </div>
   )
 }

@@ -877,6 +877,9 @@ function App() {
               challenge={state.challenge}
               sales={state.prestige.sales}
               ipoDone={state.records.ipoAt > 0}
+              game={state}
+              autoRate={auto}
+              perClick={perClick}
               company={state.company}
               onRename={(company) => dispatch({ type: 'setCompany', company })}
               onIpo={() => {
