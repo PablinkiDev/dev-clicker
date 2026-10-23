@@ -1,3 +1,4 @@
+import MacroCursor from '../MacroCursor'
 import TutorialBubble from '../TutorialBubble'
 import { formatRate } from '../../game/format'
 type ActionDockProps = {
@@ -14,6 +15,8 @@ type ActionDockProps = {
   onAbility: (id: string) => void
   /** 🧭 Tutorial (C2): qué botón señalar */
   tutorial?: 'click' | 'deliver' | null
+  /** 🤖 Clics por segundo del Macro mientras trabaja (0 = apagado o sin contrato) */
+  macroRate?: number
 }
 
 /** Una habilidad en la barra: lista, activa (con sus segundos) o recargándose */
@@ -47,6 +50,7 @@ function ActionDock({
   abilities,
   onAbility,
   tutorial = null,
+  macroRate = 0,
 }: ActionDockProps) {
   const canProgram = hasContract && !isComplete && isWorkView
 
@@ -72,6 +76,7 @@ function ActionDock({
         <kbd className="hidden rounded-md border border-black/10 bg-black/15 px-1.75 py-0.75 font-mono text-[11px] font-bold md:inline">
           ESPACIO
         </kbd>
+        <MacroCursor rate={macroRate} />
       </button>
 
       {tutorial === 'click' && canProgram && (

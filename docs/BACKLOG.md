@@ -110,7 +110,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 
 | # | Historia | Prioridad | Tamaño |
 |---|----------|-----------|--------|
-| H1 ✅ | ✨ **Animaciones de recompensa:** al cobrar, "+$X" y "+N XP" flotan sobre el HUD y el número rebota; cada compra hace un estallido de chispas donde tocaste | M | 2 |
+| H1 ✅ | ✨ **Animaciones de recompensa:** al cobrar, "+$X" y "+N XP" flotan sobre el HUD y el número rebota; cada compra hace un estallido de chispas donde tocaste; con el 🤖 Macro, un cursor hace clic solo sobre Programar a su ritmo | M | 2 |
 | H2 ✅ | 🔔 **Centro de notificaciones:** campanita con contador de nuevas; panel con logros, ascensos, ventas, jefes, cajas, artefactos, eventos, pasantes, minijuegos y contratos vencidos (últimas 60, se guardan y sobreviven a las ventas) | S | 1–2 |
 | H3 ✅ | 📊 **Estadísticas:** pestaña nueva en Empresa con los totales de la carrera y dos gráficos de barras (duración y tokens de cada empresa vendida, con detalle al pasar el mouse) | C | 2 |
 | H4 ✅ | 🆕 **"¡Nuevo!":** en mejoras recién disponibles (con puntito en su pestaña), profesiones nuevas entre los candidatos y accesorios/títulos ganados; puntito en el menú de esa pantalla. Se marca visto al salir. Las partidas viejas arrancan sin nada "nuevo" | S | 1 |
@@ -124,11 +124,11 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | C2 ✅ | 🧭 **Tutorial liviano:** globitos en la primera partida (elegí este contrato → hacé clic o ESPACIO → entregalo con git push → gastá tu XP), salen del estado del juego y se van solos. El primer tablón ya no trae contratos especiales | M | 1–2 |
 | C3 ✅ | **Simulación de balance:** un script que juega solo con `gameReducer` y mide tiempos por etapa. Objetivo: el primer prestigio en 1–2 días casuales y un 2.º ciclo entre 25 y 40 % más rápido. | M | 2 |
 | C4 ✅ | **Ajuste de números** según lo que muestre la simulación | M | 1–3 |
-| C5 ✅ | 📱 **Pasada mobile:** HUD compacto (4 columnas, sin subtítulos), menú de Nano en una fila deslizable (antes se partía y tapaba pantallas), terminal oculta en el celular (está la 🔔), avisos de logro arriba de los botones. Los árboles se resuelven con C10 | S | 1–2 |
+| C5 ✅ | 📱 **Pasada mobile:** HUD compacto (4 columnas, sin subtítulos), menú de Nano en una fila deslizable (antes se partía y tapaba pantallas), terminal oculta en el celular (está la 🔔), avisos de logro arriba de los botones. Los árboles quedaron resueltos con C10 | S | 1–2 |
 | C6 | **Deploy público** (GitHub Pages o Vercel), con la versión visible en el juego | M | 1 |
 | C7 | **Forma de juntar feedback** (link a un form o a issues de GitHub, desde Ajustes) | S | 1 |
 | C8 | Bug bash final y README actualizado | M | 1 |
-| C10 | **Repensar el diseño de los árboles de Mejoras** (los nodos andan, pero el look no termina de convencer) | S | 1–2 |
+| C10 ✅ | 🌌 **Árboles "constelación":** nodos redondos con anillo de nivel repartidos en todo el ancho, lo comprable late en violeta, panel de detalle a la derecha (abajo en el celular, y se desplaza solo al tocar) con el botón de comprar. Elegido entre 3 opciones | S | 1–2 |
 | C9 ✅ | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
 | C11 ✅ | **Ayuda ❓ (y F1):** modal con cómo jugar y una wiki de todo el juego (contratos, equipo, mejoras, etapas, prestigio, extras y atajos). Las tablas salen de los datos del juego | M | 1 |
 | C12 ✅ | **Guardado firmado y revisión de seguridad:** el guardado de localStorage va firmado (v19); una partida editada se carga igual, queda marcada para siempre y da el logro secreto "sudo give money" (nunca se borra). 28 tests con Vitest (`npm test`) del reducer, el guardado y las migraciones. `npm audit`: 0 vulnerabilidades. *Pendiente para C6: headers de seguridad (CSP) en el deploy* | M | 2–3 |

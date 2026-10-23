@@ -975,6 +975,7 @@ function App() {
             abilities={abilitySlots}
             onAbility={activateAbility}
             tutorial={tutorial === 'click' || tutorial === 'deliver' ? tutorial : null}
+            macroRate={isRunning ? macroRate : 0}
           />
           {/* En Cladex el agente ya informa el estado: la terminal se oculta para dejar lugar al código */}
           {/* En el celular la terminal no entra: lo importante está en las notificaciones 🔔 */}
