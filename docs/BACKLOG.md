@@ -119,6 +119,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | H5.2 ✅ | 📋 **Ofertas en tarjetas + panel:** tarjetas grandes con banda de color por dificultad, avatar del cliente, cita, chips (archivo, líneas, plazo, fullstack, bonus), premios en cajitas, barra de "cuánto del plazo te llevaría" y botón Aceptar. Panel lateral con tu ritmo, reputación (ofertas y cuánto falta) y Captación automática. Solo colores del tema: probado en VS Code, Bloc de notas, Sublime y Nano | M | 1 |
 | H5.3 ✅ | ▣ **Setup en 3 columnas:** personaje con pestañas (Look / Título / Mascota), escritorio con los artefactos y detalle al tocar uno (reemplaza la lista por rareza), y panel de cajas con barra de tokens. En celular se apila con avatar chico; los casilleros tienen tope de tamaño | S | 1 |
 | H5.4 ✅ | 👥 **Equipo como plano de oficina:** un escritorio por puesto (la pantalla se prende cuando trabajan), detalle al tocar a alguien y reemplazo tocando el escritorio. Candidatos en lista compacta a la derecha y próxima oficina con barra de plata. En celular los puestos libres de más se juntan. Favicon nuevo (sin fondo) en PNG, ICO y apple-touch | S | 1 |
+| H5.5 ✅ | ⌨️ **Programar como teclado:** el botón es un teclado con teclas 3D (1 fila en el celular, 2 en la compu, 3 en pantallas grandes y altas) y la barra espaciadora verde dice "Programar". En cada clic tuyo se prenden y se hunden 3 teclas de un código de ejemplo (sin estado: sale del contador de clics). Probado en VS Code, Bloc de notas y Nano | S | 1 |
 
 ## Hito C — Listo para amigos (1.0)
 
