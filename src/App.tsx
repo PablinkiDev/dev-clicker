@@ -826,6 +826,7 @@ function App() {
               activeFile={activeFile}
               knowsJs={state.tech.javascript > 0}
               tech={state.tech}
+              rep={state.rep}
               onAccept={acceptContract}
               autoAccept={state.skills.autoAccept > 0 ? state.autoAccept : null}
               onAutoAcceptChange={(on) => dispatch({ type: 'setAutoAccept', on })}
