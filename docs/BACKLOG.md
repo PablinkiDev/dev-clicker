@@ -117,6 +117,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | H5 | Molestias de UI (lista de Agustín, se va completando) | M | ? |
 | H5.1 ✅ | 🏢 **Empresa a pantalla completa:** franja arriba (empresa, línea de etapas, pestañas) y tres columnas: dónde estás (etapa y tu run) · qué sigue (requisitos o venta) · tu carrera (IPO y últimas 3 ventas). Modo infinito y venta en una sola tarjeta. Historial completo en 📊. En el celular se apila con "qué sigue" primero. Sin cajas estiradas: se suman "Tu empresa hoy", "Qué trae [etapa]", "Logros cerca" y "Tus bonus permanentes" | M | 1 |
 | H5.2 ✅ | 📋 **Ofertas en tarjetas + panel:** tarjetas grandes con banda de color por dificultad, avatar del cliente, cita, chips (archivo, líneas, plazo, fullstack, bonus), premios en cajitas, barra de "cuánto del plazo te llevaría" y botón Aceptar. Panel lateral con tu ritmo, reputación (ofertas y cuánto falta) y Captación automática. Solo colores del tema: probado en VS Code, Bloc de notas, Sublime y Nano | M | 1 |
+| H5.3 ✅ | ▣ **Setup en 3 columnas:** personaje con pestañas (Look / Título / Mascota), escritorio con los artefactos y detalle al tocar uno (reemplaza la lista por rareza), y panel de cajas con barra de tokens. En celular se apila con avatar chico; los casilleros tienen tope de tamaño | S | 1 |
 
 ## Hito C — Listo para amigos (1.0)
 

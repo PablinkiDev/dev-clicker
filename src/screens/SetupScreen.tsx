@@ -52,6 +52,7 @@ function SetupScreen({
   onSeen,
 }: SetupScreenProps) {
   const [opening, setOpening] = useState<Opening | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
   const owned = ARTIFACTS.filter((a) => artifacts[a.id]).length
   const price = boxPrice(boxesBought)
 
@@ -74,137 +75,162 @@ function SetupScreen({
     return () => clearTimeout(t)
   }, [opening])
 
+  const rarities = Object.keys(RARITIES) as Rarity[]
+  const picked = getArtifact(selected ?? '') ?? null
+  const pickedLevel = picked ? (artifacts[picked.id] ?? 0) : 0
+
   return (
     <section className="min-h-0 flex-1 overflow-y-auto px-3 pt-2.5 pb-6 md:px-4.5">
       <ScreenHeader icon="▣" title="Tu setup">
-        Vos y tu escritorio. El avatar, el título y la mascota son tuyos: no se pierden al vender la empresa.
+        Vos y tu escritorio: no se pierden al vender la empresa.
         {showArtifacts && (
           <>
             {' '}
-            Los artefactos dan mejoras <b className="text-text">para siempre</b>: salen de las cajas de suministros y
-            los repetidos suben de nivel (hasta Nv.{MAX_ARTIFACT_LEVEL}).
+            Los artefactos dan mejoras <b className="text-text">para siempre</b> y los repetidos suben de nivel (hasta
+            Nv.
+            {MAX_ARTIFACT_LEVEL}).
           </>
         )}
       </ScreenHeader>
 
       <SeenOnLeave keys={news} onSeen={onSeen} />
-      <ProfileEditor profile={profile} unlocked={unlocked} onChange={onProfile} news={news} />
+      <div
+        className={`grid grid-cols-1 items-start gap-3 ${showArtifacts ? 'lg:grid-cols-[280px_1fr_280px]' : 'max-w-md'}`}
+      >
+        <ProfileEditor profile={profile} unlocked={unlocked} onChange={onProfile} news={news} />
 
-      {showArtifacts && (
-        <>
-          {/* El escritorio: cada artefacto tiene su lugar; los que no tenés todavía son una silueta */}
-          <div className="mb-5 max-w-xl overflow-hidden rounded-2xl border border-line-2">
-            <div className="bg-linear-to-b from-[#1b2135] to-[#232b45] px-4 pt-4 pb-2">
-              <p className="mb-3 font-mono text-[11px] text-muted">
-                🏺 {owned}/{ARTIFACTS.length} artefactos
-              </p>
-              <div className="grid grid-cols-5 gap-2 sm:gap-3">
-                {ARTIFACTS.map((a) => {
-                  const level = artifacts[a.id] ?? 0
-                  const rarity = RARITIES[a.rarity]
-                  return (
-                    <div
-                      key={a.id}
-                      title={level ? `${a.name} · Nv.${level}: ${a.text(level)}` : '??? · todavía no lo encontraste'}
-                      className={`relative grid aspect-square place-items-center rounded-xl border-2 text-2xl sm:text-4xl ${
-                        level
-                          ? `${rarity.border} ${rarity.glow} bg-panel-2`
-                          : 'border-dashed border-line bg-panel/40 grayscale'
-                      }`}
-                    >
-                      <span className={level ? '' : 'opacity-15'}>{level ? a.icon : '❔'}</span>
-                      {level > 0 && (
-                        <span className={`absolute right-1 bottom-0.5 font-mono text-[10px] font-bold ${rarity.text}`}>
-                          {level >= MAX_ARTIFACT_LEVEL ? 'MAX' : `Nv.${level}`}
-                        </span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-            {/* La madera del escritorio */}
-            <div className="h-4 bg-linear-to-b from-[#6b4a2b] to-[#4a3220]" />
-          </div>
-
-          {/* Cajas */}
-          <div className="mb-5 flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-yellow/40 bg-yellow/5 p-4">
-            <span className="text-4xl">📦</span>
-            <div className="min-w-0 flex-1">
-              <p className="font-extrabold">
-                {boxes} caja{boxes === 1 ? '' : 's'} de suministros
-              </p>
-              <p className="text-xs text-muted">
-                Se ganan venciendo clientes jefe y con cada venta de la empresa. También se compran con tokens.
-              </p>
-              <p className="mt-1 font-mono text-xs">
-                🪙 Tenés <b className="text-purple">{tokens}</b> token{tokens === 1 ? '' : 's'}
-                {tokens < price && (
-                  <span className="text-faint"> · te faltan {price - tokens} para la próxima caja</span>
-                )}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={open}
-              disabled={boxes < 1 || opening !== null}
-              className="cursor-pointer rounded-xl bg-yellow px-5 py-2.5 text-sm font-extrabold text-[#2b1a00] disabled:cursor-default disabled:bg-panel-3 disabled:text-faint"
-            >
-              Abrir caja
-            </button>
-            <button
-              type="button"
-              onClick={onBuy}
-              disabled={tokens < price}
-              className="cursor-pointer rounded-xl border border-purple/50 px-4 py-2.5 font-mono text-xs font-bold text-purple hover:bg-purple/10 disabled:cursor-default disabled:border-line disabled:text-faint"
-            >
-              Comprar · {price} tokens
-            </button>
-          </div>
-
-          {/* Colección por rareza */}
-          {(Object.keys(RARITIES) as Rarity[]).map((r) => {
-            const items = ARTIFACTS.filter((a) => a.rarity === r)
-            return (
-              <div key={r} className="mb-4 max-w-3xl">
-                <p className={`mb-2 font-mono text-xs ${RARITIES[r].text}`}>
-                  {RARITIES[r].name.toLowerCase()}/ · {items.filter((a) => artifacts[a.id]).length}/{items.length}
-                </p>
-                <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {items.map((a) => {
-                    const level = artifacts[a.id] ?? 0
+        {showArtifacts && (
+          <>
+            {/* El escritorio: cada artefacto tiene su lugar; tocalo para ver qué da */}
+            <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-line-2 bg-panel-2 p-3 sm:p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 font-mono text-[11px] text-muted">
+                <span>
+                  🏺 Escritorio · {owned}/{ARTIFACTS.length}
+                </span>
+                <span className="flex gap-2.5">
+                  {rarities.map((r) => {
+                    const items = ARTIFACTS.filter((x) => x.rarity === r)
                     return (
-                      <li
-                        key={a.id}
-                        className={`flex items-center gap-3 rounded-xl border p-3 ${level ? `${RARITIES[r].border} bg-panel-2` : 'border-line bg-panel/50'}`}
-                      >
-                        <span className={`text-2xl ${level ? '' : 'opacity-20 grayscale'}`}>
-                          {level ? a.icon : '❔'}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-sm font-extrabold">
-                            {level ? a.name : '???'}
-                            {level > 0 && (
-                              <span className={`ml-2 font-mono text-xs ${RARITIES[r].text}`}>Nv.{level}</span>
-                            )}
-                          </span>
-                          <span className="block text-xs text-muted">
-                            {level
-                              ? `${a.text(level)}${level < MAX_ARTIFACT_LEVEL ? ` · Nv.${level + 1}: ${a.text(level + 1)}` : ''}`
-                              : 'Todavía no lo encontraste'}
-                          </span>
-                        </span>
-                      </li>
+                      <span key={r} className={RARITIES[r].text} title={RARITIES[r].name}>
+                        {RARITIES[r].name.slice(0, 3)}. {items.filter((x) => artifacts[x.id]).length}/{items.length}
+                      </span>
                     )
                   })}
-                </ul>
+                </span>
               </div>
-            )
-          })}
-        </>
-      )}
+              <div className="overflow-hidden rounded-xl border border-line">
+                <div className="grid grid-cols-4 justify-center gap-2 bg-linear-to-b from-panel to-panel-3 p-3 sm:grid-cols-[repeat(8,minmax(0,84px))]">
+                  {ARTIFACTS.map((x) => {
+                    const level = artifacts[x.id] ?? 0
+                    const rarity = RARITIES[x.rarity]
+                    return (
+                      <button
+                        key={x.id}
+                        type="button"
+                        onClick={() => setSelected(x.id)}
+                        aria-pressed={selected === x.id}
+                        aria-label={level ? `${x.name} Nv.${level}` : 'Artefacto sin encontrar'}
+                        className={`relative grid aspect-square cursor-pointer place-items-center rounded-xl border-2 text-2xl sm:text-3xl ${
+                          level ? `${rarity.border} ${rarity.glow} bg-panel-2` : 'border-dashed border-line bg-panel/40'
+                        } ${selected === x.id ? 'ring-2 ring-green ring-offset-2 ring-offset-panel' : ''}`}
+                      >
+                        <span className={level ? '' : 'text-lg opacity-25 grayscale'}>{level ? x.icon : '❔'}</span>
+                        {level > 0 && (
+                          <span className={`absolute right-1 bottom-0.5 font-mono text-[9px] font-bold ${rarity.text}`}>
+                            {level >= MAX_ARTIFACT_LEVEL ? 'MAX' : `Nv.${level}`}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* La madera del escritorio */}
+                <div className="h-3.5 bg-linear-to-b from-[#6b4a2b] to-[#4a3220]" />
+              </div>
 
-      {opening && <BoxOpening opening={opening} onClose={() => setOpening(null)} />}
+              {/* Detalle del artefacto tocado */}
+              <div className="flex min-h-18 items-center gap-3 rounded-xl border border-line bg-panel p-3">
+                {picked ? (
+                  <>
+                    <span className={`text-4xl ${pickedLevel ? '' : 'opacity-25 grayscale'}`}>
+                      {pickedLevel ? picked.icon : '❔'}
+                    </span>
+                    <span className="min-w-0">
+                      <span
+                        className={`block font-mono text-[10px] font-bold tracking-widest uppercase ${RARITIES[picked.rarity].text}`}
+                      >
+                        {RARITIES[picked.rarity].name}
+                        {pickedLevel > 0 && ` · Nv.${pickedLevel}`}
+                      </span>
+                      <span className="block font-extrabold">{pickedLevel ? picked.name : '???'}</span>
+                      <span className="block text-xs text-muted">
+                        {pickedLevel ? picked.text(pickedLevel) : 'Todavía no lo encontraste: sale de las cajas'}
+                        {pickedLevel > 0 && pickedLevel < MAX_ARTIFACT_LEVEL && (
+                          <span className="text-faint">
+                            {' '}
+                            · Nv.{pickedLevel + 1}: {picked.text(pickedLevel + 1)}
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs text-muted">👆 Tocá un artefacto para ver qué mejora da.</span>
+                )}
+              </div>
+            </div>
+
+            {/* Cajas */}
+            <div className="flex flex-col items-center gap-2 rounded-2xl border border-yellow/40 bg-yellow/5 p-4 text-center">
+              <span className="text-5xl">📦</span>
+              <p className="text-base font-extrabold">
+                {boxes} caja{boxes === 1 ? '' : 's'} de suministros
+              </p>
+              <button
+                type="button"
+                onClick={open}
+                disabled={boxes < 1 || opening !== null}
+                className="w-full cursor-pointer rounded-xl bg-yellow py-2.5 text-sm font-extrabold text-[#2b1a00] disabled:cursor-default disabled:bg-panel-3 disabled:text-faint"
+              >
+                Abrir caja
+              </button>
+              <div className="mt-1 w-full">
+                <div className="flex justify-between font-mono text-[11px] text-muted">
+                  <span>
+                    🪙 <b className="text-purple">{tokens}</b> token{tokens === 1 ? '' : 's'}
+                  </span>
+                  <span>caja: {price}</span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-panel-3">
+                  <i
+                    className="block h-full bg-purple"
+                    style={{ width: `${Math.min(100, (tokens / price) * 100)}%` }}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onBuy}
+                disabled={tokens < price}
+                className="w-full cursor-pointer rounded-xl border border-purple/50 py-2 font-mono text-xs font-bold text-purple hover:bg-purple/10 disabled:cursor-default disabled:border-line disabled:text-faint"
+              >
+                Comprar · {price} tokens
+              </button>
+              <p className="text-[11px] text-faint">Se ganan venciendo clientes jefe y con cada venta de la empresa.</p>
+            </div>
+          </>
+        )}
+      </div>
+
+      {opening && (
+        <BoxOpening
+          opening={opening}
+          onClose={() => {
+            setSelected(opening.id)
+            setOpening(null)
+          }}
+        />
+      )}
     </section>
   )
 }
