@@ -315,6 +315,46 @@
   border-top: 1px solid #383932;
 }
 
+/* 🟧 Sublimado clásico (H5.8): pestañas inclinadas que se pisan, la activa del color del código */
+[data-editor='sublime'] .editor-tabs {
+  align-items: flex-end;
+  gap: 0;
+  padding: 0 8px;
+  border-bottom: 0;
+  background: #1e1f1b;
+}
+[data-editor='sublime'] .editor-tab {
+  height: 28px;
+  margin-right: -10px;
+  padding: 0 24px;
+  border: 0;
+  isolation: isolate;
+  color: #a8a38b;
+}
+[data-editor='sublime'] .editor-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1px solid #141511;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: #34352d;
+  transform: perspective(40px) rotateX(8deg);
+  transform-origin: bottom;
+}
+[data-editor='sublime'] .editor-tab[data-active] {
+  z-index: 2;
+  color: #f8f8f2;
+  background: transparent;
+}
+[data-editor='sublime'] .editor-tab[data-active]::before {
+  background: #272822;
+}
+[data-editor='sublime'] .tab-accent {
+  display: none;
+}
+
 /* Cladex Code: terminal cálida, el código aparece como un diff que escribe el agente */
 [data-editor='cladex'] {
   --color-bg: #1a1918;

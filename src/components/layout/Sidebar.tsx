@@ -20,6 +20,8 @@ type SidebarProps = {
   /** 🏢 Nombre y logo de la empresa: es la carpeta del proyecto (G4) */
   company: CompanyIdentity
   onNavigate: (view: View) => void
+  /** 🟧 Sublime (H5.8): arriba van las pantallas como "OPEN FILES" y el árbol pasa a llamarse FOLDERS */
+  openFiles?: { views: View[]; view: View; fresh: View[]; names: Record<View, string> }
 }
 
 const DIFFICULTY_MARK: Record<Difficulty, { letter: string; className: string }> = {
@@ -48,13 +50,45 @@ function Folder({ children, extra }: { children: string; extra?: string }) {
 const FILE_ROW = 'flex h-6.5 w-full cursor-pointer items-center gap-1.5 rounded-md pr-2 pl-5.5 text-left text-[13px]'
 
 /** Explorador de archivos: el estado del juego visto como un proyecto */
-function Sidebar({ contract, offers, team, capacity, showTeam, money, company, onNavigate }: SidebarProps) {
+function Sidebar({ contract, offers, team, capacity, showTeam, money, company, onNavigate, openFiles }: SidebarProps) {
   const firstHire = employeePrice('dev', 1)
   const goal = Math.min(100, (money / firstHire) * 100)
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col overflow-y-auto border-r border-line bg-panel md:flex">
-      <p className="px-4 pt-3 pb-2 text-[11px] font-semibold tracking-widest text-muted uppercase">Explorador</p>
+      {openFiles && (
+        <>
+          <p className="px-4 pt-3 pb-1.5 text-[11px] font-semibold tracking-widest text-muted uppercase">Open files</p>
+          <div className="px-1.5 pb-1">
+            {openFiles.views
+              .filter((v) => v !== 'work' || contract)
+              .map((v) => {
+                const isActive = v === openFiles.view
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => onNavigate(v)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`${FILE_ROW} pl-3 ${isActive ? 'bg-panel-3 text-text' : 'text-muted hover:bg-panel-2 hover:text-text'}`}
+                  >
+                    <span className="truncate">{openFiles.names[v]}</span>
+                    {openFiles.fresh.includes(v) ? (
+                      <span className="ml-auto text-[9px] text-text" title="Hay algo nuevo">
+                        ●
+                      </span>
+                    ) : (
+                      isActive && <span className="ml-auto text-xs text-faint">×</span>
+                    )}
+                  </button>
+                )
+              })}
+          </div>
+        </>
+      )}
+      <p className="px-4 pt-3 pb-2 text-[11px] font-semibold tracking-widest text-muted uppercase">
+        {openFiles ? 'Folders' : 'Explorador'}
+      </p>
       <p
         className="mx-1.5 flex items-center gap-2 rounded-md px-2 py-1 text-[13px] font-extrabold"
         title={company.name}

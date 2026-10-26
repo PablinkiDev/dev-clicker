@@ -35,7 +35,7 @@ function EditorTabs({ view, contract, onChange, views }: EditorTabsProps) {
   const tabs = allTabs.filter((tab) => views.includes(tab.view))
 
   return (
-    <div className="hidden h-9 shrink-0 overflow-x-auto border-b border-line bg-panel [scrollbar-width:none] md:flex">
+    <div className="editor-tabs hidden h-9 shrink-0 overflow-x-auto border-b border-line bg-panel [scrollbar-width:none] md:flex">
       {tabs.map((tab) => {
         const isActive = tab.view === view
         return (
@@ -43,11 +43,12 @@ function EditorTabs({ view, contract, onChange, views }: EditorTabsProps) {
             key={tab.view}
             type="button"
             onClick={() => onChange(tab.view)}
-            className={`relative flex cursor-pointer items-center gap-2 border-r border-line px-4 font-mono text-xs whitespace-nowrap ${
+            data-active={isActive || undefined}
+            className={`editor-tab relative flex cursor-pointer items-center gap-2 border-r border-line px-4 font-mono text-xs whitespace-nowrap ${
               isActive ? 'bg-bg text-text' : 'text-muted hover:text-text'
             }`}
           >
-            {isActive && <span className="absolute inset-x-0 top-0 h-0.5 bg-green" />}
+            {isActive && <span className="tab-accent absolute inset-x-0 top-0 h-0.5 bg-green" />}
             <span className={tab.iconClass}>{tab.icon}</span>
             {tab.name}
             {tab.modified && <span className="size-2 rounded-full bg-text/80" />}

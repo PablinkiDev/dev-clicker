@@ -41,7 +41,7 @@ import { EDITORS, getEditor } from './data/editors'
 import { STAGES } from './data/stages'
 import { officeCapacity } from './data/offices'
 import { SKILLS, missingSkillRequirements } from './data/skills'
-import { TECHS, missingRequirements } from './data/techs'
+import { LANG_TECH, TECHS, missingRequirements } from './data/techs'
 import { currentGoal, nextPurchase } from './game/goals'
 import { fileName } from './game/format'
 import { skillCost } from './game/formulas'
@@ -131,6 +131,7 @@ function App() {
   const editor = getEditor(editorId)
   const look = getEditor(lookId)
   const { ideChrome } = look.features
+  const isSublime = look.features.nav === 'sublime'
   // Reloj de la Concentración: solo hace falta mientras está activa o recargándose
   const [now, setNow] = useState(() => Date.now())
   // También corre mientras hay modificadores activos (bug dorado, eventos), para mostrar sus segundos
@@ -725,15 +726,18 @@ function App() {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {ideChrome && (
           <>
-            <ActivityBar
-              views={views}
-              fresh={dotViews}
-              view={currentView}
-              onChange={navigate}
-              offersCount={offers.length}
-              skillsAvailable={skillsAvailable}
-              canAscend={canAscend(state)}
-            />
+            {/* 🟧 Sublime no tiene barra de actividad: en la compu se navega con OPEN FILES (en el celular sigue abajo) */}
+            <div className={isSublime ? 'contents md:hidden' : 'contents'}>
+              <ActivityBar
+                views={views}
+                fresh={dotViews}
+                view={currentView}
+                onChange={navigate}
+                offersCount={offers.length}
+                skillsAvailable={skillsAvailable}
+                canAscend={canAscend(state)}
+              />
+            </div>
             <Sidebar
               contract={contract}
               offers={offers}
@@ -743,6 +747,7 @@ function App() {
               money={money}
               company={state.company}
               onNavigate={navigate}
+              openFiles={isSublime ? { views, view: currentView, fresh: dotViews, names: titles } : undefined}
             />
           </>
         )}
@@ -801,7 +806,7 @@ function App() {
           {currentView === 'work' && contract && (
             <div className="flex min-h-0 flex-1">
               <div className="flex min-w-0 flex-1 flex-col">
-                {ideChrome && (
+                {ideChrome && !isSublime && (
                   <p className="hidden shrink-0 gap-1.5 px-4.5 pt-1.5 font-mono text-[11px] text-faint md:flex">
                     dev-clicker › en-curso › <b className="font-medium text-muted">{activeFile}</b>
                   </p>
@@ -822,7 +827,7 @@ function App() {
                   lineNumbers={look.features.lineNumbers}
                 />
               </div>
-              {ideChrome && <Minimap code={code} target={contract.code} />}
+              {ideChrome && <Minimap code={code} target={contract.code} wide={isSublime} />}
             </div>
           )}
           {currentView === 'board' && (
@@ -1013,7 +1018,15 @@ function App() {
         </main>
       </div>
 
-      {ideChrome && <StatusBar line={Math.floor(code) + 1} timeLeft={contract ? timeLeft : null} isUrgent={isUrgent} />}
+      {ideChrome && (
+        <StatusBar
+          line={Math.floor(code) + 1}
+          timeLeft={contract ? timeLeft : null}
+          isUrgent={isUrgent}
+          sublime={isSublime}
+          lang={contract ? TECHS.find((t) => t.id === LANG_TECH[contract.lang ?? 'html'])?.name : undefined}
+        />
+      )}
 
       {notice && <Toast notice={notice} onDismiss={dismissNotice} />}
       <AchievementToast unlocked={state.records.unlocked} />

@@ -11,8 +11,8 @@ export type EditorFeatures = {
   lineNumbers: boolean
   /** Explorador, pestañas, minimapa y barra de estado: el IDE "completo" */
   ideChrome: boolean
-  /** Cómo se navega: atajos de Nano, menú de ventana o barra de actividad del IDE */
-  nav: 'nano' | 'menu' | 'ide' | 'agent'
+  /** Cómo se navega: atajos de Nano, menú de ventana, barra de actividad del IDE o archivos abiertos de Sublime */
+  nav: 'nano' | 'menu' | 'ide' | 'sublime' | 'agent'
 }
 
 export type Editor = {
@@ -76,7 +76,7 @@ export const EDITORS: Editor[] = [
     critMultiplier: 3,
     autoBonus: 0,
     bonusText: 'Multicursor: los críticos valen x3 en vez de x2',
-    features: { syntax: true, lineNumbers: true, ideChrome: true, nav: 'ide' },
+    features: { syntax: true, lineNumbers: true, ideChrome: true, nav: 'sublime' },
   },
   {
     id: 'vscode',
