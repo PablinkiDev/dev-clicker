@@ -106,7 +106,11 @@ function ActionDock({
           } ${canProgram && clicks > 0 ? 'animate-keypress' : ''}`}
         >
           <span className="text-base md:text-lg">Programar</span>
-          <span className="font-mono text-[11px] font-semibold opacity-75">{hint}</span>
+          <span
+            className={`truncate font-mono text-[11px] font-semibold opacity-75 ${canProgram ? '' : 'hidden sm:inline'}`}
+          >
+            {hint}
+          </span>
           <kbd className="hidden rounded-md border border-black/10 bg-black/15 px-1.5 py-0.5 font-mono text-[10px] font-bold md:inline">
             ESPACIO
           </kbd>

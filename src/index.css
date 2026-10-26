@@ -216,6 +216,26 @@
   Temas de editor: cada uno redefine la paleta. Los componentes usan siempre las mismas
   clases (bg-panel, text-muted…) y cambian de color solos, porque Tailwind las arma con var().
 */
+/* Visual Estudio Code usa la paleta base: se repite acá para las miniaturas de Ajustes dentro de otro editor */
+[data-editor='vscode'] {
+  --color-bg: #0b0d17;
+  --color-panel: #10131f;
+  --color-panel-2: #151a2a;
+  --color-panel-3: #1b2135;
+  --color-line: #232a40;
+  --color-line-2: #2e3753;
+  --color-text: #d6dcf0;
+  --color-muted: #7c86a6;
+  --color-faint: #4a5372;
+  --color-green: #5af78e;
+  --color-yellow: #ffcb6b;
+  --color-purple: #c792ea;
+  --color-cyan: #89ddff;
+  --color-red: #ff6e7f;
+  --color-orange: #f78c6c;
+  --color-blue: #82aaff;
+}
+
 [data-editor='nano'] {
   --color-bg: #0c0c0c;
   --color-panel: #0c0c0c;

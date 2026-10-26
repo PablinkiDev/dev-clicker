@@ -120,6 +120,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | H5.3 ✅ | ▣ **Setup en 3 columnas:** personaje con pestañas (Look / Título / Mascota), escritorio con los artefactos y detalle al tocar uno (reemplaza la lista por rareza), y panel de cajas con barra de tokens. En celular se apila con avatar chico; los casilleros tienen tope de tamaño | S | 1 |
 | H5.4 ✅ | 👥 **Equipo como plano de oficina:** un escritorio por puesto (la pantalla se prende cuando trabajan), detalle al tocar a alguien y reemplazo tocando el escritorio. Candidatos en lista compacta a la derecha y próxima oficina con barra de plata. En celular los puestos libres de más se juntan. Favicon nuevo (sin fondo) en PNG, ICO y apple-touch | S | 1 |
 | H5.5 ✅ | ⌨️ **Programar como teclado:** el botón es un teclado con teclas 3D (1 fila en el celular, 2 en la compu, 3 en pantallas grandes y altas) y la barra espaciadora verde dice "Programar". En cada clic tuyo se prenden y se hunden 3 teclas de un código de ejemplo (sin estado: sale del contador de clics). Probado en VS Code, Bloc de notas y Nano | S | 1 |
+| H5.6 ✅ | ⚙ **Ajustes en tarjetas:** los editores como miniaturas pintadas con su propia paleta (data-editor, se agregó la de VS Code para que se vea dentro de otros), y abajo Sonido, Accesibilidad (con interruptores) y Partida (estadísticas, exportar/importar y zona de peligro aparte). En celular, el texto gris de Programar sin contrato se oculta para que no se corte | S | 1 |
 
 ## Hito C — Listo para amigos (1.0)
 
