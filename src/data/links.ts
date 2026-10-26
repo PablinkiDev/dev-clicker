@@ -5,4 +5,4 @@
 export const FEEDBACK_URL = 'https://forms.gle/7cdyT5M5PtiNfrRB7'
 
 /** ☕ Link de pago de Mercado Pago para donar */
-export const DONATE_URL = ''
+export const DONATE_URL = 'https://link.mercadopago.com.ar/pablinkidev'
