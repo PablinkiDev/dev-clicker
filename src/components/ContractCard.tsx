@@ -1,15 +1,22 @@
 import { SPECIAL_RULES } from '../game/offers'
 import { formatMoney, formatNumber, formatTime } from '../game/format'
+import { useState } from 'react'
+import { FAILURE_REP_LOSS, failureMoneyLoss } from '../game/formulas'
 import type { Contract } from '../game/types'
 
 type ContractCardProps = {
   contract: Contract
   code: number
   timeLeft: number
+  /** Plata actual: para avisar cuánto se pierde al renunciar */
+  money: number
+  /** 🏳 Renunciar (H5.7): misma derrota que vencer el plazo */
+  onQuit: () => void
 }
 
 /** Tarjeta del contrato en curso, arriba del código (como un "peek" del editor) */
-function ContractCard({ contract, code, timeLeft }: ContractCardProps) {
+function ContractCard({ contract, code, timeLeft, money, onQuit }: ContractCardProps) {
+  const [confirming, setConfirming] = useState(false)
   const progress = (code / contract.code) * 100
   const timeRatio = timeLeft / contract.time
   const isComplete = code >= contract.code
@@ -27,6 +34,15 @@ function ContractCard({ contract, code, timeLeft }: ContractCardProps) {
             {formatTime(timeLeft)}
           </p>
           <p className="text-[10px] tracking-widest text-muted uppercase">deadline</p>
+          {!isComplete && !confirming && (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="mt-1 cursor-pointer rounded-md border border-line-2 px-2 py-0.5 font-mono text-[10px] text-muted hover:border-red/50 hover:text-red"
+            >
+              🏳 Renunciar
+            </button>
+          )}
         </div>
       </div>
 
@@ -58,6 +74,37 @@ function ContractCard({ contract, code, timeLeft }: ContractCardProps) {
           </span>
         )}
       </div>
+
+      {confirming && !isComplete && (
+        <div className="mx-4 mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-red/45 bg-red/10 px-3 py-2 text-xs">
+          <span className="w-full min-w-0 sm:w-auto sm:flex-1">
+            🏳 ¿Renunciar a <b>{contract.title}</b>? Cuenta como contrato perdido:{' '}
+            <b className="text-red">
+              {contract.boss
+                ? 'el jefe se va y no deja la caja'
+                : `−${formatMoney(failureMoneyLoss(money))} · −${FAILURE_REP_LOSS} ★`}
+            </b>
+            , sin XP.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setConfirming(false)
+              onQuit()
+            }}
+            className="cursor-pointer rounded-md bg-red px-3 py-1 font-bold text-[#2a0a0f]"
+          >
+            Sí, renunciar
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            className="cursor-pointer rounded-md bg-panel-3 px-3 py-1 font-bold"
+          >
+            Seguir
+          </button>
+        </div>
+      )}
 
       {/* Barra fina: tiempo que queda. Barra verde: progreso del código */}
       <div className="h-0.5">

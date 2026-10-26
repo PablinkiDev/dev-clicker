@@ -806,7 +806,14 @@ function App() {
                     dev-clicker › en-curso › <b className="font-medium text-muted">{activeFile}</b>
                   </p>
                 )}
-                <ContractCard contract={contract} code={code} timeLeft={timeLeft} />
+                <ContractCard
+                  key={`card-${contract.uid}`}
+                  contract={contract}
+                  code={code}
+                  timeLeft={timeLeft}
+                  money={state.money}
+                  onQuit={() => dispatch({ type: 'quit' })}
+                />
                 <CodeView
                   key={contract.uid}
                   contract={contract}

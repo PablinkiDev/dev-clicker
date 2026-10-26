@@ -201,6 +201,8 @@ export type GameAction =
   | { type: 'focus'; now: number }
   | { type: 'ability'; id: AbilityId; now: number }
   | { type: 'deliver' }
+  /** 🏳 Renunciar al contrato en curso (H5.7) */
+  | { type: 'quit' }
   // now: la hora, para el 🐛 bug dorado (opcional: la simulación no lo usa)
   | { type: 'tick'; elapsed: number; now?: number }
   // fast: si se atrapó en sus primeros 2 segundos
@@ -414,6 +416,62 @@ function startPerks(fresh: GameState, old: GameState): Partial<GameState> {
 }
 
 /** Con Entrega continua, un contrato completo se entrega solo (GDD §9) */
+/**
+ * El contrato se pierde: por plazo vencido o porque renunciaste (quit).
+ * Contra un jefe solo se pierde la oportunidad; en uno normal (GDD §4), 5 % de la plata y reputación.
+ * Al vencerse se gana un poco de XP; al renunciar no (si no, aceptar y renunciar daría XP gratis).
+ */
+function failContract(state: GameState, code: number, quit: boolean): GameState {
+  const contract = state.contract
+  if (!contract) return state
+  const gainedXp = quit ? 0 : failureXp(contract.reward.xp)
+  const progress = `(${Math.floor(code)}/${contract.code})`
+  const base = {
+    ...state,
+    xp: state.xp + gainedXp,
+    code: 0,
+    contract: null,
+    timeLeft: 0,
+    stats: {
+      ...state.stats,
+      contractsFailed: state.stats.contractsFailed + 1,
+      xpEarned: state.stats.xpEarned + gainedXp,
+    },
+  }
+  const xpText = gainedXp ? ` · +${formatNumber(gainedXp)} XP por la experiencia` : ''
+
+  if (contract.boss) {
+    return {
+      ...base,
+      notice: {
+        kind: 'error',
+        text: quit
+          ? `👹 Le renunciaste a ${contract.client}. Esta vez ganó el jefe.`
+          : `👹 ${contract.client} se fue sin pagar. Esta vez ganó el jefe.${xpText}`,
+      },
+      log: addLog(state.log, 'error', `✗ El jefe ganó esta vez ${progress}`),
+    }
+  }
+
+  const lostMoney = failureMoneyLoss(state.money)
+  return {
+    ...base,
+    money: state.money - lostMoney,
+    rep: Math.max(0, state.rep - FAILURE_REP_LOSS),
+    notice: {
+      kind: 'error',
+      text: `${quit ? `Renunciaste: ${contract.client} buscó a otro.` : `Se venció el plazo: ${contract.client} contrató a un primo.`} −${formatMoney(lostMoney)} · −${FAILURE_REP_LOSS} ★${xpText}`,
+    },
+    log: addLog(
+      state.log,
+      'error',
+      quit
+        ? `✗ git branch -D ${contract.id} · renunciaste ${progress}`
+        : `✗ DeadlineExceededException en ${contract.id} ${progress}`,
+    ),
+  }
+}
+
 function finishIfDone(state: GameState): GameState {
   const done = state.contract !== null && state.code >= state.contract.code
   return done && state.skills.autoDeliver > 0 ? deliverContract(state) : state
@@ -584,56 +642,15 @@ function reduce(state: GameState, action: GameAction): GameState {
       const timeLeft = Math.max(0, state.timeLeft - action.elapsed)
       if (timeLeft > 0) return { ...state, code, timeLeft, records }
 
-      // 3. Se venció el plazo. Contra un jefe solo se pierde la oportunidad (y se aprende algo)
-      if (contract.boss) {
-        const gainedXp = failureXp(contract.reward.xp)
-        return {
-          ...state,
-          records,
-          xp: state.xp + gainedXp,
-          code: 0,
-          contract: null,
-          timeLeft: 0,
-          stats: {
-            ...state.stats,
-            contractsFailed: state.stats.contractsFailed + 1,
-            xpEarned: state.stats.xpEarned + gainedXp,
-          },
-          notice: {
-            kind: 'error',
-            text: `👹 ${contract.client} se fue sin pagar. Esta vez ganó el jefe. +${formatNumber(gainedXp)} XP por intentarlo`,
-          },
-          log: addLog(state.log, 'error', `✗ El jefe ganó esta vez (${Math.floor(code)}/${contract.code})`),
-        }
-      }
+      // 3. Se venció el plazo
+      return failContract({ ...state, records }, code, false)
+    }
 
-      // Contrato normal (GDD §4): pérdidas leves y un poco de XP
-      const lostMoney = failureMoneyLoss(state.money)
-      const gainedXp = failureXp(contract.reward.xp)
-      return {
-        ...state,
-        money: state.money - lostMoney,
-        records,
-        rep: Math.max(0, state.rep - FAILURE_REP_LOSS),
-        xp: state.xp + gainedXp,
-        code: 0,
-        contract: null,
-        timeLeft: 0,
-        stats: {
-          ...state.stats,
-          contractsFailed: state.stats.contractsFailed + 1,
-          xpEarned: state.stats.xpEarned + gainedXp,
-        },
-        notice: {
-          kind: 'error',
-          text: `Se venció el plazo: ${contract.client} contrató a un primo. −${formatMoney(lostMoney)} · −${FAILURE_REP_LOSS} ★ · +${gainedXp} XP por la experiencia`,
-        },
-        log: addLog(
-          state.log,
-          'error',
-          `✗ DeadlineExceededException en ${contract.id} (${Math.floor(code)}/${contract.code})`,
-        ),
-      }
+    // 🏳 Renunciar (H5.7): misma derrota que vencer el plazo, pero sin el XP "por la experiencia"
+    case 'quit': {
+      const { contract } = state
+      if (!contract || state.code >= contract.code) return state
+      return failContract(state, state.code, true)
     }
 
     case 'learnTech': {

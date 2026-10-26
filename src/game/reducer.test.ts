@@ -8,14 +8,7 @@ import { createBossOffer } from './offers'
 import { unreadCount } from './inbox'
 import { newsOf } from './news'
 import { ACHIEVEMENTS } from '../data/achievements'
-import {
-  DEFAULT_COMPANY,
-  DEFAULT_PROFILE,
-  FACE_ITEMS,
-  HEAD_ITEMS,
-  HOODIES,
-  TITLES,
-} from '../data/personalization'
+import { DEFAULT_COMPANY, DEFAULT_PROFILE, FACE_ITEMS, HEAD_ITEMS, HOODIES, TITLES } from '../data/personalization'
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state)
 
@@ -55,6 +48,25 @@ describe('contratos', () => {
     expect(after.contract).toBeNull()
     expect(after.stats.contractsFailed).toBe(1)
     expect(after.money).toBe(950) // −5 %
+  })
+
+  it('renunciar es la misma derrota, pero sin XP', () => {
+    const s = { ...withContract(), money: 1000, rep: 5, xp: 0 }
+    const after = gameReducer(s, { type: 'quit' })
+    expect(after.contract).toBeNull()
+    expect(after.code).toBe(0)
+    expect(after.stats.contractsFailed).toBe(1)
+    expect(after.money).toBe(950)
+    expect(after.rep).toBe(4)
+    expect(after.xp).toBe(0)
+  })
+
+  it('no se puede renunciar sin contrato ni con el código terminado', () => {
+    const idle = createInitialState()
+    expect(gameReducer(idle, { type: 'quit' })).toBe(idle)
+    const done = { ...withContract(), money: 1000 }
+    const full = { ...done, code: done.contract!.code }
+    expect(gameReducer(full, { type: 'quit' }).contract).not.toBeNull()
   })
 
   it('los clics de la macro escriben pero no cuentan como tuyos', () => {
