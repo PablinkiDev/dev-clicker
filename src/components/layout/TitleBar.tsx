@@ -1,5 +1,6 @@
 import { STAGES } from '../../data/stages'
 import type { EditorId } from '../../data/editors'
+import Sponsor from '../Sponsor'
 
 type TitleBarProps = {
   /** Índice de la etapa actual, para la etiqueta de la derecha */
@@ -31,7 +32,10 @@ function TitleBar({ editor, title, modified, stage, endlessScale, companyName }:
       <header className="hidden h-6.5 shrink-0 items-center justify-between bg-text px-3 font-mono text-xs text-bg md:flex">
         <span>nano 7.2{companyName ? ` · ${companyName}` : ''}</span>
         <span>{title}</span>
-        <span>{modified ? 'Modificado' : ''}</span>
+        <span className="flex items-center gap-3">
+          {modified ? 'Modificado' : ''}
+          <Sponsor variant="bar" />
+        </span>
       </header>
     )
   }
@@ -44,6 +48,7 @@ function TitleBar({ editor, title, modified, stage, endlessScale, companyName }:
           {modified ? '*' : ''}
           {title} - Bloc de notas
         </span>
+        <Sponsor variant="bar" className="mr-2 font-normal" />
         {['—', '▢', '✕'].map((symbol) => (
           <span
             key={symbol}
@@ -63,6 +68,7 @@ function TitleBar({ editor, title, modified, stage, endlessScale, companyName }:
         <span className="flex-1">
           {modified ? '*' : ''}C:\\clientes\\{title} - Notepad
         </span>
+        <Sponsor variant="bar" className="mr-2 font-normal" />
         {['—', '▢', '✕'].map((symbol) => (
           <span
             key={symbol}
@@ -85,7 +91,8 @@ function TitleBar({ editor, title, modified, stage, endlessScale, companyName }:
         <span>
           <span className="text-orange">✻</span> cladex — ~/dev-clicker · {title}
         </span>
-        <span className="flex gap-1.5">
+        <span className="flex items-center gap-1.5">
+          <Sponsor variant="bar" className="mr-2" />
           <EndlessBadge scale={endlessScale} />
           <span className="rounded-full border border-orange/35 bg-orange/10 px-2.5 py-0.5 text-[11px] text-orange">
             Etapa {stage + 1} · {STAGES[stage].name}
@@ -107,7 +114,8 @@ function TitleBar({ editor, title, modified, stage, endlessScale, companyName }:
         <b className="font-medium text-text">dev-clicker</b> — {title}
         {editor === 'sublime' && <span className="opacity-55"> (UNREGISTERED)</span>}
       </p>
-      <span className="flex gap-1.5">
+      <span className="flex items-center gap-1.5">
+        <Sponsor variant="bar" className="mr-2" />
         <EndlessBadge scale={endlessScale} />
         <span className="rounded-full border border-green/25 bg-green/10 px-2.5 py-0.5 font-mono text-[11px] text-green">
           Etapa {stage + 1} · {STAGES[stage].name}

@@ -1,3 +1,4 @@
+import Sponsor from '../Sponsor'
 import type { ReactNode } from 'react'
 import { formatMoney, formatNumber, formatRate } from '../../game/format'
 import type { Goal, Purchase } from '../../game/goals'
@@ -208,7 +209,7 @@ function EconomyHud(props: EconomyHudProps) {
 
       <Cell
         onClick={() => onNavigate('company')}
-        className={`col-span-4 border-t pr-18 md:col-span-1 md:border-t-0 md:border-r-0 md:pr-4 ${
+        className={`col-span-4 border-t pr-25 md:col-span-1 md:border-t-0 md:border-r-0 md:pr-4 ${
           goal.ready ? 'bg-linear-to-r from-green/10 to-transparent' : 'bg-linear-to-r from-yellow/6 to-transparent'
         }`}
       >
@@ -219,6 +220,8 @@ function EconomyHud(props: EconomyHudProps) {
         </span>
         <Bar ratio={goal.progress} className={goal.ready ? 'bg-green' : 'bg-yellow'} />
       </Cell>
+      {/* 🤝 En el celular no hay barra de título: el logo va junto a la campanita */}
+      <Sponsor variant="icon" className="absolute right-16 bottom-2.5 z-10 md:hidden" />
       <InboxButton unread={props.unread} onClick={props.onInbox} />
       <HelpButton onClick={props.onHelp} />
     </section>

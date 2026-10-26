@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
+import Sponsor from '../components/Sponsor'
 import { EDITORS, type EditorId } from '../data/editors'
 import { formatDuration, formatMoney } from '../game/format'
 import type { Stats } from '../game/reducer'
@@ -166,6 +167,8 @@ function SettingsScreen({
           </div>
         </Card>
       </div>
+
+      <Sponsor variant="card" className="mt-6" />
     </section>
   )
 }
