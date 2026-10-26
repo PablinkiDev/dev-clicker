@@ -81,7 +81,7 @@ function SkillTree({ nodes, edges, columns, onBuy }: SkillTreeProps) {
   return (
     <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start">
       <div
-        className="relative w-full min-w-0 shrink-0 overflow-hidden rounded-2xl lg:flex-1 border border-line bg-[radial-gradient(circle_at_30%_15%,#161c33,transparent_70%)]"
+        className="relative w-full min-w-0 shrink-0 overflow-hidden rounded-2xl lg:flex-1 border border-line bg-panel bg-[radial-gradient(circle_at_30%_15%,var(--color-panel-3),transparent_70%)]"
         style={{ height }}
       >
         {columns.map((title, i) => (

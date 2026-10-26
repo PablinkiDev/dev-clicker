@@ -234,6 +234,46 @@ function TeamScreen({
               </span>
             )}
           </div>
+
+          {/* 🏢 Próxima oficina: en la columna grande, así no queda tapada abajo de los candidatos */}
+          {next && (
+            <div className="rounded-2xl border border-dashed border-line-2 bg-panel-2 p-3 sm:p-4">
+              <p className="font-mono text-[10px] font-bold tracking-wider text-muted uppercase">Próxima oficina</p>
+              <p className="font-extrabold">
+                {next.icon} {next.name}{' '}
+                <span className="font-mono text-xs font-normal text-muted">
+                  · {officeCapacity(office + 1, homeOffice)} empleados
+                </span>
+              </p>
+              <p className="text-xs text-muted">{next.description} El equipo se muda con vos.</p>
+              {!nextLocked && (
+                <>
+                  <div className="mt-2 flex justify-between font-mono text-[11px] text-muted">
+                    <span>
+                      {formatMoney(Math.min(money, next.price))} / {formatMoney(next.price)}
+                    </span>
+                    <span>{Math.floor(Math.min(1, money / next.price) * 100)} %</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-panel-3">
+                    <i
+                      className="block h-full bg-yellow"
+                      style={{ width: `${Math.min(100, (money / next.price) * 100)}%` }}
+                    />
+                  </div>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={onMove}
+                disabled={nextLocked || money < next.price}
+                className="mt-3 w-full cursor-pointer rounded-lg border border-yellow/50 bg-yellow/15 py-2 font-mono text-sm font-bold text-yellow transition-colors hover:bg-yellow/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
+              >
+                {nextLocked
+                  ? `🔒 Requiere etapa ${STAGES[next.minStage].name}`
+                  : `Mudarse · ${formatMoney(next.price)}`}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
@@ -295,45 +335,6 @@ function TeamScreen({
               {isFull && ' · oficina llena: contratar reemplaza a alguien'}
             </p>
           </div>
-
-          {next && (
-            <div className="rounded-2xl border border-dashed border-line-2 bg-panel-2 p-3 sm:p-4">
-              <p className="font-mono text-[10px] font-bold tracking-wider text-muted uppercase">Próxima oficina</p>
-              <p className="font-extrabold">
-                {next.icon} {next.name}{' '}
-                <span className="font-mono text-xs font-normal text-muted">
-                  · {officeCapacity(office + 1, homeOffice)} empleados
-                </span>
-              </p>
-              <p className="text-xs text-muted">{next.description} El equipo se muda con vos.</p>
-              {!nextLocked && (
-                <>
-                  <div className="mt-2 flex justify-between font-mono text-[11px] text-muted">
-                    <span>
-                      {formatMoney(Math.min(money, next.price))} / {formatMoney(next.price)}
-                    </span>
-                    <span>{Math.floor(Math.min(1, money / next.price) * 100)} %</span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-panel-3">
-                    <i
-                      className="block h-full bg-yellow"
-                      style={{ width: `${Math.min(100, (money / next.price) * 100)}%` }}
-                    />
-                  </div>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={onMove}
-                disabled={nextLocked || money < next.price}
-                className="mt-3 w-full cursor-pointer rounded-lg border border-yellow/50 bg-yellow/15 py-2 font-mono text-sm font-bold text-yellow transition-colors hover:bg-yellow/25 disabled:cursor-default disabled:border-line disabled:bg-panel disabled:text-faint"
-              >
-                {nextLocked
-                  ? `🔒 Requiere etapa ${STAGES[next.minStage].name}`
-                  : `Mudarse · ${formatMoney(next.price)}`}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </section>
