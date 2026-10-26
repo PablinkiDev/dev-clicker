@@ -39,7 +39,7 @@ function Sponsor({ variant, className = '' }: SponsorProps) {
   return (
     <a
       {...link}
-      className={`mx-auto flex w-fit items-center gap-2.5 rounded-xl border border-line-2 bg-panel-2 px-4 py-2 font-mono text-xs text-muted transition-colors hover:border-muted hover:text-text ${className}`}
+      className={`flex w-fit items-center gap-2.5 rounded-xl border border-line-2 bg-panel-2 px-4 py-2 font-mono text-xs text-muted transition-colors hover:border-muted hover:text-text ${className}`}
     >
       Con el apoyo de
       <img src="/wearesrv.png" alt="" width={24} height={24} className="size-6" />

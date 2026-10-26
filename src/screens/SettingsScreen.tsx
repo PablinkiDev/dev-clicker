@@ -174,8 +174,11 @@ function SettingsScreen({
         <CommunityLinks variant="card" />
       </Card>
 
-      <Sponsor variant="card" className="mt-6" />
-      <p className="mt-2 text-center font-mono text-[11px] text-faint">Dev Clicker v{VERSION}</p>
+      {/* Auspicio y versión en una sola fila, para que no haga falta scrollear para verlos */}
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <Sponsor variant="card" />
+        <span className="font-mono text-[11px] text-faint">Dev Clicker v{VERSION}</span>
+      </div>
     </section>
   )
 }
