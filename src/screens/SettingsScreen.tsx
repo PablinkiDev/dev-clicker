@@ -6,6 +6,7 @@ import { EDITORS, type EditorId } from '../data/editors'
 import { formatDuration, formatMoney } from '../game/format'
 import type { Stats } from '../game/reducer'
 import type { AudioSettings } from '../audio/audio'
+import { VERSION } from '../version'
 
 type SettingsScreenProps = {
   /** Mejor editor comprado */
@@ -174,6 +175,7 @@ function SettingsScreen({
       </Card>
 
       <Sponsor variant="card" className="mt-6" />
+      <p className="mt-2 text-center font-mono text-[11px] text-faint">Dev Clicker v{VERSION}</p>
     </section>
   )
 }

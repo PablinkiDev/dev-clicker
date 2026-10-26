@@ -30,6 +30,7 @@ import { ACHIEVEMENT_BONUS } from '../game/records'
 import { REP_LEVELS, boardSize } from '../game/reputation'
 import { ENDLESS_GROWTH } from '../game/stages'
 import { REROLL_GROWTH, employeeEffect, maxStars } from '../game/team'
+import { VERSION } from '../version'
 
 // --- Piezas -----------------------------------------------------------------------------
 
@@ -623,7 +624,9 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
         <header className="flex items-center gap-3 border-b border-line px-4 py-3">
           <span className="grid size-8 place-items-center rounded-lg bg-cyan/15 font-extrabold text-cyan">?</span>
           <div className="min-w-0 flex-1">
-            <p className="font-extrabold">Ayuda · Dev Clicker</p>
+            <p className="font-extrabold">
+              Ayuda · Dev Clicker <span className="font-mono text-xs font-normal text-faint">v{VERSION}</span>
+            </p>
             <p className="text-xs text-muted">Cómo jugar y todo lo que hay en el juego</p>
           </div>
           <input

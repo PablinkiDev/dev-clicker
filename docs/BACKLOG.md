@@ -136,9 +136,9 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | C3 ✅ | **Simulación de balance:** un script que juega solo con `gameReducer` y mide tiempos por etapa. Objetivo: el primer prestigio en 1–2 días casuales y un 2.º ciclo entre 25 y 40 % más rápido. | M | 2 |
 | C4 ✅ | **Ajuste de números** según lo que muestre la simulación | M | 1–3 |
 | C5 ✅ | 📱 **Pasada mobile:** HUD compacto (4 columnas, sin subtítulos), menú de Nano en una fila deslizable (antes se partía y tapaba pantallas), terminal oculta en el celular (está la 🔔), avisos de logro arriba de los botones. Los árboles quedaron resueltos con C10 | S | 1–2 |
-| C6 | **Deploy público** (GitHub Pages o Vercel), con la versión visible en el juego | M | 1 |
-| C7 | **Forma de juntar feedback** (link a un form o a issues de GitHub, desde Ajustes) | S | 1 |
-| C8 | Bug bash final y README actualizado | M | 1 |
+| C6 ✅ | **Deploy público** en Vercel. Versión 1.0.0 (sale del `package.json` vía `src/version.ts`) visible en la terminal, en Ajustes y en la ayuda. `vercel.json` con CSP (solo self + Google Fonts), X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy y HSTS | M | 1 |
+| C7 ✅ | **Forma de juntar feedback:** Google Form en Ajustes y en la ayuda (ver V1.1) | S | 1 |
+| C8 ✅ | **Bug bash final y README:** recorrido automático por los 6 editores (compu y celular, partida nueva y avanzada) con el build de producción y la CSP puesta: sin errores ni violaciones de CSP; el panel de dev no llega al build. Arreglo: el panel de notificaciones ahora se cierra con Esc. README reescrito para la 1.0 | M | 1 |
 | C10 ✅ | 🌌 **Árboles "constelación":** nodos redondos con anillo de nivel repartidos en todo el ancho, lo comprable late en violeta, panel de detalle a la derecha (abajo en el celular, y se desplaza solo al tocar) con el botón de comprar. Elegido entre 3 opciones | S | 1–2 |
 | C9 ✅ | **Error boundary:** si algo se rompe, mostrar un mensaje con botón para recargar en vez de la pantalla azul | S | 1 |
 | C11 ✅ | **Ayuda ❓ (y F1):** modal con cómo jugar y una wiki de todo el juego (contratos, equipo, mejoras, etapas, prestigio, extras y atajos). Las tablas salen de los datos del juego | M | 1 |

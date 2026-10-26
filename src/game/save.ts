@@ -19,6 +19,7 @@ import { MAX_ARTIFACT_LEVEL, getArtifact } from '../data/artifacts'
 import { getChallenge } from '../data/challenges'
 import { ACHIEVEMENTS } from '../data/achievements'
 import { FEATURES, featuresFor } from '../data/features'
+import { VERSION } from '../version'
 
 const SAVE_KEY = 'dev-clicker:save'
 
@@ -204,7 +205,7 @@ export function loadGame(): GameState | null {
             text: 'git blame: detectamos cambios sin commitear en esta partida 👀 Te la cargamos igual.',
           }
         : null,
-      log: [{ id: 1, kind: 'info', text: 'Partida cargada. ¡Bienvenido de vuelta!' }],
+      log: [{ id: 1, kind: 'info', text: `Dev Clicker v${VERSION} · partida cargada. ¡Bienvenido de vuelta!` }],
     }
   } catch {
     backup(localStorage.getItem(SAVE_KEY))

@@ -59,6 +59,7 @@ import {
   type AbilityId,
   type AbilityTimers,
 } from '../data/abilities'
+import { VERSION } from '../version'
 
 /** Mensaje que se muestra después de entregar o fallar un contrato */
 export type Notice = {
@@ -314,7 +315,7 @@ export function createInitialState(): GameState {
     company: randomCompany(),
     profile: DEFAULT_PROFILE,
     inbox: INITIAL_INBOX,
-    log: [{ id: 1, kind: 'info', text: 'Dev Clicker v0.1.0 — sesión iniciada. Elegí un contrato en ofertas/' }],
+    log: [{ id: 1, kind: 'info', text: `Dev Clicker v${VERSION} — sesión iniciada. Elegí un contrato en ofertas/` }],
   }
   // Lo que ya está disponible al empezar no es "nuevo"
   return { ...state, records: { ...state.records, seen: allAvailable(state) } }

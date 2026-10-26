@@ -1,5 +1,5 @@
 // 🔔 H2: el centro de notificaciones. Lo más nuevo arriba; lo que no viste, resaltado.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Inbox, InboxKind } from '../game/inbox'
 
 const KIND_STYLE: Record<InboxKind, string> = {
@@ -40,6 +40,13 @@ function InboxPanel({ inbox, onClose }: InboxPanelProps) {
   // Lo que era nuevo al abrir (al abrir se marca todo como visto, pero se sigue resaltando)
   const [seenBefore] = useState(inbox.seen)
   const items = [...inbox.items].reverse()
+
+  // Se cierra con Esc, como la ayuda
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   return (
     <div className="fixed inset-0 z-60 flex justify-end bg-black/40" onClick={onClose}>
