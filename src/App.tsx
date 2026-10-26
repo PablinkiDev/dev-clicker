@@ -19,6 +19,7 @@ import EventCard from './components/EventCard'
 import AchievementToast from './components/AchievementToast'
 import FeatureCard from './components/FeatureCard'
 import DevPanel from './components/DevPanel'
+import ConfirmModal, { type Dialog } from './components/ConfirmModal'
 import { HelpModal } from './components/HelpModal'
 import {
   applyAudioSettings,
@@ -319,6 +320,9 @@ function App() {
 
   // 🦄 Pantalla final de la IPO (se abre al salir a la bolsa)
   const [ipoOpen, setIpoOpen] = useState(false)
+  /** ⚠️ Confirmación o aviso abierto (reemplaza a window.confirm/alert) */
+  const [dialog, setDialog] = useState<Dialog | null>(null)
+  const closeDialog = useCallback(() => setDialog(null), [])
   /** 🐈 Para que el panel de dev haga pasear a la mascota ya (cambia la key del componente) */
   const [mascotSummon, setMascotSummon] = useState(0)
 
@@ -665,10 +669,25 @@ function App() {
   function importSave(text: string) {
     const imported = importGame(text)
     if (!imported) {
-      window.alert('Ese archivo no es una partida válida de Dev Clicker.')
+      setDialog({
+        icon: '📄',
+        title: 'Archivo inválido',
+        text: 'Ese archivo no es una partida válida de Dev Clicker.',
+        confirm: 'Entendido',
+      })
       return
     }
-    if (!window.confirm('¿Reemplazar tu partida actual por la importada? No se puede deshacer.')) return
+    setDialog({
+      icon: '⬆',
+      title: '¿Importar esta partida?',
+      text: 'Reemplaza tu partida actual por la del archivo. No se puede deshacer.',
+      confirm: 'Sí, importar',
+      danger: true,
+      onConfirm: () => loadImported(imported),
+    })
+  }
+
+  function loadImported(imported: NonNullable<ReturnType<typeof importGame>>) {
     dispatch({
       type: 'reset',
       state: {
@@ -687,10 +706,18 @@ function App() {
   }
 
   function resetGame() {
-    if (!window.confirm('¿Borrar la partida y empezar de cero? No se puede deshacer.')) return
-    clearSave()
-    dispatch({ type: 'reset', state: createInitialState() })
-    setView('board')
+    setDialog({
+      icon: '🗑',
+      title: 'rm -rf partida/',
+      text: '¿Borrar la partida y empezar de cero? Se pierde todo: empresas, logros, artefactos y tokens. No se puede deshacer.',
+      confirm: 'Sí, borrar todo',
+      danger: true,
+      onConfirm: () => {
+        clearSave()
+        dispatch({ type: 'reset', state: createInitialState() })
+        setView('board')
+      },
+    })
   }
 
   // useCallback: la misma función entre renders, para que el temporizador del Toast no se reinicie
@@ -897,13 +924,17 @@ function App() {
               onRename={(company) => dispatch({ type: 'setCompany', company })}
               onIpo={() => {
                 if (state.records.ipoAt > 0) return setIpoOpen(true) // ya saliste: solo mirar tu carrera
-                if (
-                  !window.confirm('¿Sacar tu empresa a la bolsa? Es el final del juego (después podés seguir jugando).')
-                )
-                  return
-                dispatch({ type: 'ipo', now: Date.now() })
-                setIpoOpen(true)
-                playSfx('levelUp')
+                setDialog({
+                  icon: '🦄',
+                  title: '¿Salir a la bolsa?',
+                  text: 'Es el final del juego: vas a ver toda tu carrera. Después podés seguir jugando como leyenda.',
+                  confirm: 'Tocar la campana 🔔',
+                  onConfirm: () => {
+                    dispatch({ type: 'ipo', now: Date.now() })
+                    setIpoOpen(true)
+                    playSfx('levelUp')
+                  },
+                })
               }}
             />
           )}
@@ -1045,6 +1076,7 @@ function App() {
       {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
       {inboxOpen && <InboxPanel inbox={state.inbox} onClose={() => setInboxOpen(false)} />}
       {ipoOpen && <IpoScreen state={state} onContinue={() => setIpoOpen(false)} />}
+      {dialog && <ConfirmModal dialog={dialog} onClose={closeDialog} />}
       {state.challengeChoice && (
         <ChallengePicker
           done={state.records.challengesDone}

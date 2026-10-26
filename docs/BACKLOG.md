@@ -127,6 +127,7 @@ Primera partida real: ~1 h hasta poder vender (se sintió bien), pero las mejora
 | V1.1 ✅ | 💬☕ **Feedback y donaciones:** tarjeta "Comunidad" en Ajustes y links chicos en la ayuda. Links en `src/data/links.ts`: Google Form (forms.gle/7cdyT5M5PtiNfrRB7) y Mercado Pago sin monto fijo (link.mercadopago.com.ar/pablinkidev) | XS | 1 |
 | V1.2 ✅ | ❓ **Ayuda como wiki 1.0:** buscador (sin tildes ni mayúsculas) que muestra todas las secciones que coinciden, y secciones nuevas: 🗂 Pantallas (qué hace cada una, campanita, celular) y 🧑‍💻 Personalización (empresa, avatar, accesorios y títulos con su logro —los secretos no se revelan—, mascota, aspectos de editor). Contratos explica 🏳 Renunciar y Equipo, el plano de oficina | S | 1 |
 | V1.3 ✅ | 🧭 **Globito del tutorial en Ofertas:** quedaba arriba de la tarjeta y lo tapaba la barra de economía; ahora va adentro, pegado al botón Aceptar ("👇 Empezá por acá") | XS | 1 |
+| V1.4 ✅ | ⚠️ **Modales propias en vez de alert/confirm:** borrar la partida, importar una (y el aviso de archivo inválido) y salir a la bolsa usan `ConfirmModal`, con los colores del editor. Esc cierra; en las peligrosas el foco arranca en Cancelar para que un Enter apurado no borre nada | XS | 1 |
 
 ## Hito C — Listo para amigos (1.0)
 
