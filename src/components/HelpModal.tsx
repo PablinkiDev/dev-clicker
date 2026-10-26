@@ -1,7 +1,7 @@
 // ❓ Ayuda: cómo jugar y una wiki de todo el juego.
 // Las listas (editores, tecnologías, mejoras, etapas…) se arman con los datos del juego,
 // así la ayuda no queda vieja cuando se cambia un número.
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ABILITIES } from '../data/abilities'
 import { CHALLENGES, CHALLENGE_FIRST_BOXES } from '../data/challenges'
 import { ARTIFACTS, MAX_ARTIFACT_LEVEL, RARITIES } from '../data/artifacts'
@@ -9,6 +9,8 @@ import { BOSSES, BOSS_EVERY, BOSS_SCALE } from '../data/bosses'
 import { CARDS, RARE_CHANCE, STYLES } from '../data/cards'
 import { ACHIEVEMENTS, CATEGORIES } from '../data/achievements'
 import { EDITORS } from '../data/editors'
+import { FACE_ITEMS, HEAD_ITEMS, HOODIES, MASCOTS, TITLES, type Choice } from '../data/personalization'
+import CommunityLinks from './CommunityLinks'
 import { EVENTS } from '../data/events'
 import { INVESTMENTS } from '../data/investments'
 import { MACRO_LEVELS } from '../data/macro'
@@ -131,6 +133,11 @@ function Contracts() {
         Si se vence el plazo, el cliente "contrata a un primo": perdés el 5 % de tu dinero y {FAILURE_REP_LOSS} ★, pero
         te llevás un 20 % de la XP por la experiencia.
       </P>
+      <P>
+        <B>🏳 Renunciar:</B> con el botón debajo del reloj podés abandonar un contrato en cualquier momento. Cuenta como
+        contrato perdido (las mismas pérdidas) pero <B>sin</B> la XP de consuelo. Contra un jefe, se va y no deja la
+        caja.
+      </P>
       <H>Lenguajes y tecnologías</H>
       <P>
         Cada contrato es de un lenguaje (.html, .js, .py…). Para que aparezcan tenés que aprender esa tecnología en
@@ -178,8 +185,8 @@ function Team() {
       <P>
         Hay un candidato por cada profesión de tu etapa (y un dev de más mientras son pocas). <B>🔄 Buscar otros</B>{' '}
         trae una lista nueva; cada búsqueda seguida sale ×{REROLL_GROWTH.toLocaleString('es-AR')} más cara, hasta que
-        contratás a alguien. Con la oficina llena podés contratar reemplazando a alguien (el que se va no devuelve lo
-        que costó).
+        contratás a alguien. Con la oficina llena podés contratar reemplazando a alguien: elegís al candidato y tocás el
+        escritorio de quien se va (no devuelve lo que costó). Tocá a cualquiera del plano para ver qué aporta.
       </P>
       <H>Oficinas</H>
       <Table
@@ -414,6 +421,80 @@ function Extras() {
   )
 }
 
+function Screens() {
+  return (
+    <>
+      <P>Todo el juego pasa en estas pantallas. Las que todavía no se desbloquearon no aparecen en la barra.</P>
+      <Table
+        head={['Pantalla', 'Para qué sirve']}
+        rows={[
+          ['⌨️ Código', 'El contrato en curso: el reloj, el código que se va escribiendo, Programar y git push.'],
+          ['📋 Ofertas', 'El tablón de contratos, tu ritmo, tu reputación y la Captación automática.'],
+          ['👥 Equipo', 'El plano de la oficina, los candidatos para contratar y la próxima oficina.'],
+          ['▲ Empresa', 'La etapa, los requisitos para ascender, logros, estadísticas, historial y la venta.'],
+          ['▣ Setup', 'Tu avatar, título y mascota; el escritorio con los artefactos y las cajas.'],
+          ['⑂ Mejoras', 'Herramientas, tecnologías, árboles de habilidades y el árbol de prestigio.'],
+          ['⚙ Ajustes', 'Aspecto del editor, sonido, brillo, exportar o importar la partida y empezar de cero.'],
+        ]}
+      />
+      <H>🔔 Notificaciones</H>
+      <P>
+        La campanita junta todo lo que pasó mientras no mirabas: logros, eventos, jefes, cajas. El número rojo dice
+        cuántas no leíste. Los puntitos en la barra y la etiqueta <B>¡NUEVO!</B> marcan cosas recién desbloqueadas.
+      </P>
+      <H>📱 En el celular</H>
+      <P>
+        Se juega igual: la barra de pantallas va abajo, el teclado de Programar muestra una sola fila y la terminal se
+        esconde (lo importante llega a la campanita).
+      </P>
+    </>
+  )
+}
+
+/** Cómo se consigue algo de tu perfil (los logros secretos no se cuentan) */
+const unlockText = (c: Choice) => {
+  if (!c.unlock) return 'Desde el inicio'
+  const a = ACHIEVEMENTS.find((x) => x.id === c.unlock)
+  return a?.secret ? 'Logro secreto' : `Logro: ${a?.name ?? '?'}`
+}
+
+function Personalization() {
+  const locked = [...HOODIES, ...HEAD_ITEMS, ...FACE_ITEMS].filter((c) => c.unlock)
+  return (
+    <>
+      <P>
+        Nada de esto da bonus: es para que el juego sea tuyo. El perfil (avatar, título y mascota) <B>no se pierde</B>{' '}
+        al vender la empresa.
+      </P>
+      <H>🏢 Tu empresa</H>
+      <P>
+        En Empresa tocá ✏️ para cambiarle el nombre, el emoji del logo y el color. Cada empresa nueva arranca con un
+        nombre al azar.
+      </P>
+      <H>🧑‍💻 Tu avatar</H>
+      <P>
+        En Setup elegís piel, buzo, algo en la cabeza y algo en la cara. Algunas cosas se ganan con logros:{' '}
+        {locked.length} en total.
+      </P>
+      <Table head={['Accesorio', 'Cómo se consigue']} rows={locked.map((c) => [c.name, unlockText(c)])} />
+      <H>🏷 Títulos</H>
+      <Table head={['Título', 'Cómo se consigue']} rows={TITLES.map((t) => [t.name, unlockText(t)])} />
+      <H>🐈 Mascota de la oficina</H>
+      <P>
+        {MASCOTS.map((m) => `${m.icon} ${m.name}`).join(', ')}. Cada tanto cruza la pantalla: tocala para acariciarla
+        (hay un logro escondido ahí).
+      </P>
+      <H>🎨 Aspecto del editor</H>
+      <P>
+        Cada editor que comprás cambia todo el juego: Nano (terminal), Bloc de notas y Notepad (ventanas claras),
+        Sublimado Text (pestañas inclinadas y navegación por archivos abiertos), Visual Estudio Code (IDE completo) y
+        Cladex Code (un agente que programa por vos). En Ajustes podés volver a cualquiera que ya compraste; los bonus
+        son siempre los del mejor.
+      </P>
+    </>
+  )
+}
+
 function Shortcuts() {
   return (
     <>
@@ -442,23 +523,87 @@ function Shortcuts() {
   )
 }
 
+/** Secciones de la wiki. keywords: palabras extra para el buscador (además del título) */
 const SECTIONS = [
-  { id: 'play', label: '🚀 Cómo jugar', body: HowToPlay },
-  { id: 'contracts', label: '📄 Contratos', body: Contracts },
-  { id: 'team', label: '👥 Equipo', body: Team },
-  { id: 'upgrades', label: '🧠 Mejoras', body: Upgrades },
-  { id: 'stages', label: '▲ Etapas', body: Stages },
-  { id: 'prestige', label: '🪙 Prestigio', body: Prestige },
-  { id: 'extras', label: '✨ Extras', body: Extras },
-  { id: 'keys', label: '⌨️ Atajos', body: Shortcuts },
+  { id: 'play', label: '🚀 Cómo jugar', body: HowToPlay, keywords: 'empezar ciclo consejos objetivo primer' },
+  {
+    id: 'screens',
+    label: '🗂 Pantallas',
+    body: Screens,
+    keywords: 'código ofertas equipo empresa setup mejoras ajustes campanita notificaciones celular',
+  },
+  {
+    id: 'contracts',
+    label: '📄 Contratos',
+    body: Contracts,
+    keywords: 'plazo deadline paga reputación especiales lenguajes fullstack renunciar fallar vencer',
+  },
+  {
+    id: 'team',
+    label: '👥 Equipo',
+    body: Team,
+    keywords: 'profesiones empleados candidatos oficina estrellas reemplazar contratar',
+  },
+  {
+    id: 'upgrades',
+    label: '🧠 Mejoras',
+    body: Upgrades,
+    keywords: 'editores macro tecnologías árbol habilidades xp herramientas',
+  },
+  {
+    id: 'stages',
+    label: '▲ Etapas',
+    body: Stages,
+    keywords: 'ascender requisitos cartas especialización build infinito',
+  },
+  {
+    id: 'prestige',
+    label: '🪙 Prestigio',
+    body: Prestige,
+    keywords: 'vender tokens fundador artefactos cajas desafíos bolsa ipo final',
+  },
+  {
+    id: 'extras',
+    label: '✨ Extras',
+    body: Extras,
+    keywords: 'foco habilidades jefes bug dorado eventos minijuegos logros',
+  },
+  {
+    id: 'profile',
+    label: '🧑‍💻 Personalización',
+    body: Personalization,
+    keywords: 'avatar título mascota logo nombre empresa accesorios aspecto editor gato perro pato',
+  },
+  {
+    id: 'keys',
+    label: '⌨️ Atajos',
+    body: Shortcuts,
+    keywords: 'teclado espacio teclas guardar partida exportar offline',
+  },
 ] as const
+
+type SectionId = (typeof SECTIONS)[number]['id']
+
+/** Saca tildes y mayúsculas para buscar "tecnologias" y encontrar "Tecnologías" */
+const normalize = (text: string) =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
 
 // --- Modal ----------------------------------------------------------------------------------
 
 export function HelpModal({ onClose }: { onClose: () => void }) {
-  const [section, setSection] = useState<(typeof SECTIONS)[number]['id']>('play')
+  const [section, setSection] = useState<SectionId>('play')
+  const [query, setQuery] = useState('')
   const current = SECTIONS.find((s) => s.id === section) ?? SECTIONS[0]
-  const Body = current.body
+  // 🔎 Buscador (v1.0): con algo escrito se ven todas las secciones que lo mencionan, una abajo de la otra
+  const found = useMemo(() => {
+    const q = normalize(query.trim())
+    if (!q) return null
+    return SECTIONS.filter((s) => normalize(`${s.label} ${s.keywords}`).includes(q))
+  }, [query])
+  const shown = found ?? [current]
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
@@ -481,6 +626,14 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
             <p className="font-extrabold">Ayuda · Dev Clicker</p>
             <p className="text-xs text-muted">Cómo jugar y todo lo que hay en el juego</p>
           </div>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="🔎 Buscar…"
+            aria-label="Buscar en la ayuda"
+            className="hidden w-48 rounded-lg border border-line-2 bg-panel px-2.5 py-1.5 text-sm outline-none focus:border-cyan sm:block"
+          />
           <button
             type="button"
             onClick={onClose}
@@ -491,24 +644,53 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
           </button>
         </header>
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-line p-2 md:w-48 md:flex-col md:border-r md:border-b-0">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setSection(s.id)}
-                aria-current={s.id === section ? 'page' : undefined}
-                className={`cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-bold whitespace-nowrap transition-colors ${
-                  s.id === section ? 'bg-text text-bg' : 'text-muted hover:bg-panel-3 hover:text-text'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
+          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-line p-2 md:w-52 md:flex-col md:border-r md:border-b-0">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="🔎 Buscar…"
+              aria-label="Buscar en la ayuda"
+              className="w-32 shrink-0 rounded-lg border border-line-2 bg-panel px-2.5 py-1.5 text-sm outline-none focus:border-cyan sm:hidden"
+            />
+            {SECTIONS.map((s) => {
+              const active = found ? found.includes(s) : s.id === section
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setQuery('')
+                    setSection(s.id)
+                  }}
+                  aria-current={active ? 'page' : undefined}
+                  className={`cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-bold whitespace-nowrap transition-colors ${
+                    active
+                      ? 'bg-text text-bg'
+                      : found
+                        ? 'text-faint hover:text-text'
+                        : 'text-muted hover:bg-panel-3 hover:text-text'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              )
+            })}
+            <CommunityLinks variant="inline" className="mt-auto hidden pt-3 md:flex md:flex-col" />
           </nav>
           <article className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6">
-            <h2 className="mb-3 text-lg font-extrabold">{current.label}</h2>
-            <Body />
+            {found && !found.length && (
+              <p className="text-sm text-muted">
+                No encontramos nada con “{query}”. Probá con otra palabra, como <B>jefe</B>, <B>tokens</B> o{' '}
+                <B>mascota</B>.
+              </p>
+            )}
+            {shown.map((s) => (
+              <section key={s.id} className="mb-6">
+                <h2 className="mb-3 text-lg font-extrabold">{s.label}</h2>
+                <s.body />
+              </section>
+            ))}
           </article>
         </div>
       </div>

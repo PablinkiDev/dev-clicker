@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import ScreenHeader from '../components/ScreenHeader'
 import Sponsor from '../components/Sponsor'
+import CommunityLinks from '../components/CommunityLinks'
 import { EDITORS, type EditorId } from '../data/editors'
 import { formatDuration, formatMoney } from '../game/format'
 import type { Stats } from '../game/reducer'
@@ -167,6 +168,10 @@ function SettingsScreen({
           </div>
         </Card>
       </div>
+
+      <Card title="💬 Comunidad" note="el juego crece con lo que nos cuentes" className="mt-3">
+        <CommunityLinks variant="card" />
+      </Card>
 
       <Sponsor variant="card" className="mt-6" />
     </section>
