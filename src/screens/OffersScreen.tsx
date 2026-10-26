@@ -80,13 +80,7 @@ function OffersScreen(props: OffersScreenProps) {
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(290px,1fr))]">
             {sorted.map((offer) => (
               <li key={offer.uid} className="relative">
-                {showTutorial && offer.uid === tutorialTarget?.uid && (
-                  <TutorialBubble
-                    text="👇 Empezá por acá: tocá Aceptar"
-                    className="-top-11 left-1/2 -translate-x-1/2"
-                  />
-                )}
-                <OfferCard {...props} offer={offer} />
+                <OfferCard {...props} offer={offer} tutorial={showTutorial && offer.uid === tutorialTarget?.uid} />
               </li>
             ))}
           </ul>
@@ -97,7 +91,15 @@ function OffersScreen(props: OffersScreenProps) {
   )
 }
 
-function OfferCard({ offer, perClick, autoRate, tech, activeFile, onAccept }: OffersScreenProps & { offer: Contract }) {
+function OfferCard({
+  offer,
+  perClick,
+  autoRate,
+  tech,
+  activeFile,
+  onAccept,
+  tutorial = false,
+}: OffersScreenProps & { offer: Contract; tutorial?: boolean }) {
   const difficulty = DIFFICULTY[offer.difficulty]
   const boss = offer.boss ? getBoss(offer.boss) : undefined
   const special = offer.special ? SPECIAL_RULES[offer.special] : undefined
@@ -216,14 +218,23 @@ function OfferCard({ offer, perClick, autoRate, tech, activeFile, onAccept }: Of
               ~{Math.ceil(estimate)} s de {offer.time} s
             </span>
           </span>
-          <button
-            type="button"
-            onClick={() => onAccept(offer)}
-            disabled={activeFile !== null}
-            className="shrink-0 cursor-pointer rounded-xl bg-green px-4 py-2 text-sm font-extrabold text-bg transition hover:brightness-110 disabled:cursor-default disabled:bg-panel-3 disabled:text-faint"
-          >
-            Aceptar
-          </button>
+          {/* 🧭 El globito va pegado al botón (adentro de la tarjeta): arriba de todo lo tapaba la barra de economía */}
+          <span className="relative shrink-0">
+            {tutorial && (
+              <TutorialBubble
+                text="👇 Empezá por acá"
+                className="right-0 bottom-full mb-2.5 [&>i]:right-7 [&>i]:left-auto"
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => onAccept(offer)}
+              disabled={activeFile !== null}
+              className="shrink-0 cursor-pointer rounded-xl bg-green px-4 py-2 text-sm font-extrabold text-bg transition hover:brightness-110 disabled:cursor-default disabled:bg-panel-3 disabled:text-faint"
+            >
+              Aceptar
+            </button>
+          </span>
         </div>
       </div>
     </article>
